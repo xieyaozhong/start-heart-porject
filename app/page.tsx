@@ -2,576 +2,201 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-type Inputs = {
-  signalMethod: string;
-  raHours: number;
-  decDeg: number;
-  distancePc: number;
-  starMass: number;
-  starRadius: number;
-  radialVelocity: number;
-  orbitalPeriod: number;
-  eccentricity: number;
-  transitDepth: number;
-  phase: number;
-  positionAngle: number;
+type Composition = { label: string; value: number; color: string };
+type Planet = {
+  id: string; code: string; displayName: string | null; type: string; massEarth: number; radiusEarth: number;
+  periodDays: number; semiMajorAu: number; eccentricity: number; equilibriumTemp: number; epochAngleDeg: number;
+  orbitColor: string; composition: Composition[]; atmosphere: string; state: string; bioScore: number; bioPrediction: string;
 };
-
-type Candidate = {
-  id: string;
-  createdAt: string;
-  raHours: number;
-  decDeg: number;
-  predictedRa: number;
-  predictedDec: number;
-  distancePc: number;
-  periodDays: number;
-  minimumMassJupiter: number;
-  radiusEarth: number;
-  semiMajorAu: number;
-  angularSeparationMas: number;
-  equilibriumTemp: number;
-  type: string;
-  confidence: number;
-  probabilities: { label: string; value: number }[];
+type StarSystem = {
+  id: string; designation: string; displayName: string | null; classification: string; raHours: number; decDeg: number;
+  distancePc: number; starMass: number; starRadius: number; temperatureK: number; luminosity: number; ageByr: number;
+  metallicity: number; confidence: number; summary: string; epochAt: string; publishedAt: string; planets: Planet[];
 };
+type NamingPackage = { id: string; name: string; priceTwd: number; description: string; features: string[] };
+type Registry = { order: { registryCode: string; desiredName: string; ownerName: string; dedication: string; packageName: string }; system: StarSystem };
 
-const defaults: Inputs = {
-  signalMethod: "徑向速度",
-  raHours: 19.8464,
-  decDeg: 8.8683,
-  distancePc: 47.2,
-  starMass: 0.91,
-  starRadius: 0.94,
-  radialVelocity: 23.8,
-  orbitalPeriod: 126.4,
-  eccentricity: 0.12,
-  transitDepth: 780,
-  phase: 42,
-  positionAngle: 118,
-};
+const fallbackSystems: StarSystem[] = [{
+  id: "SYS-NX-001", designation: "NOCTUA-X1", displayName: null, classification: "G8V 黃矮星", raHours: 19.8464, decDeg: 8.8683,
+  distancePc: 47.2, starMass: 0.91, starRadius: 0.94, temperatureK: 5480, luminosity: 0.72, ageByr: 5.1, metallicity: 0.08,
+  confidence: 86, summary: "徑向速度與凌日訊號交叉吻合的四行星候選系統。", epochAt: "2026-07-19T00:00:00.000Z", publishedAt: "2026-07-19T00:00:00.000Z",
+  planets: [
+    { id: "PL-NX-001-B", code: "NOCTUA-X1 b", displayName: null, type: "熔岩岩質行星", massEarth: 1.7, radiusEarth: 1.19, periodDays: 8.42, semiMajorAu: .078, eccentricity: .03, equilibriumTemp: 982, epochAngleDeg: 34, orbitColor: "#d46b3c", composition: [{ label: "矽酸鹽", value: 61, color: "#d97848" }, { label: "鐵鎳核心", value: 34, color: "#a8a9a7" }, { label: "其他", value: 5, color: "#617682" }], atmosphere: "極稀薄鈉、氧外逸層", state: "潮汐鎖定 · 強烈火山活動", bioScore: 1, bioPrediction: "表面溫度過高，已知型態生命可能性極低。" },
+    { id: "PL-NX-001-C", code: "NOCTUA-X1 c", displayName: null, type: "溫暖超級地球", massEarth: 4.8, radiusEarth: 1.73, periodDays: 46.2, semiMajorAu: .244, eccentricity: .07, equilibriumTemp: 421, epochAngleDeg: 158, orbitColor: "#dfaa62", composition: [{ label: "岩石地函", value: 58, color: "#c58b5d" }, { label: "金屬核心", value: 26, color: "#a8a9a7" }, { label: "水／冰", value: 16, color: "#6d9ec7" }], atmosphere: "氮、二氧化碳、水氣候選", state: "高壓溫室 · 可能有季節循環", bioScore: 22, bioPrediction: "高層雲帶可能存在溫和區，但尚無直接生物標記。" },
+    { id: "PL-NX-001-D", code: "NOCTUA-X1 d", displayName: null, type: "宜居帶海洋候選體", massEarth: 2.3, radiusEarth: 1.34, periodDays: 126.4, semiMajorAu: .478, eccentricity: .12, equilibriumTemp: 286, epochAngleDeg: 242, orbitColor: "#72b6c9", composition: [{ label: "矽酸鹽", value: 43, color: "#bd8b63" }, { label: "水／冰", value: 39, color: "#6ab6d5" }, { label: "鐵鎳", value: 18, color: "#a8a9a7" }], atmosphere: "氮、水氣、微量甲烷候選", state: "液態水條件可能 · 模型穩定", bioScore: 61, bioPrediction: "具有液態水與能量梯度條件；生物可能性為中等，需光譜確認。" },
+    { id: "PL-NX-001-E", code: "NOCTUA-X1 e", displayName: null, type: "冰冷氣態巨行星", massEarth: 128, radiusEarth: 9.2, periodDays: 682, semiMajorAu: 1.47, eccentricity: .19, equilibriumTemp: 163, epochAngleDeg: 306, orbitColor: "#9c8fc4", composition: [{ label: "氫氦", value: 79, color: "#d3c6a4" }, { label: "冰質物", value: 16, color: "#87a9c5" }, { label: "重元素", value: 5, color: "#9a826f" }], atmosphere: "氫、氦、甲烷", state: "外層雲帶穩定 · 可能有大型衛星", bioScore: 8, bioPrediction: "行星本體不適居；衛星可能具有地下海洋環境。" },
+  ],
+}];
 
-const demoCandidates: Candidate[] = [
-  {
-    id: "NX-2407-C",
-    createdAt: "2026-07-18T09:12:00.000Z",
-    raHours: 19.8464,
-    decDeg: 8.8683,
-    predictedRa: 19.846402,
-    predictedDec: 8.868296,
-    distancePc: 47.2,
-    periodDays: 126.4,
-    minimumMassJupiter: 0.54,
-    radiusEarth: 3.03,
-    semiMajorAu: 0.48,
-    angularSeparationMas: 10.17,
-    equilibriumTemp: 356,
-    type: "溫暖海王星型",
-    confidence: 82,
-    probabilities: [
-      { label: "海王星型", value: 58 },
-      { label: "氣態巨行星", value: 27 },
-      { label: "超級地球", value: 15 },
-    ],
-  },
-  {
-    id: "NX-2391-A",
-    createdAt: "2026-07-15T04:26:00.000Z",
-    raHours: 5.2351,
-    decDeg: -8.201,
-    predictedRa: 5.235098,
-    predictedDec: -8.200996,
-    distancePc: 83.7,
-    periodDays: 18.6,
-    minimumMassJupiter: 0.029,
-    radiusEarth: 1.86,
-    semiMajorAu: 0.13,
-    angularSeparationMas: 1.55,
-    equilibriumTemp: 721,
-    type: "高溫超級地球",
-    confidence: 74,
-    probabilities: [
-      { label: "超級地球", value: 69 },
-      { label: "迷你海王星", value: 22 },
-      { label: "岩質行星", value: 9 },
-    ],
-  },
+const fallbackPackages: NamingPackage[] = [
+  { id: "PKG-EXPLORER", name: "探索者", priceTwd: 680, description: "一顆行星的私人紀念登錄", features: ["數位命名證書", "即時軌道動畫", "專屬行星編號"] },
+  { id: "PKG-OBSERVER", name: "觀測者", priceTwd: 1280, description: "恆星與完整行星體系登錄", features: ["恆星體系專屬編號", "4K 星系動畫", "年度位置更新"] },
+  { id: "PKG-ARCHIVIST", name: "典藏者", priceTwd: 2680, description: "完整典藏檔案與客製動畫", features: ["可列印典藏證書", "客製獻詞", "完整軌道與成分報告"] },
 ];
-
-const knownStars = [
-  [0.62, 0.18, 1.7], [0.22, 0.34, 1.1], [0.8, 0.39, 2.2], [0.47, 0.55, 1.4],
-  [0.14, 0.66, 1.8], [0.69, 0.72, 1.2], [0.91, 0.13, 1.3], [0.34, 0.82, 2],
-  [0.53, 0.27, 0.9], [0.73, 0.53, 0.8], [0.08, 0.43, 1], [0.86, 0.8, 1.5],
-];
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function classify(massJ: number, radiusE: number, tempK: number) {
-  const hot = tempK > 600 ? "高溫" : tempK < 220 ? "冰冷" : tempK < 420 ? "溫暖" : "暖熱";
-  let base = "未知行星";
-  let probabilities = [
-    { label: "超級地球", value: 34 },
-    { label: "海王星型", value: 33 },
-    { label: "氣態巨行星", value: 33 },
-  ];
-
-  if (massJ >= 13) {
-    base = "棕矮星候選體";
-    probabilities = [
-      { label: "棕矮星", value: 83 },
-      { label: "低質量恆星", value: 11 },
-      { label: "超級木星", value: 6 },
-    ];
-  } else if (massJ >= 0.3 || radiusE > 7) {
-    base = `${hot}氣態巨行星`;
-    probabilities = [
-      { label: "氣態巨行星", value: 72 },
-      { label: "海王星型", value: 19 },
-      { label: "棕矮星", value: 9 },
-    ];
-  } else if (massJ >= 0.045 || radiusE > 2.5) {
-    base = `${hot}海王星型`;
-    probabilities = [
-      { label: "海王星型", value: 61 },
-      { label: "迷你海王星", value: 27 },
-      { label: "氣態巨行星", value: 12 },
-    ];
-  } else if (radiusE > 1.35 || massJ > 0.008) {
-    base = `${hot}超級地球`;
-    probabilities = [
-      { label: "超級地球", value: 68 },
-      { label: "迷你海王星", value: 23 },
-      { label: "岩質行星", value: 9 },
-    ];
-  } else {
-    base = `${hot}岩質行星`;
-    probabilities = [
-      { label: "岩質行星", value: 75 },
-      { label: "超級地球", value: 18 },
-      { label: "其他", value: 7 },
-    ];
-  }
-
-  return { base, probabilities };
-}
-
-function calculate(inputs: Inputs): Candidate {
-  const G = 6.6743e-11;
-  const solarMass = 1.98847e30;
-  const jupiterMass = 1.89813e27;
-  const periodSeconds = inputs.orbitalPeriod * 86400;
-  const massKg =
-    inputs.radialVelocity *
-    Math.sqrt(1 - inputs.eccentricity ** 2) *
-    Math.pow(periodSeconds / (2 * Math.PI * G), 1 / 3) *
-    Math.pow(inputs.starMass * solarMass, 2 / 3);
-  const minimumMassJupiter = Math.max(0.0003, massKg / jupiterMass);
-  const periodYears = inputs.orbitalPeriod / 365.25;
-  const semiMajorAu = Math.cbrt(inputs.starMass * periodYears ** 2);
-  const radiusEarth = Math.max(
-    0.2,
-    Math.sqrt(Math.max(0, inputs.transitDepth) * 1e-6) * inputs.starRadius * 109.1,
-  );
-  const luminosity = Math.pow(inputs.starMass, 3.5);
-  const equilibriumTemp = 278 * Math.pow(luminosity, 0.25) / Math.sqrt(2 * semiMajorAu);
-  const angularSeparationMas = (semiMajorAu / inputs.distancePc) * 1000;
-  const projectedMas = angularSeparationMas * Math.cos((inputs.phase * Math.PI) / 180);
-  const offsetDeg = projectedMas / 3_600_000;
-  const pa = (inputs.positionAngle * Math.PI) / 180;
-  const predictedDec = inputs.decDeg + offsetDeg * Math.sin(pa);
-  const predictedRa =
-    inputs.raHours +
-    (offsetDeg * Math.cos(pa)) /
-      (15 * Math.max(0.2, Math.cos((inputs.decDeg * Math.PI) / 180)));
-  const { base, probabilities } = classify(minimumMassJupiter, radiusEarth, equilibriumTemp);
-  const methodBonus = inputs.signalMethod === "聯合擬合" ? 12 : inputs.signalMethod === "凌日" ? 7 : 4;
-  const confidence = Math.round(clamp(48 + methodBonus + Math.log10(inputs.radialVelocity + 1) * 10 + (inputs.transitDepth > 0 ? 8 : 0), 42, 94));
-
-  return {
-    id: `NX-${Date.now().toString().slice(-6)}`,
-    createdAt: new Date().toISOString(),
-    raHours: inputs.raHours,
-    decDeg: inputs.decDeg,
-    predictedRa,
-    predictedDec,
-    distancePc: inputs.distancePc,
-    periodDays: inputs.orbitalPeriod,
-    minimumMassJupiter,
-    radiusEarth,
-    semiMajorAu,
-    angularSeparationMas,
-    equilibriumTemp,
-    type: base,
-    confidence,
-    probabilities,
-  };
-}
 
 function formatRa(hours: number) {
-  const normalized = ((hours % 24) + 24) % 24;
-  const h = Math.floor(normalized);
-  const mFloat = (normalized - h) * 60;
-  const m = Math.floor(mFloat);
-  const s = (mFloat - m) * 60;
-  return `${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${s.toFixed(2)}s`;
+  const h = Math.floor(hours); const min = Math.floor((hours - h) * 60); const sec = (((hours - h) * 60 - min) * 60).toFixed(1);
+  return `${String(h).padStart(2, "0")}h ${String(min).padStart(2, "0")}m ${sec}s`;
 }
 
-function formatDec(degrees: number) {
-  const sign = degrees >= 0 ? "+" : "−";
-  const absolute = Math.abs(degrees);
-  const d = Math.floor(absolute);
-  const mFloat = (absolute - d) * 60;
-  const m = Math.floor(mFloat);
-  const s = (mFloat - m) * 60;
-  return `${sign}${String(d).padStart(2, "0")}° ${String(m).padStart(2, "0")}′ ${s.toFixed(1)}″`;
-}
+function formatDec(value: number) { return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(4)}°`; }
 
-function SkyMap({ candidate, zoom }: { candidate: Candidate; zoom: number }) {
+function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { system: StarSystem; selectedId: string; onSelect: (id: string) => void; mode: "live" | "animation"; ownerLabel?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const positionsRef = useRef<{ id: string; x: number; y: number; radius: number }[]>([]);
+  const selectRef = useRef(onSelect);
+  selectRef.current = onSelect;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ratio = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * ratio;
-    canvas.height = rect.height * ratio;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.scale(ratio, ratio);
-    const w = rect.width;
-    const h = rect.height;
+    let frame = 0;
+    let observer: ResizeObserver | null = null;
+    const draw = (time: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
+        canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const w = rect.width; const h = rect.height; const cx = w * .49; const cy = h * .5;
+      const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .72);
+      gradient.addColorStop(0, "#102536"); gradient.addColorStop(.45, "#08141f"); gradient.addColorStop(1, "#03080e");
+      ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(135,174,194,.1)"; ctx.lineWidth = 1;
+      const grid = 48;
+      for (let x = cx % grid; x < w; x += grid) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let y = cy % grid; y < h; y += grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      const maxOrbit = Math.min(w * .42, h * .43); const maxAu = Math.max(...system.planets.map((planet) => planet.semiMajorAu), 1);
+      positionsRef.current = [];
+      ctx.setLineDash([3, 6]);
+      system.planets.forEach((planet) => {
+        const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
+        ctx.strokeStyle = planet.id === selectedId ? `${planet.orbitColor}aa` : "rgba(132,164,181,.2)";
+        ctx.lineWidth = planet.id === selectedId ? 1.6 : .8; ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 32; ctx.fillStyle = "#fff1b2"; ctx.beginPath(); ctx.arc(cx, cy, 9 + system.starRadius * 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
+      system.planets.forEach((planet, index) => {
+        const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
+        const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + time * (.006 / Math.sqrt(planet.periodDays));
+        const angle = degrees * Math.PI / 180;
+        const x = cx + Math.cos(angle) * orbit * Math.cos(.18) - Math.sin(angle) * orbit * .56 * Math.sin(-.18);
+        const y = cy + Math.cos(angle) * orbit * Math.sin(-.18) + Math.sin(angle) * orbit * .56 * Math.cos(.18);
+        const radius = Math.max(4, Math.min(10, 3 + Math.log2(planet.radiusEarth + 1) * 2));
+        positionsRef.current.push({ id: planet.id, x, y, radius: radius + 7 });
+        ctx.fillStyle = planet.orbitColor; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 19 : 7;
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.68)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin(time / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
+      });
+      ctx.fillStyle = "rgba(148,179,194,.46)"; ctx.font = "9px ui-monospace, monospace"; ctx.fillText(`REAL-TIME EPHEMERIS · ${new Date().toISOString().slice(0, 19)} UTC`, 18, h - 18);
+      frame = requestAnimationFrame(draw);
+    };
+    observer = new ResizeObserver(() => undefined); observer.observe(canvas); frame = requestAnimationFrame(draw);
+    const click = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      const hit = positionsRef.current.find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
+      if (hit) selectRef.current(hit.id);
+    };
+    canvas.addEventListener("click", click);
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); };
+  }, [system, selectedId, mode, ownerLabel]);
 
-    const bg = ctx.createRadialGradient(w * 0.48, h * 0.48, 10, w * 0.48, h * 0.48, w * 0.7);
-    bg.addColorStop(0, "#102638");
-    bg.addColorStop(0.55, "#081521");
-    bg.addColorStop(1, "#040a11");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.strokeStyle = "rgba(143, 174, 194, .14)";
-    ctx.lineWidth = 1;
-    const grid = 44 * zoom;
-    for (let x = w / 2 % grid; x < w; x += grid) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-    }
-    for (let y = h / 2 % grid; y < h; y += grid) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-    }
-
-    ctx.fillStyle = "rgba(215, 235, 244, .82)";
-    knownStars.forEach(([px, py, r], i) => {
-      const x = ((px - 0.5) * zoom + 0.5) * w;
-      const y = ((py - 0.5) * zoom + 0.5) * h;
-      if (x < 0 || x > w || y < 0 || y > h) return;
-      ctx.globalAlpha = 0.58 + (i % 3) * 0.16;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-
-    const cx = w * 0.52;
-    const cy = h * 0.49;
-    ctx.strokeStyle = "rgba(255, 176, 74, .35)";
-    ctx.setLineDash([4, 6]);
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, 62 * zoom, 24 * zoom, -0.4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = "#f5f0d8";
-    ctx.shadowColor = "#cceeff";
-    ctx.shadowBlur = 15;
-    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
-
-    const angle = (candidate.periodDays + candidate.raHours * 12) % 360 * Math.PI / 180;
-    const px = cx + Math.cos(angle) * 62 * zoom;
-    const py = cy + Math.sin(angle) * 24 * zoom;
-    ctx.fillStyle = "#ffb24b";
-    ctx.shadowColor = "#ff9b37";
-    ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = "rgba(255, 178, 75, .75)";
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(px + 8, py - 8); ctx.lineTo(px + 48, py - 42); ctx.stroke();
-    ctx.fillStyle = "#ffca7d";
-    ctx.font = "600 11px ui-monospace, monospace";
-    ctx.fillText(candidate.id, px + 52, py - 42);
-    ctx.fillStyle = "rgba(210, 230, 240, .66)";
-    ctx.font = "10px ui-monospace, monospace";
-    ctx.fillText(formatRa(candidate.predictedRa), px + 52, py - 26);
-
-    ctx.fillStyle = "rgba(174, 205, 222, .48)";
-    ctx.font = "10px ui-monospace, monospace";
-    ctx.fillText("N", 18, 24);
-    ctx.fillText("E", w - 25, h - 18);
-  }, [candidate, zoom]);
-
-  return <canvas className="sky-canvas" ref={canvasRef} aria-label={`候選天體 ${candidate.id} 的預測星圖`} />;
+  return <canvas ref={canvasRef} className="orbit-canvas" aria-label={`${system.designation} 即時行星軌道圖；點擊行星可查看詳情`} />;
 }
 
 export default function Home() {
-  const [inputs, setInputs] = useState<Inputs>(defaults);
-  const [candidates, setCandidates] = useState<Candidate[]>(demoCandidates);
-  const [selectedId, setSelectedId] = useState(demoCandidates[0].id);
-  const [calculating, setCalculating] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [panel, setPanel] = useState<"lab" | "records" | "naming">("lab");
-  const [checkout, setCheckout] = useState(false);
+  const [systems, setSystems] = useState<StarSystem[]>(fallbackSystems);
+  const [packages, setPackages] = useState<NamingPackage[]>(fallbackPackages);
+  const [systemId, setSystemId] = useState(fallbackSystems[0].id);
+  const [planetId, setPlanetId] = useState(fallbackSystems[0].planets[2].id);
+  const [mode, setMode] = useState<"live" | "animation">("live");
+  const [orderPlan, setOrderPlan] = useState<NamingPackage | null>(null);
   const [orderDone, setOrderDone] = useState<string | null>(null);
-  const [packageName, setPackageName] = useState("探索者");
-  const [desiredName, setDesiredName] = useState("");
-  const [email, setEmail] = useState("");
+  const [registryOpen, setRegistryOpen] = useState(false);
+  const [registryCode, setRegistryCode] = useState("");
+  const [registry, setRegistry] = useState<Registry | null>(null);
+  const [registryError, setRegistryError] = useState("");
 
   useEffect(() => {
-    fetch("/api/candidates")
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
-      .then((data) => {
-        if (Array.isArray(data.candidates) && data.candidates.length) {
-          const hydrated = data.candidates.map((item: Candidate & { probabilitiesJson?: string }) => ({
-            ...item,
-            probabilities: item.probabilities ?? JSON.parse(item.probabilitiesJson || "[]"),
-          }));
-          setCandidates(hydrated);
-          setSelectedId(hydrated[0].id);
-        }
-      })
-      .catch(() => undefined);
+    fetch("/api/public/systems").then((response) => response.ok ? response.json() : Promise.reject()).then((data) => {
+      if (data.systems?.length) { setSystems(data.systems); setSystemId(data.systems[0].id); setPlanetId(data.systems[0].planets[0]?.id ?? ""); }
+      if (data.packages?.length) setPackages(data.packages);
+    }).catch(() => undefined);
   }, []);
 
-  const selected = useMemo(
-    () => candidates.find((candidate) => candidate.id === selectedId) ?? candidates[0],
-    [candidates, selectedId],
-  );
+  const system = useMemo(() => systems.find((item) => item.id === systemId) ?? systems[0], [systems, systemId]);
+  const planet = useMemo(() => system.planets.find((item) => item.id === planetId) ?? system.planets[0], [system, planetId]);
 
-  function updateNumber(key: keyof Inputs, value: string) {
-    setInputs((current) => ({ ...current, [key]: Number(value) }));
+  function chooseSystem(next: StarSystem) { setSystemId(next.id); setPlanetId(next.planets[0]?.id ?? ""); document.getElementById("observatory")?.scrollIntoView({ behavior: "smooth" }); }
+
+  async function submitOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!orderPlan) return;
+    const form = new FormData(event.currentTarget);
+    const response = await fetch("/api/orders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ packageId: orderPlan.id, systemId: system.id, planetId: planet.id, desiredName: form.get("desiredName"), ownerName: form.get("ownerName"), email: form.get("email"), dedication: form.get("dedication") }) });
+    const data = await response.json();
+    if (!response.ok) return window.alert(data.error ?? "申請失敗");
+    setOrderDone(data.order.id);
   }
 
-  function runCalculation(event: FormEvent) {
-    event.preventDefault();
-    setCalculating(true);
-    window.setTimeout(() => {
-      const result = calculate(inputs);
-      setCandidates((current) => [result, ...current]);
-      setSelectedId(result.id);
-      setCalculating(false);
-      fetch("/api/candidates", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(result),
-      }).catch(() => undefined);
-    }, 850);
+  async function lookupRegistry(event: FormEvent) {
+    event.preventDefault(); setRegistryError("");
+    const response = await fetch(`/api/public/registry?code=${encodeURIComponent(registryCode)}`); const data = await response.json();
+    if (!response.ok) return setRegistryError(data.error ?? "查詢失敗");
+    setRegistry(data.registry);
   }
-
-  async function placeOrder(event: FormEvent) {
-    event.preventDefault();
-    const orderId = `ORD-${Date.now().toString().slice(-7)}`;
-    try {
-      await fetch("/api/orders", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          id: orderId,
-          candidateId: selected.id,
-          desiredName,
-          email,
-          packageName,
-        }),
-      });
-    } catch {}
-    setOrderDone(orderId);
-  }
-
-  const packagePrice = packageName === "典藏者" ? 2680 : packageName === "觀測者" ? 1280 : 680;
 
   return (
     <main>
-      <header className="topbar">
-        <button className="brand" onClick={() => setPanel("lab")} aria-label="返回觀測台首頁">
-          <span className="brand-mark">N</span>
-          <span><b>NOCTUA</b><small>暗夜天體觀測台</small></span>
-        </button>
-        <nav aria-label="主要導覽">
-          <button className={panel === "lab" ? "active" : ""} onClick={() => setPanel("lab")}>推演實驗室</button>
-          <button className={panel === "records" ? "active" : ""} onClick={() => setPanel("records")}>候選紀錄</button>
-          <button className={panel === "naming" ? "active" : ""} onClick={() => setPanel("naming")}>紀念命名</button>
-        </nav>
-        <div className="observatory-status"><i /> 系統在線 <span>UTC+8</span></div>
+      <header className="site-header">
+        <a className="brand" href="#top"><span className="brand-sigil">N</span><span><b>NOCTUA</b><small>暗夜天體觀測台</small></span></a>
+        <nav><a href="#observatory">即時星系</a><a href="#discoveries">最新發布</a><a href="#registry">紀念命名</a><button onClick={() => setRegistryOpen(true)}>持有者入口</button></nav>
+        <a className="admin-link" href="/admin">後台管理 ↗</a>
       </header>
+      <div className="science-banner"><b>MODEL CANDIDATE</b> 所有天體皆為訊號推演候選體，尚非正式天文發現；位置依軌道週期與參考曆元即時計算。</div>
 
-      <div className="science-notice">
-        <span>SIMULATION / 科學推演</span>
-        本站結果是依輸入訊號產生的候選模型，不等同正式發現；紀念命名不是 IAU 官方命名。
-      </div>
-
-      {panel === "lab" && (
-        <>
-          <section className="hero-grid">
-            <div className="hero-copy">
-              <p className="eyebrow">INFERENCE ENGINE · v2.4</p>
-              <h1>從看不見的擾動，<br /><em>推回一顆星。</em></h1>
-              <p className="lede">輸入徑向速度、凌日深度與母恆星參數，估算未被直接觀測天體的質量、軌道、類型及下一個可能位置。</p>
-              <div className="hero-stats">
-                <div><b>{candidates.length.toString().padStart(2, "0")}</b><span>候選紀錄</span></div>
-                <div><b>9</b><span>輸入維度</span></div>
-                <div><b>3</b><span>分類模型</span></div>
-              </div>
-            </div>
-
-            <form className="input-console" onSubmit={runCalculation}>
-              <div className="section-heading">
-                <div><span>01</span><h2>觀測訊號</h2></div>
-                <small>所有欄位可調整</small>
-              </div>
-              <div className="method-switch" role="group" aria-label="觀測方法">
-                {["徑向速度", "凌日", "聯合擬合"].map((method) => (
-                  <button type="button" key={method} className={inputs.signalMethod === method ? "selected" : ""} onClick={() => setInputs({ ...inputs, signalMethod: method })}>{method}</button>
-                ))}
-              </div>
-              <div className="field-grid">
-                <label>母恆星赤經 <span>hr</span><input type="number" step="0.0001" value={inputs.raHours} onChange={(e) => updateNumber("raHours", e.target.value)} /></label>
-                <label>母恆星赤緯 <span>deg</span><input type="number" step="0.0001" value={inputs.decDeg} onChange={(e) => updateNumber("decDeg", e.target.value)} /></label>
-                <label>距離 <span>pc</span><input type="number" min="0.1" step="0.1" value={inputs.distancePc} onChange={(e) => updateNumber("distancePc", e.target.value)} /></label>
-                <label>恆星質量 <span>M☉</span><input type="number" min="0.08" step="0.01" value={inputs.starMass} onChange={(e) => updateNumber("starMass", e.target.value)} /></label>
-                <label>徑向速度振幅 <span>m/s</span><input type="number" min="0" step="0.1" value={inputs.radialVelocity} onChange={(e) => updateNumber("radialVelocity", e.target.value)} /></label>
-                <label>軌道週期 <span>day</span><input type="number" min="0.1" step="0.1" value={inputs.orbitalPeriod} onChange={(e) => updateNumber("orbitalPeriod", e.target.value)} /></label>
-                <label>軌道偏心率 <span>e</span><input type="number" min="0" max="0.95" step="0.01" value={inputs.eccentricity} onChange={(e) => updateNumber("eccentricity", e.target.value)} /></label>
-                <label>凌日深度 <span>ppm</span><input type="number" min="0" step="10" value={inputs.transitDepth} onChange={(e) => updateNumber("transitDepth", e.target.value)} /></label>
-              </div>
-              <details>
-                <summary>位置推演進階參數</summary>
-                <div className="field-grid compact">
-                  <label>母恆星半徑 <span>R☉</span><input type="number" min="0.1" step="0.01" value={inputs.starRadius} onChange={(e) => updateNumber("starRadius", e.target.value)} /></label>
-                  <label>軌道相位 <span>deg</span><input type="number" min="0" max="360" value={inputs.phase} onChange={(e) => updateNumber("phase", e.target.value)} /></label>
-                  <label>位置角 <span>deg</span><input type="number" min="0" max="360" value={inputs.positionAngle} onChange={(e) => updateNumber("positionAngle", e.target.value)} /></label>
-                </div>
-              </details>
-              <button className="calculate-button" type="submit" disabled={calculating}>
-                <span>{calculating ? "正在求解軌道…" : "執行天體推演"}</span><b>→</b>
-              </button>
-            </form>
-          </section>
-
-          <section className="result-section">
-            <div className="section-heading large">
-              <div><span>02</span><h2>最新候選解</h2></div>
-              <div className="solution-badge"><i /> SOLUTION CONVERGED</div>
-            </div>
-            <div className="result-grid">
-              <article className="candidate-card">
-                <div className="candidate-topline"><span>{selected.id}</span><small>MODEL CONFIDENCE</small></div>
-                <div className="candidate-core">
-                  <div className="planet-orb" aria-hidden="true"><i /></div>
-                  <div>
-                    <p>最可能類型</p>
-                    <h3>{selected.type}</h3>
-                    <div className="confidence"><span style={{ width: `${selected.confidence}%` }} /><b>{selected.confidence}%</b></div>
-                  </div>
-                </div>
-                <div className="probability-list">
-                  {selected.probabilities.map((probability) => (
-                    <div key={probability.label}><span>{probability.label}</span><i><b style={{ width: `${probability.value}%` }} /></i><strong>{probability.value}%</strong></div>
-                  ))}
-                </div>
-              </article>
-
-              <article className="metric-panel">
-                <div className="metric"><span>最低質量</span><b>{selected.minimumMassJupiter.toFixed(3)}</b><small>M♃</small></div>
-                <div className="metric"><span>估計半徑</span><b>{selected.radiusEarth.toFixed(2)}</b><small>R⊕</small></div>
-                <div className="metric"><span>半長軸</span><b>{selected.semiMajorAu.toFixed(3)}</b><small>AU</small></div>
-                <div className="metric"><span>平衡溫度</span><b>{Math.round(selected.equilibriumTemp)}</b><small>K</small></div>
-                <div className="position-box">
-                  <p>預測天球座標 <span>± {Math.max(0.8, 10 - selected.confidence / 10).toFixed(1)} mas</span></p>
-                  <b>{formatRa(selected.predictedRa)}</b>
-                  <b>{formatDec(selected.predictedDec)}</b>
-                </div>
-              </article>
-
-              <article className="map-panel">
-                <div className="map-head"><div><span>預測星圖</span><small>視場中心：{selected.id}</small></div><div className="zoom"><button onClick={() => setZoom((z) => clamp(z - 0.2, 0.7, 1.8))} aria-label="縮小星圖">−</button><span>{zoom.toFixed(1)}×</span><button onClick={() => setZoom((z) => clamp(z + 0.2, 0.7, 1.8))} aria-label="放大星圖">＋</button></div></div>
-                <SkyMap candidate={selected} zoom={zoom} />
-                <div className="map-legend"><span><i className="host" />母恆星</span><span><i className="candidate" />候選天體</span><span>視角分離 {selected.angularSeparationMas.toFixed(2)} mas</span></div>
-              </article>
-            </div>
-          </section>
-        </>
-      )}
-
-      {panel === "records" && (
-        <section className="page-section records-page">
-          <div className="page-title"><p className="eyebrow">ARCHIVE / PERSISTENT RECORDS</p><h1>候選天體紀錄庫</h1><p>每次推演都保存輸入與模型輸出，方便後續比對觀測資料。</p></div>
-          <div className="record-toolbar"><span>{candidates.length} 筆候選</span><button onClick={() => setPanel("lab")}>＋ 新增推演</button></div>
-          <div className="record-table" role="table" aria-label="候選天體紀錄">
-            <div className="record-row header" role="row"><span>候選編號</span><span>推測類型</span><span>位置（RA / DEC）</span><span>軌道週期</span><span>信心</span><span /></div>
-            {candidates.map((candidate) => (
-              <button className="record-row" role="row" key={candidate.id} onClick={() => { setSelectedId(candidate.id); setPanel("lab"); }}>
-                <span><b>{candidate.id}</b><small>{new Date(candidate.createdAt).toLocaleDateString("zh-TW")}</small></span>
-                <span>{candidate.type}</span>
-                <span className="mono">{formatRa(candidate.predictedRa)}<small>{formatDec(candidate.predictedDec)}</small></span>
-                <span>{candidate.periodDays.toFixed(1)} 日</span>
-                <span><i className="mini-confidence"><b style={{ width: `${candidate.confidence}%` }} /></i>{candidate.confidence}%</span>
-                <span>查看 →</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {panel === "naming" && (
-        <section className="page-section naming-page">
-          <div className="naming-intro">
-            <p className="eyebrow">PERSONAL COMMEMORATION</p>
-            <h1>讓一個夜空座標，<br /><em>記得一個名字。</em></h1>
-            <p>選擇候選天體，建立私人典藏用紀念名稱、數位證書與專屬星圖。這是一項文化紀念服務，不會改變天體的科學編號或 IAU 官方名稱。</p>
-            <div className="selected-target"><span>目前選擇</span><b>{selected.id}</b><small>{selected.type} · {formatRa(selected.predictedRa)}</small></div>
-          </div>
-          <div className="package-grid">
-            {[
-              { name: "探索者", price: 680, note: "數位命名證書", detail: "HD 星圖 · 候選資料卡" },
-              { name: "觀測者", price: 1280, note: "典藏版數位證書", detail: "4K 星圖 · 軌道推演報告", featured: true },
-              { name: "典藏者", price: 2680, note: "完整紀念檔案", detail: "可列印證書 · 年度位置更新" },
-            ].map((item) => (
-              <article className={item.featured ? "package featured" : "package"} key={item.name}>
-                {item.featured && <span className="popular">最多人選</span>}
-                <p>{item.name}</p><h3>NT$ {item.price.toLocaleString()}</h3><b>{item.note}</b><small>{item.detail}</small>
-                <button onClick={() => { setPackageName(item.name); setCheckout(true); setOrderDone(null); }}>選擇方案 →</button>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <footer><div><span className="brand-mark small">N</span><b>NOCTUA 暗夜天體觀測台</b></div><p>模型輸出僅供教育、研究假設與紀念用途。© 2026</p></footer>
-
-      {checkout && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => setCheckout(false)}>
-          <section className="checkout" role="dialog" aria-modal="true" aria-labelledby="checkout-title" onMouseDown={(e) => e.stopPropagation()}>
-            <button className="close" onClick={() => setCheckout(false)} aria-label="關閉">×</button>
-            {!orderDone ? (
-              <form onSubmit={placeOrder}>
-                <p className="eyebrow">MEMORIAL REGISTRY</p>
-                <h2 id="checkout-title">建立紀念命名</h2>
-                <div className="order-summary"><span>{packageName}方案 · {selected.id}</span><b>NT$ {packagePrice.toLocaleString()}</b></div>
-                <label>想記錄的名稱<input required maxLength={40} value={desiredName} onChange={(e) => setDesiredName(e.target.value)} placeholder="例如：Asteria" /></label>
-                <label>收件電子郵件<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" /></label>
-                <label className="consent"><input required type="checkbox" />我了解此服務為私人紀念證書，不是官方天體命名權。</label>
-                <div className="payment-demo"><span>測試付款流程</span><p>此展示版不會收取費用；正式上線前需串接合法金流服務。</p></div>
-                <button className="purchase-button" type="submit">建立測試訂單 <span>→</span></button>
-              </form>
-            ) : (
-              <div className="order-complete">
-                <div className="seal">N</div><p>紀念登錄已建立</p><h2>{desiredName}</h2><span>對應候選天體 {selected.id}</span>
-                <div><small>登錄編號</small><b>{orderDone}</b></div>
-                <button onClick={() => setCheckout(false)}>完成</button>
-              </div>
-            )}
-          </section>
+      <section className="observatory" id="observatory">
+        <div className="observatory-head" id="top">
+          <div><p className="eyebrow">LIVE SYSTEM / {system.id}</p><h1>{system.displayName ?? system.designation}</h1><p>{system.summary}</p></div>
+          <div className="system-coordinates"><span>RA <b>{formatRa(system.raHours)}</b></span><span>DEC <b>{formatDec(system.decDeg)}</b></span><span>DIST <b>{system.distancePc.toFixed(1)} pc</b></span></div>
         </div>
-      )}
+        <div className="observatory-grid">
+          <article className="system-viewport">
+            <div className="viewport-toolbar"><div><i /> LIVE POSITION <span>{system.planets.length} PLANETS</span></div><div className="mode-switch"><button className={mode === "live" ? "active" : ""} onClick={() => setMode("live")}>即時位置</button><button className={mode === "animation" ? "active" : ""} onClick={() => setMode("animation")}>動畫預覽</button></div></div>
+            <OrbitCanvas system={system} selectedId={planet.id} onSelect={setPlanetId} mode={mode} />
+            <div className="viewport-foot"><span>視野：約 {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>點擊軌道上的行星查看資料</span></div>
+          </article>
+          <aside className="planet-inspector">
+            <div className="inspector-title"><span style={{ background: planet.orbitColor }} /><div><p>SELECTED BODY</p><h2>{planet.displayName ?? planet.code}</h2><small>{planet.type}</small></div></div>
+            <div className="planet-metrics"><div><span>質量</span><b>{planet.massEarth.toFixed(2)} M⊕</b></div><div><span>半徑</span><b>{planet.radiusEarth.toFixed(2)} R⊕</b></div><div><span>公轉週期</span><b>{planet.periodDays.toFixed(2)} 日</b></div><div><span>平衡溫度</span><b>{planet.equilibriumTemp} K</b></div></div>
+            <div className="data-block"><p>主要成分</p>{planet.composition.map((item) => <div className="composition" key={item.label}><span>{item.label}</span><i><b style={{ width: `${item.value}%`, background: item.color }} /></i><strong>{item.value}%</strong></div>)}</div>
+            <div className="data-block compact"><p>大氣與狀態</p><b>{planet.atmosphere}</b><small>{planet.state}</small></div>
+            <div className="bio-card"><div><span>生物條件預測</span><b>{planet.bioScore}%</b></div><i><b style={{ width: `${planet.bioScore}%` }} /></i><p>{planet.bioPrediction}</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <section className="discoveries" id="discoveries">
+        <div className="section-title"><div><p className="eyebrow">PUBLISHED SYSTEMS</p><h2>最新發布的候選星系</h2></div><span>後台審核後公開 · 資料即時更新</span></div>
+        <div className="system-list">
+          {systems.map((item, index) => <button key={item.id} className={item.id === system.id ? "system-row active" : "system-row"} onClick={() => chooseSystem(item)}><span className="system-index">{String(index + 1).padStart(2, "0")}</span><span><b>{item.designation}</b><small>{item.classification}</small></span><span><b>{item.planets.length}</b><small>行星候選體</small></span><span><b>{item.confidence}%</b><small>模型信心</small></span><span><b>{item.distancePc.toFixed(1)} pc</b><small>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("zh-TW") : "待發布"}</small></span><span>開啟星系 →</span></button>)}
+        </div>
+      </section>
+
+      <section className="registry-section" id="registry">
+        <div className="registry-copy"><p className="eyebrow">PRIVATE CELESTIAL REGISTRY</p><h2>把一個名字，<br /><em>留在它的軌道上。</em></h2><p>完成確認後，持有者會取得唯一恆星體系編號、個人化命名證書，以及依即時軌道資料生成的專屬動畫。</p><button onClick={() => setRegistryOpen(true)}>已有登錄編號？開啟專屬星系 →</button></div>
+        <div className="package-list">{packages.map((item, index) => <article key={item.id} className={index === 1 ? "package-card featured" : "package-card"}><div><span>{item.name}</span>{index === 1 && <i>推薦</i>}</div><h3>NT$ {item.priceTwd.toLocaleString()}</h3><p>{item.description}</p><ul>{item.features.map((feature) => <li key={feature}>＋ {feature}</li>)}</ul><button onClick={() => { setOrderPlan(item); setOrderDone(null); }}>選擇此方案</button></article>)}</div>
+      </section>
+
+      <footer><div className="brand"><span className="brand-sigil small">N</span><span><b>NOCTUA</b><small>暗夜天體觀測台</small></span></div><p>科學模型輸出僅供教育、研究假設與私人紀念用途。紀念命名不是 IAU 官方命名。</p><a href="/admin">管理後台</a></footer>
+
+      {orderPlan && <div className="modal-shell" onMouseDown={() => setOrderPlan(null)}><section className="order-modal" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setOrderPlan(null)}>×</button>{orderDone ? <div className="order-success"><span>✓</span><p>登錄申請已建立</p><h2>{orderDone}</h2><small>付款確認後，管理員會核發專屬登錄編號與動畫入口。</small><button onClick={() => setOrderPlan(null)}>完成</button></div> : <form onSubmit={submitOrder}><p className="eyebrow">MEMORIAL ORDER</p><h2>{orderPlan.name}方案</h2><div className="order-target"><span>登錄目標</span><b>{system.designation} · {planet.code.split(" ").at(-1)}</b></div><label>紀念名稱<input name="desiredName" required maxLength={40} placeholder="例如 Asteria" /></label><label>持有者姓名<input name="ownerName" required maxLength={60} /></label><label>電子郵件<input name="email" required type="email" /></label><label>獻詞<textarea name="dedication" maxLength={240} rows={3} placeholder="想留在證書上的一句話" /></label><div className="demo-payment">目前為訂單與登錄流程；正式收款需接上金流服務。</div><button className="primary-action" type="submit">建立 NT$ {orderPlan.priceTwd.toLocaleString()} 登錄申請 →</button></form>}</section></div>}
+
+      {registryOpen && <div className="modal-shell" onMouseDown={() => setRegistryOpen(false)}><section className={registry ? "owner-modal active" : "owner-modal"} onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => { setRegistryOpen(false); setRegistry(null); }}>×</button>{!registry ? <form onSubmit={lookupRegistry}><p className="eyebrow">OWNER ACCESS</p><h2>開啟你的專屬星系</h2><p>輸入付款確認後取得的 NOCTUA 登錄編號。</p><label>登錄編號<input value={registryCode} onChange={(event) => setRegistryCode(event.target.value.toUpperCase())} required placeholder="NOR-XXXXXXXX" /></label>{registryError && <span className="form-error">{registryError}</span>}<button className="primary-action" type="submit">驗證並開啟 →</button></form> : <div className="owner-experience"><div className="owner-sky"><OrbitCanvas system={registry.system} selectedId={registry.system.planets[0].id} onSelect={() => undefined} mode="animation" ownerLabel={registry.order.desiredName} /></div><div className="owner-certificate"><p>NOCTUA PRIVATE REGISTRY</p><h2>{registry.order.desiredName}</h2><span>紀念登錄持有者 · {registry.order.ownerName}</span><div><small>專屬恆星體系編號</small><b>{registry.order.registryCode}</b><small>科學編號</small><b>{registry.system.designation}</b></div>{registry.order.dedication && <blockquote>「{registry.order.dedication}」</blockquote>}<button onClick={() => { setRegistry(null); setRegistryCode(""); }}>返回查詢</button></div></div>}</section></div>}
     </main>
   );
 }

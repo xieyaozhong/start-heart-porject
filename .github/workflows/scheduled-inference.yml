@@ -1,0 +1,19 @@
+name: NOCTUA scheduled inference
+
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  infer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger scheduled inference
+        env:
+          CRON_SECRET: ${{ secrets.NOCTUA_CRON_SECRET }}
+        run: |
+          curl --fail-with-body --retry 3 \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "https://noctua-celestial-lab.yao1230.chatgpt.site/api/cron/infer"

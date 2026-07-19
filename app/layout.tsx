@@ -7,15 +7,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "noctua.local";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "NOCTUA｜暗夜天體觀測台";
-  const description = "從間接觀測訊號推演未被直接觀測天體的質量、類型、軌道與可能位置。";
-
+  const title = "NOCTUA｜即時星系觀測與紀念登錄";
+  const description = "探索推演候選星系的即時軌道、行星類型、成分、環境狀態與生物條件預測。";
   return {
     title,
     description,
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
-    openGraph: { title, description, type: "website", images: [`${origin}/og.png`] },
-    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og.png`] },
+    openGraph: { title, description, type: "website", images: [`${origin}/og-v2.png`] },
+    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og-v2.png`] },
   };
 }
 
