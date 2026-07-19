@@ -10,10 +10,13 @@ test("defines the live public observatory and owner experience", async () => {
   ]);
   assert.match(layout, /NOCTUA/);
   assert.match(page, /OrbitCanvas/);
+  assert.match(page, /SolarSystemCanvas/);
+  assert.match(page, /SOLAR DYNAMICS/);
   assert.match(page, /REAL-TIME EPHEMERIS/);
   assert.match(page, /bioPrediction/);
   assert.match(page, /OWNER ACCESS/);
   assert.match(css, /\.orbit-canvas/);
+  assert.match(css, /\.solar-canvas/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
 });
 

@@ -15,6 +15,21 @@ type StarSystem = {
 };
 type NamingPackage = { id: string; name: string; priceTwd: number; description: string; features: string[] };
 type Registry = { order: { registryCode: string; desiredName: string; ownerName: string; dedication: string; packageName: string }; system: StarSystem };
+type SolarBody = {
+  id: string; name: string; english: string; type: string; au: number; periodDays: number; radiusEarth: number;
+  color: string; accent: string; epochAngle: number; temperature: string; moons: number; summary: string;
+};
+
+const solarBodies: SolarBody[] = [
+  { id: "mercury", name: "水星", english: "MERCURY", type: "岩質行星", au: .387, periodDays: 88, radiusEarth: .383, color: "#8f8b84", accent: "#d6d0c5", epochAngle: 196, temperature: "−180～430°C", moons: 0, summary: "最接近太陽的行星，表面布滿撞擊坑，晝夜溫差極大。" },
+  { id: "venus", name: "金星", english: "VENUS", type: "岩質行星", au: .723, periodDays: 224.7, radiusEarth: .949, color: "#c98643", accent: "#ffe0a1", epochAngle: 34, temperature: "約 465°C", moons: 0, summary: "被濃厚二氧化碳大氣包覆，是太陽系中表面最炙熱的行星。" },
+  { id: "earth", name: "地球", english: "EARTH", type: "海洋岩質行星", au: 1, periodDays: 365.25, radiusEarth: 1, color: "#2876a9", accent: "#80d5e8", epochAngle: 112, temperature: "平均 15°C", moons: 1, summary: "目前唯一確認擁有生命的世界，液態海洋覆蓋大部分表面。" },
+  { id: "mars", name: "火星", english: "MARS", type: "岩質行星", au: 1.524, periodDays: 687, radiusEarth: .532, color: "#a94d2f", accent: "#ef946c", epochAngle: 248, temperature: "平均 −63°C", moons: 2, summary: "寒冷乾燥的紅色行星，保留古代河道與可能曾有液態水的證據。" },
+  { id: "jupiter", name: "木星", english: "JUPITER", type: "氣態巨行星", au: 5.203, periodDays: 4332.6, radiusEarth: 11.21, color: "#b98b68", accent: "#f0d1a8", epochAngle: 302, temperature: "雲頂約 −110°C", moons: 95, summary: "太陽系最大的行星，強大磁場與大紅斑風暴共同塑造它的外觀。" },
+  { id: "saturn", name: "土星", english: "SATURN", type: "環系氣態巨行星", au: 9.537, periodDays: 10759, radiusEarth: 9.45, color: "#c7a56c", accent: "#ffe2a5", epochAngle: 8, temperature: "雲頂約 −140°C", moons: 146, summary: "擁有太陽系最醒目的冰粒環系，密度甚至低於液態水。" },
+  { id: "uranus", name: "天王星", english: "URANUS", type: "冰巨行星", au: 19.19, periodDays: 30687, radiusEarth: 4.01, color: "#70b9bf", accent: "#c0f5ed", epochAngle: 138, temperature: "雲頂約 −195°C", moons: 28, summary: "自轉軸幾乎側躺在軌道面上，淡青色來自大氣中的甲烷。" },
+  { id: "neptune", name: "海王星", english: "NEPTUNE", type: "冰巨行星", au: 30.07, periodDays: 60190, radiusEarth: 3.88, color: "#3559a8", accent: "#769cff", epochAngle: 218, temperature: "雲頂約 −200°C", moons: 16, summary: "最外側的主要行星，深藍大氣中吹著太陽系最快的風。" },
+];
 
 const fallbackSystems: StarSystem[] = [{
   id: "SYS-NX-001", designation: "NOCTUA-X1", displayName: null, classification: "G8V 黃矮星", raHours: 19.8464, decDeg: 8.8683,
@@ -41,6 +56,171 @@ function formatRa(hours: number) {
 
 function formatDec(value: number) { return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(4)}°`; }
 
+function seeded(index: number, salt: number) {
+  const value = Math.sin(index * 91.733 + salt * 17.17) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function paintStarField(ctx: CanvasRenderingContext2D, w: number, h: number, time: number, count = 150) {
+  for (let index = 0; index < count; index += 1) {
+    const x = seeded(index, 2) * w;
+    const y = seeded(index, 7) * h;
+    const size = .35 + seeded(index, 11) * 1.35;
+    const twinkle = .28 + .52 * (.5 + .5 * Math.sin(time * .0012 + seeded(index, 13) * 12));
+    ctx.fillStyle = `rgba(${index % 9 === 0 ? "181,211,255" : "225,238,244"},${twinkle})`;
+    ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
+    if (size > 1.35) {
+      ctx.strokeStyle = `rgba(205,226,255,${twinkle * .3})`; ctx.lineWidth = .6;
+      ctx.beginPath(); ctx.moveTo(x - 3.5, y); ctx.lineTo(x + 3.5, y); ctx.moveTo(x, y - 3.5); ctx.lineTo(x, y + 3.5); ctx.stroke();
+    }
+  }
+}
+
+function SolarSystemCanvas({ selectedId, onSelect, speed, paused }: { selectedId: string; onSelect: (id: string) => void; speed: number; paused: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const positionsRef = useRef<{ id: string; x: number; y: number; radius: number }[]>([]);
+  const simulationDaysRef = useRef(0);
+  const previousTimeRef = useRef<number | null>(null);
+  const selectRef = useRef(onSelect);
+  selectRef.current = onSelect;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = 0;
+    let observer: ResizeObserver | null = null;
+    const draw = (time: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
+        canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const previous = previousTimeRef.current ?? time;
+      const deltaSeconds = Math.min((time - previous) / 1000, .1);
+      previousTimeRef.current = time;
+      if (!paused && !reduceMotion) simulationDaysRef.current += deltaSeconds * speed * 6;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const w = rect.width; const h = rect.height; const cx = w * .5; const cy = h * .51;
+      const space = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .78);
+      space.addColorStop(0, "#0c2032"); space.addColorStop(.42, "#061322"); space.addColorStop(1, "#01050b");
+      ctx.fillStyle = space; ctx.fillRect(0, 0, w, h);
+
+      const nebula = ctx.createRadialGradient(w * .16, h * .18, 0, w * .16, h * .18, w * .55);
+      nebula.addColorStop(0, "rgba(40,94,139,.17)"); nebula.addColorStop(.5, "rgba(33,49,92,.06)"); nebula.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
+      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(120, Math.floor(w * h / 3300)));
+
+      const tilt = -.11; const flatten = .47; const maxOrbit = Math.min(w * .455, h * .455);
+      const orbitRadius = (au: number) => 34 + Math.pow(au / 30.07, .24) * (maxOrbit - 34);
+      const transformPoint = (angle: number, radius: number) => {
+        const ox = Math.cos(angle) * radius; const oy = Math.sin(angle) * radius * flatten;
+        return { x: cx + ox * Math.cos(tilt) - oy * Math.sin(tilt), y: cy + ox * Math.sin(tilt) + oy * Math.cos(tilt) };
+      };
+
+      const beltInner = orbitRadius(2.1); const beltOuter = orbitRadius(3.35);
+      for (let index = 0; index < 330; index += 1) {
+        const beltRadius = beltInner + seeded(index, 22) * (beltOuter - beltInner);
+        const angle = seeded(index, 19) * Math.PI * 2 + simulationDaysRef.current * .00035;
+        const dot = transformPoint(angle, beltRadius);
+        ctx.fillStyle = `rgba(184,177,161,${.09 + seeded(index, 4) * .23})`;
+        ctx.fillRect(dot.x, dot.y, .45 + seeded(index, 9), .45 + seeded(index, 9));
+      }
+
+      solarBodies.forEach((body) => {
+        const orbit = orbitRadius(body.au);
+        ctx.strokeStyle = body.id === selectedId ? `${body.accent}8c` : "rgba(146,178,199,.16)";
+        ctx.lineWidth = body.id === selectedId ? 1.45 : .7;
+        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * flatten, tilt, 0, Math.PI * 2); ctx.stroke();
+      });
+
+      const sunPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 700) * .035;
+      const corona = ctx.createRadialGradient(cx, cy, 3, cx, cy, 54 * sunPulse);
+      corona.addColorStop(0, "rgba(255,248,201,1)"); corona.addColorStop(.2, "rgba(255,194,78,.9)"); corona.addColorStop(.48, "rgba(255,122,34,.25)"); corona.addColorStop(1, "rgba(255,104,20,0)");
+      ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, 54 * sunPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00003);
+      for (let ray = 0; ray < 18; ray += 1) {
+        ctx.rotate(Math.PI / 9); ctx.strokeStyle = `rgba(255,174,64,${.06 + (ray % 3) * .025})`;
+        ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(34 + (ray % 4) * 5, 0); ctx.stroke();
+      }
+      ctx.restore();
+      const sun = ctx.createRadialGradient(cx - 7, cy - 8, 2, cx, cy, 22);
+      sun.addColorStop(0, "#fffce3"); sun.addColorStop(.36, "#ffe285"); sun.addColorStop(.74, "#ff9e32"); sun.addColorStop(1, "#d95718");
+      ctx.fillStyle = sun; ctx.shadowColor = "#ffb53f"; ctx.shadowBlur = 26; ctx.beginPath(); ctx.arc(cx, cy, 19, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255,222,148,.72)";
+      for (let spot = 0; spot < 7; spot += 1) { const a = time * .00012 + spot * 2.31; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (5 + spot % 3 * 3), cy + Math.sin(a * .77) * 9, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
+
+      positionsRef.current = [];
+      solarBodies.forEach((body, index) => {
+        const orbit = orbitRadius(body.au);
+        const angle = (body.epochAngle + simulationDaysRef.current / body.periodDays * 360) * Math.PI / 180;
+        const point = transformPoint(angle, orbit);
+        const radius = Math.max(3.3, Math.min(12.5, 3.1 + Math.log2(body.radiusEarth + 1) * 2.45));
+        positionsRef.current.push({ id: body.id, x: point.x, y: point.y, radius: radius + 10 });
+
+        ctx.strokeStyle = `${body.accent}${body.id === selectedId ? "90" : "32"}`; ctx.lineWidth = body.id === selectedId ? 2 : .8;
+        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * flatten, tilt, angle - (body.id === selectedId ? .72 : .22), angle); ctx.stroke();
+
+        if (body.id === "saturn" || body.id === "uranus") {
+          ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(body.id === "uranus" ? 1.12 : -.19);
+          ctx.strokeStyle = body.id === "saturn" ? "rgba(229,205,154,.72)" : "rgba(161,222,221,.42)";
+          ctx.lineWidth = body.id === "saturn" ? 3.2 : 1.4; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.9, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+        }
+
+        const sphere = ctx.createRadialGradient(point.x - radius * .4, point.y - radius * .42, radius * .08, point.x, point.y, radius * 1.1);
+        sphere.addColorStop(0, body.accent); sphere.addColorStop(.48, body.color); sphere.addColorStop(1, "#07101a");
+        ctx.fillStyle = sphere; ctx.shadowColor = body.accent; ctx.shadowBlur = body.id === selectedId ? 22 : 7;
+        ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+
+        if (body.radiusEarth > 3) {
+          ctx.save(); ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.clip();
+          ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = Math.max(.7, radius * .1);
+          for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(point.x - radius, point.y + band * radius * .3); ctx.lineTo(point.x + radius, point.y + band * radius * .3); ctx.stroke(); }
+          ctx.restore();
+        }
+        if (body.id === "earth") {
+          const moonAngle = time * .001; ctx.fillStyle = "#d8d5cc"; ctx.beginPath(); ctx.arc(point.x + Math.cos(moonAngle) * (radius + 5), point.y + Math.sin(moonAngle) * (radius + 5), 1.2, 0, Math.PI * 2); ctx.fill();
+        }
+
+        if (body.id === selectedId) {
+          const pulse = radius + 7 + Math.sin((reduceMotion ? 0 : time) / 260) * 2;
+          ctx.strokeStyle = "rgba(236,247,255,.82)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(point.x, point.y, pulse, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = `${body.accent}45`; ctx.beginPath(); ctx.arc(point.x, point.y, pulse + 5, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.fillStyle = body.id === selectedId ? "#f4f9fb" : "rgba(184,205,216,.64)";
+        ctx.font = `${body.id === selectedId ? "600" : "400"} 9px ui-monospace, monospace`;
+        const labelX = point.x > cx ? point.x + radius + 7 : point.x - radius - 7 - ctx.measureText(body.name).width;
+        ctx.fillText(body.name, labelX, point.y - radius - 3);
+        if (body.id === selectedId) {
+          ctx.fillStyle = "rgba(132,163,181,.7)"; ctx.font = "7px ui-monospace, monospace";
+          ctx.fillText(`${body.au.toFixed(body.au < 10 ? 3 : 2)} AU`, labelX, point.y - radius + 8);
+        }
+      });
+
+      ctx.fillStyle = "rgba(137,167,184,.5)"; ctx.font = "8px ui-monospace, monospace";
+      ctx.fillText(`SOLAR DYNAMICS · T+${simulationDaysRef.current.toFixed(1)} DAYS`, 18, h - 17);
+      frame = requestAnimationFrame(draw);
+    };
+    observer = new ResizeObserver(() => undefined); observer.observe(canvas); frame = requestAnimationFrame(draw);
+    const click = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      const hit = positionsRef.current.find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
+      if (hit) selectRef.current(hit.id);
+    };
+    const move = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      canvas.style.cursor = positionsRef.current.some((position) => Math.hypot(position.x - x, position.y - y) <= position.radius) ? "pointer" : "crosshair";
+    };
+    canvas.addEventListener("click", click); canvas.addEventListener("mousemove", move);
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
+  }, [selectedId, speed, paused]);
+
+  return <canvas ref={canvasRef} className="solar-canvas" aria-label="太陽與八大行星公轉動畫；點擊行星可查看資訊" />;
+}
+
 function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { system: StarSystem; selectedId: string; onSelect: (id: string) => void; mode: "live" | "animation"; ownerLabel?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const positionsRef = useRef<{ id: string; x: number; y: number; radius: number }[]>([]);
@@ -50,6 +230,7 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     let observer: ResizeObserver | null = null;
     const draw = (time: number) => {
@@ -63,34 +244,57 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       const w = rect.width; const h = rect.height; const cx = w * .49; const cy = h * .5;
       const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .72);
-      gradient.addColorStop(0, "#102536"); gradient.addColorStop(.45, "#08141f"); gradient.addColorStop(1, "#03080e");
+      gradient.addColorStop(0, "#102b3c"); gradient.addColorStop(.42, "#071827"); gradient.addColorStop(1, "#02070d");
       ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = "rgba(135,174,194,.1)"; ctx.lineWidth = 1;
+      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(90, Math.floor(w * h / 4200)));
+      const scan = ctx.createLinearGradient(0, 0, 0, h);
+      scan.addColorStop(0, "rgba(80,151,188,.02)"); scan.addColorStop(.5, "rgba(80,151,188,.08)"); scan.addColorStop(.501, "rgba(80,151,188,.015)"); scan.addColorStop(1, "rgba(80,151,188,.02)");
+      ctx.fillStyle = scan; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(135,174,194,.065)"; ctx.lineWidth = 1;
       const grid = 48;
       for (let x = cx % grid; x < w; x += grid) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
       for (let y = cy % grid; y < h; y += grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
       const maxOrbit = Math.min(w * .42, h * .43); const maxAu = Math.max(...system.planets.map((planet) => planet.semiMajorAu), 1);
+      const habitableInner = 48 + Math.sqrt(Math.min(.8 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
+      const habitableOuter = 48 + Math.sqrt(Math.min(1.5 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
+      ctx.save(); ctx.strokeStyle = "rgba(78,183,142,.06)"; ctx.lineWidth = Math.max(4, (habitableOuter - habitableInner) * .55); ctx.beginPath();
+      ctx.ellipse(cx, cy, (habitableInner + habitableOuter) * .5, (habitableInner + habitableOuter) * .28, -.18, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       positionsRef.current = [];
-      ctx.setLineDash([3, 6]);
+      ctx.setLineDash([2, 6]);
       system.planets.forEach((planet) => {
         const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
         ctx.strokeStyle = planet.id === selectedId ? `${planet.orbitColor}aa` : "rgba(132,164,181,.2)";
         ctx.lineWidth = planet.id === selectedId ? 1.6 : .8; ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, 0, Math.PI * 2); ctx.stroke();
       });
       ctx.setLineDash([]);
-      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 32; ctx.fillStyle = "#fff1b2"; ctx.beginPath(); ctx.arc(cx, cy, 9 + system.starRadius * 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      const starRadius = 9 + system.starRadius * 5;
+      const starPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 680) * .045;
+      const corona = ctx.createRadialGradient(cx, cy, starRadius * .2, cx, cy, starRadius * 4.2 * starPulse);
+      corona.addColorStop(0, "rgba(255,246,194,1)"); corona.addColorStop(.24, "rgba(255,190,75,.78)"); corona.addColorStop(.6, "rgba(255,117,34,.16)"); corona.addColorStop(1, "rgba(255,102,24,0)");
+      ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, starRadius * 4.2 * starPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00005);
+      for (let ray = 0; ray < 14; ray += 1) { ctx.rotate(Math.PI / 7); ctx.strokeStyle = "rgba(255,181,74,.11)"; ctx.beginPath(); ctx.moveTo(starRadius * 1.25, 0); ctx.lineTo(starRadius * (1.8 + ray % 3 * .25), 0); ctx.stroke(); }
+      ctx.restore();
+      const stellarSurface = ctx.createRadialGradient(cx - starRadius * .35, cy - starRadius * .38, 1, cx, cy, starRadius);
+      stellarSurface.addColorStop(0, "#fffde3"); stellarSurface.addColorStop(.42, "#ffe18a"); stellarSurface.addColorStop(.78, "#ff9d35"); stellarSurface.addColorStop(1, "#ce4b18");
+      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(cx, cy, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
       const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
       system.planets.forEach((planet, index) => {
         const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
-        const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + time * (.006 / Math.sqrt(planet.periodDays));
+        const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + (reduceMotion ? 0 : time) * (.006 / Math.sqrt(planet.periodDays));
         const angle = degrees * Math.PI / 180;
         const x = cx + Math.cos(angle) * orbit * Math.cos(.18) - Math.sin(angle) * orbit * .56 * Math.sin(-.18);
         const y = cy + Math.cos(angle) * orbit * Math.sin(-.18) + Math.sin(angle) * orbit * .56 * Math.cos(.18);
         const radius = Math.max(4, Math.min(10, 3 + Math.log2(planet.radiusEarth + 1) * 2));
         positionsRef.current.push({ id: planet.id, x, y, radius: radius + 7 });
-        ctx.fillStyle = planet.orbitColor; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 19 : 7;
+        ctx.strokeStyle = `${planet.orbitColor}${planet.id === selectedId ? "9c" : "35"}`; ctx.lineWidth = planet.id === selectedId ? 1.8 : .7;
+        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, angle - (planet.id === selectedId ? .82 : .24), angle); ctx.stroke();
+        const sphere = ctx.createRadialGradient(x - radius * .42, y - radius * .42, radius * .06, x, y, radius * 1.18);
+        sphere.addColorStop(0, "#f5f0df"); sphere.addColorStop(.28, planet.orbitColor); sphere.addColorStop(1, "#06101a");
+        ctx.fillStyle = sphere; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 22 : 8;
         ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-        if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.68)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin(time / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
+        if (planet.radiusEarth > 5) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.19)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
+        if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
         ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
       });
       ctx.fillStyle = "rgba(148,179,194,.46)"; ctx.font = "9px ui-monospace, monospace"; ctx.fillText(`REAL-TIME EPHEMERIS · ${new Date().toISOString().slice(0, 19)} UTC`, 18, h - 18);
@@ -112,6 +316,9 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
 export default function Home() {
   const [systems, setSystems] = useState<StarSystem[]>(fallbackSystems);
   const [packages, setPackages] = useState<NamingPackage[]>(fallbackPackages);
+  const [solarPlanetId, setSolarPlanetId] = useState("earth");
+  const [solarSpeed, setSolarSpeed] = useState(1);
+  const [solarPaused, setSolarPaused] = useState(false);
   const [systemId, setSystemId] = useState(fallbackSystems[0].id);
   const [planetId, setPlanetId] = useState(fallbackSystems[0].planets[2].id);
   const [mode, setMode] = useState<"live" | "animation">("live");
@@ -131,6 +338,7 @@ export default function Home() {
 
   const system = useMemo(() => systems.find((item) => item.id === systemId) ?? systems[0], [systems, systemId]);
   const planet = useMemo(() => system.planets.find((item) => item.id === planetId) ?? system.planets[0], [system, planetId]);
+  const solarPlanet = useMemo(() => solarBodies.find((item) => item.id === solarPlanetId) ?? solarBodies[2], [solarPlanetId]);
 
   function chooseSystem(next: StarSystem) { setSystemId(next.id); setPlanetId(next.planets[0]?.id ?? ""); document.getElementById("observatory")?.scrollIntoView({ behavior: "smooth" }); }
 
@@ -154,13 +362,40 @@ export default function Home() {
     <main>
       <header className="site-header">
         <a className="brand" href="#top"><span className="brand-sigil">N</span><span><b>NOCTUA</b><small>暗夜天體觀測台</small></span></a>
-        <nav><a href="#observatory">即時星系</a><a href="#discoveries">最新發布</a><a href="#registry">紀念命名</a><button onClick={() => setRegistryOpen(true)}>持有者入口</button></nav>
+        <nav><a href="#solar-system">太陽系</a><a href="#observatory">候選星系</a><a href="#discoveries">最新發布</a><a href="#registry">紀念命名</a><button onClick={() => setRegistryOpen(true)}>持有者入口</button></nav>
         <a className="admin-link" href="/admin">後台管理 ↗</a>
       </header>
       <div className="science-banner"><b>MODEL CANDIDATE</b> 所有天體皆為訊號推演候選體，尚非正式天文發現；位置依軌道週期與參考曆元即時計算。</div>
 
+      <section className="solar-showcase" id="solar-system">
+        <div className="solar-intro" id="top">
+          <div><p className="eyebrow">HOME SYSTEM / LIVE SIMULATION</p><h1>從我們的太陽出發，<br /><em>看見八顆世界正在移動。</em></h1></div>
+          <div className="solar-intro-copy"><p>依公轉週期推演的互動式太陽系。點擊任一行星，即時查看它的距離、週期與環境概況。</p><div><span><i />即時渲染</span><span>8 PLANETS</span><span>30.07 AU</span></div></div>
+        </div>
+        <div className="solar-console">
+          <article className="solar-stage">
+            <div className="solar-toolbar">
+              <div><span className="live-pulse" /> SOLAR ORBITAL VIEW <small>軌道距離採視覺壓縮</small></div>
+              <div className="solar-controls">
+                {[1, 6, 24].map((value) => <button key={value} className={solarSpeed === value ? "active" : ""} aria-pressed={solarSpeed === value} onClick={() => setSolarSpeed(value)}>{value}×</button>)}
+                <button className={solarPaused ? "active pause" : "pause"} aria-pressed={solarPaused} onClick={() => setSolarPaused((value) => !value)}>{solarPaused ? "繼續" : "暫停"}</button>
+              </div>
+            </div>
+            <SolarSystemCanvas selectedId={solarPlanet.id} onSelect={setSolarPlanetId} speed={solarSpeed} paused={solarPaused} />
+            <div className="solar-foot"><span>內行星 · 小行星帶 · 外行星</span><span>點擊星體選取</span></div>
+          </article>
+          <aside className="solar-inspector">
+            <div className="solar-planet-title"><span style={{ "--planet-color": solarPlanet.color, "--planet-accent": solarPlanet.accent } as React.CSSProperties} /><div><small>{solarPlanet.english} / SELECTED</small><h2>{solarPlanet.name}</h2><p>{solarPlanet.type}</p></div></div>
+            <div className="solar-data-grid"><div><span>平均距離</span><b>{solarPlanet.au} AU</b></div><div><span>公轉週期</span><b>{solarPlanet.periodDays.toLocaleString()} 日</b></div><div><span>半徑</span><b>{solarPlanet.radiusEarth} R⊕</b></div><div><span>已知衛星</span><b>{solarPlanet.moons}</b></div></div>
+            <div className="solar-climate"><span>溫度概況</span><b>{solarPlanet.temperature}</b></div>
+            <p className="solar-summary">{solarPlanet.summary}</p>
+            <div className="planet-picker" aria-label="選擇太陽系行星">{solarBodies.map((body) => <button key={body.id} className={body.id === solarPlanet.id ? "active" : ""} onClick={() => setSolarPlanetId(body.id)}><i style={{ background: body.color, boxShadow: `0 0 9px ${body.accent}` }} /><span>{body.name}</span></button>)}</div>
+          </aside>
+        </div>
+      </section>
+
       <section className="observatory" id="observatory">
-        <div className="observatory-head" id="top">
+        <div className="observatory-head">
           <div><p className="eyebrow">LIVE SYSTEM / {system.id}</p><h1>{system.displayName ?? system.designation}</h1><p>{system.summary}</p></div>
           <div className="system-coordinates"><span>RA <b>{formatRa(system.raHours)}</b></span><span>DEC <b>{formatDec(system.decDeg)}</b></span><span>DIST <b>{system.distancePc.toFixed(1)} pc</b></span></div>
         </div>
