@@ -17,11 +17,11 @@ type PaymentOrder = {
 };
 
 const presentation: Record<string, { mark: string; title: string; body: string }> = {
-  confirmed: { mark: "✓", title: "付款成功，命名權已核發", body: "綠界已確認款項，專屬恆星體系編號已建立。" },
-  test_paid: { mark: "T", title: "綠界測試付款完成", body: "這是測試交易，未產生扣款，也不會自動核發真實命名權。" },
-  payment_pending: { mark: "…", title: "正在等待付款結果", body: "綠界可能仍在處理交易；此頁會自動更新狀態。" },
-  payment_failed: { mark: "×", title: "付款未完成", body: "交易沒有成功，你可以返回方案頁重新建立訂單。" },
-  payment_review: { mark: "!", title: "付款需要人工核對", body: "付款金額或交易資訊與訂單不一致，請暫勿重複付款。" },
+  confirmed: { mark: "✓", title: "Payment confirmed. Your registry is ready.", body: "ECPay has confirmed the transaction and your unique stellar-system registry number has been issued." },
+  test_paid: { mark: "T", title: "ECPay test payment completed", body: "This was a simulated transaction. No funds were charged and no real naming right was issued." },
+  payment_pending: { mark: "…", title: "Waiting for payment confirmation", body: "ECPay may still be processing the transaction. This page will refresh the status automatically." },
+  payment_failed: { mark: "×", title: "Payment was not completed", body: "The transaction was unsuccessful. Return to the registry plans when you are ready to create a new order." },
+  payment_review: { mark: "!", title: "Payment requires manual review", body: "The payment amount or transaction details do not match the order. Please avoid submitting a duplicate payment." },
 };
 
 export default function PaymentResultPage() {
@@ -34,7 +34,7 @@ export default function PaymentResultPage() {
     const token = params.get("token") ?? "";
     let active = true;
     if (!orderId || !token) {
-      queueMicrotask(() => { if (active) setError(params.has("error") ? "付款資料驗證失敗，請回到網站或聯絡管理員。" : "缺少付款查詢資料。"); });
+      queueMicrotask(() => { if (active) setError(params.has("error") ? "Payment verification failed. Return to NOCTUA or contact the administrator." : "Payment lookup details are missing."); });
       return () => { active = false; };
     }
     let timer: number | undefined;
@@ -42,12 +42,12 @@ export default function PaymentResultPage() {
       try {
         const response = await fetch(`/api/orders/status?order=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`, { cache: "no-store" });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error ?? "付款狀態載入失敗");
+        if (!response.ok) throw new Error(data.error ?? "Unable to load the payment status.");
         if (!active) return;
         setOrder(data.order);
         if (data.order.status === "payment_pending") timer = window.setTimeout(load, 3500);
       } catch (reason) {
-        if (active) setError(reason instanceof Error ? reason.message : "付款狀態載入失敗");
+        if (active) setError(reason instanceof Error ? reason.message : "Unable to load the payment status.");
       }
     };
     load();
@@ -55,21 +55,21 @@ export default function PaymentResultPage() {
   }, []);
 
   const state = order ? (presentation[order.status] ?? presentation.payment_pending) : null;
-  return <main className="payment-result-page">
+  return <main className="payment-result-page public-site">
     <Link className="payment-brand" href="/"><span>N</span><div><b>NOCTUA</b><small>SECURE PAYMENT</small></div></Link>
     <section className={order ? `payment-result-card ${order.status}` : "payment-result-card"}>
-      {error ? <><div className="payment-result-mark error">!</div><p className="payment-kicker">PAYMENT VERIFICATION</p><h1>無法確認付款狀態</h1><p className="payment-result-copy">{error}</p><Link className="payment-main-action" href="/#registry">返回命名方案</Link></> : !order || !state ? <><div className="payment-result-mark loading">N</div><p className="payment-kicker">SECURE PAYMENT</p><h1>正在確認付款資訊</h1><p className="payment-result-copy">請稍候，不要關閉此頁面。</p></> : <>
+      {error ? <><div className="payment-result-mark error">!</div><p className="payment-kicker">PAYMENT VERIFICATION</p><h1>We could not verify this payment</h1><p className="payment-result-copy">{error}</p><Link className="payment-main-action" href="/#registry">RETURN TO REGISTRY PLANS</Link></> : !order || !state ? <><div className="payment-result-mark loading">N</div><p className="payment-kicker">SECURE PAYMENT</p><h1>Verifying your payment</h1><p className="payment-result-copy">Please keep this page open for a moment.</p></> : <>
         <div className="payment-result-mark">{state.mark}</div>
         <p className="payment-kicker">{order.gateway.provider} · {order.gateway.mode === "test" ? "TEST MODE" : "VERIFIED PAYMENT"}</p>
         <h1>{state.title}</h1>
         <p className="payment-result-copy">{state.body}</p>
-        {order.gateway.mode === "test" && <div className="payment-test-notice"><b>測試環境</b><span>畫面與回呼流程皆為真實介接，但不會向信用卡或銀行帳戶扣款。</span></div>}
-        <div className="payment-order-summary"><div><span>訂單編號</span><b>{order.id}</b></div><div><span>紀念名稱</span><b>{order.desiredName}</b></div><div><span>方案／金額</span><b>{order.packageName} · NT$ {order.amountTwd.toLocaleString()}</b></div>{order.paymentType && <div><span>付款方式</span><b>{order.paymentType}</b></div>}</div>
-        {order.registryCode && <div className="payment-registry"><span>專屬恆星體系編號</span><strong>{order.registryCode}</strong><small>請保存此編號，回到持有者入口即可開啟專屬星系。</small></div>}
-        {order.paymentMessage && order.status !== "confirmed" && <p className="payment-gateway-message">金流訊息：{order.paymentMessage}</p>}
-        <div className="payment-result-actions"><Link className="payment-main-action" href={order.registryCode ? `/?registry=${encodeURIComponent(order.registryCode)}` : "/#registry"}>{order.registryCode ? "前往持有者入口" : "返回 NOCTUA"}</Link><Link href="/resources">查看天文機構資料</Link></div>
+        {order.gateway.mode === "test" && <div className="payment-test-notice"><b>TEST ENVIRONMENT</b><span>The checkout and callback flow are fully integrated, but no credit card or bank account will be charged.</span></div>}
+        <div className="payment-order-summary"><div><span>ORDER NUMBER</span><b>{order.id}</b></div><div><span>MEMORIAL NAME</span><b>{order.desiredName}</b></div><div><span>PLAN / AMOUNT</span><b>{order.packageName} · NT$ {order.amountTwd.toLocaleString()}</b></div>{order.paymentType && <div><span>PAYMENT METHOD</span><b>{order.paymentType}</b></div>}</div>
+        {order.registryCode && <div className="payment-registry"><span>UNIQUE STELLAR-SYSTEM REGISTRY</span><strong>{order.registryCode}</strong><small>Keep this number. Use Holder Access on NOCTUA to open your private system at any time.</small></div>}
+        {order.paymentMessage && order.status !== "confirmed" && <p className="payment-gateway-message">GATEWAY MESSAGE: {order.paymentMessage}</p>}
+        <div className="payment-result-actions"><Link className="payment-main-action" href={order.registryCode ? `/?registry=${encodeURIComponent(order.registryCode)}` : "/#registry"}>{order.registryCode ? "OPEN HOLDER ACCESS" : "RETURN TO NOCTUA"}</Link><Link href="/resources">VIEW ASTRONOMY INSTITUTIONS</Link></div>
       </>}
     </section>
-    <footer className="payment-footer"><span>付款由綠界科技處理，NOCTUA 不儲存信用卡或銀行帳號資料。</span><a href="https://www.ecpay.com.tw/" target="_blank" rel="noreferrer noopener">ECPay 綠界科技 ↗</a></footer>
+    <footer className="payment-footer"><span>Payments are processed by ECPay. NOCTUA never stores credit-card or bank-account details.</span><a href="https://www.ecpay.com.tw/" target="_blank" rel="noreferrer noopener">ECPay ↗</a></footer>
   </main>;
 }

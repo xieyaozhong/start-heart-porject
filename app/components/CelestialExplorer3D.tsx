@@ -66,7 +66,7 @@ function planetTexture(planet: ExplorerPlanet) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const gaseous = /氣|巨|gas|neptune|jovian/i.test(planet.type);
+  const gaseous = /gas|giant|neptune|jovian/i.test(planet.type);
   let seed = [...planet.id].reduce((total, char) => total + char.charCodeAt(0), 0);
   const random = () => {
     seed = (seed * 9301 + 49297) % 233280;
@@ -228,7 +228,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         new THREE.MeshBasicMaterial({ color: colorWithLightness(selected.orbitColor, 0.24), transparent: true, opacity: 0.11, side: THREE.BackSide, blending: THREE.AdditiveBlending }),
       );
       scene.add(atmosphere);
-      if (/氣|巨|neptune|jovian/i.test(selected.type)) {
+      if (/gas|giant|neptune|jovian/i.test(selected.type)) {
         const ring = new THREE.Mesh(
           new THREE.RingGeometry(2.03, 2.82, 128),
           new THREE.MeshBasicMaterial({ color: selected.orbitColor, side: THREE.DoubleSide, transparent: true, opacity: 0.24 }),
@@ -365,34 +365,34 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
   const ownerName = ownerLabel ?? selected.displayName;
 
   return (
-    <section className="celestial-explorer" role="dialog" aria-modal="true" aria-label={`${system.designation} 3D 星體探索器`}>
+    <section className="celestial-explorer" role="dialog" aria-modal="true" aria-label={`${system.designation} 3D celestial explorer`}>
       <div ref={mountRef} className="explorer-webgl" />
-      {webglError && <div className="explorer-error"><b>此裝置無法啟動 WebGL 3D</b><span>你仍可關閉此視窗，使用原本的即時軌道動畫。</span></div>}
+      {webglError && <div className="explorer-error"><b>WebGL 3D is unavailable on this device</b><span>Close this view to continue with the live orbital simulation.</span></div>}
       <header className="explorer-header">
         <a className="explorer-brand" href="#top" onClick={(event) => { event.preventDefault(); onClose(); }}><span>N</span><b>NOCTUA</b></a>
-        <nav aria-label="3D 檢視模式">
-          {(["planet", "system", "star"] as ViewMode[]).map((mode) => <button key={mode} className={view === mode ? "active" : ""} onClick={() => setView(mode)}>{mode === "planet" ? "行星" : mode === "system" ? "星系" : "恆星"}</button>)}
+        <nav aria-label="3D viewing mode">
+          {(["planet", "system", "star"] as ViewMode[]).map((mode) => <button key={mode} className={view === mode ? "active" : ""} onClick={() => setView(mode)}>{mode === "planet" ? "PLANET" : mode === "system" ? "SYSTEM" : "STAR"}</button>)}
         </nav>
-        <button className="explorer-close" onClick={onClose} aria-label="關閉 3D 探索器">關閉 ×</button>
+        <button className="explorer-close" onClick={onClose} aria-label="Close the 3D explorer">CLOSE ×</button>
       </header>
 
       <aside className="explorer-info">
         <p>{ownerLabel ? "PRIVATE REGISTERED SYSTEM" : "MODEL CANDIDATE / INTERACTIVE 3D"}</p>
-        {ownerLabel && <span className="explorer-owner">持有者專屬命名 · {ownerLabel}</span>}
+        {ownerLabel && <span className="explorer-owner">HOLDER’S PRIVATE NAME · {ownerLabel}</span>}
         <h1>{view === "planet" ? (ownerName ?? selected.code) : (system.displayName ?? system.designation)}</h1>
         <div className="explorer-subtitle"><span>{view === "planet" ? selected.type : system.classification}</span><i /> <span>{system.distancePc.toFixed(1)} pc</span></div>
         {view === "planet" ? <>
-          <div className="explorer-metrics"><div><small>質量</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>半徑</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>溫度</small><b>{selected.equilibriumTemp} K</b></div><div><small>生命條件</small><b>{selected.bioScore}%</b></div></div>
+          <div className="explorer-metrics"><div><small>MASS</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>RADIUS</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>TEMPERATURE</small><b>{selected.equilibriumTemp} K</b></div><div><small>ASTROBIOLOGY</small><b>{selected.bioScore}%</b></div></div>
           <p className="explorer-description">{selected.atmosphere} · {selected.state}。{selected.bioPrediction}</p>
-        </> : <p className="explorer-description">{view === "system" ? `依參考曆元與週期顯示 ${system.planets.length} 顆候選行星的即時近似位置。` : `表面溫度約 ${system.temperatureK.toLocaleString()} K，光度約為太陽的 ${system.luminosity.toFixed(2)} 倍。`}</p>}
-        {registryCode && <code className="explorer-registry">專屬體系編號 {registryCode}</code>}
+        </> : <p className="explorer-description">{view === "system" ? `Live approximate positions for ${system.planets.length} candidate planets, calculated from their reference epoch and orbital periods.` : `Surface temperature approximately ${system.temperatureK.toLocaleString()} K, with ${system.luminosity.toFixed(2)} times the Sun’s luminosity.`}</p>}
+        {registryCode && <code className="explorer-registry">PRIVATE SYSTEM REGISTRY {registryCode}</code>}
       </aside>
 
-      {view === "system" && <div className="explorer-planet-list" aria-label="選擇候選行星">{system.planets.map((planet) => <button key={planet.id} className={selected.id === planet.id ? "active" : ""} onClick={() => setSelectedId(planet.id)}><i style={{ background: planet.orbitColor }} /><span>{planet.displayName ?? planet.code.split(" ").at(-1)}</span></button>)}</div>}
+      {view === "system" && <div className="explorer-planet-list" aria-label="Select a candidate planet">{system.planets.map((planet) => <button key={planet.id} className={selected.id === planet.id ? "active" : ""} onClick={() => setSelectedId(planet.id)}><i style={{ background: planet.orbitColor }} /><span>{planet.displayName ?? planet.code.split(" ").at(-1)}</span></button>)}</div>}
 
       <div className="explorer-controls">
-        <div><span>拖曳旋轉</span><span>滾輪／雙指縮放</span><span>{view === "system" ? "點擊行星查看" : "自由觀察"}</span></div>
-        {view === "system" && <div className="explorer-time"><button className={showHabitable ? "active" : ""} onClick={() => setShowHabitable((value) => !value)}>宜居帶</button>{[0.2, 1, 10, 50].map((value) => <button key={value} className={speed === value ? "active" : ""} onClick={() => { setSpeed(value); setPaused(false); }}>{value}×</button>)}<button className={paused ? "active" : ""} onClick={() => setPaused((value) => !value)}>{paused ? "繼續" : "暫停"}</button></div>}
+        <div><span>DRAG TO ROTATE</span><span>SCROLL / PINCH TO ZOOM</span><span>{view === "system" ? "SELECT A PLANET" : "FREE OBSERVATION"}</span></div>
+        {view === "system" && <div className="explorer-time"><button className={showHabitable ? "active" : ""} onClick={() => setShowHabitable((value) => !value)}>HABITABLE ZONE</button>{[0.2, 1, 10, 50].map((value) => <button key={value} className={speed === value ? "active" : ""} onClick={() => { setSpeed(value); setPaused(false); }}>{value}×</button>)}<button className={paused ? "active" : ""} onClick={() => setPaused((value) => !value)}>{paused ? "RESUME" : "PAUSE"}</button></div>}
       </div>
       <div className="explorer-vignette" aria-hidden="true" />
     </section>

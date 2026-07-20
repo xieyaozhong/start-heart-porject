@@ -4,32 +4,36 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("defines the live public observatory and owner experience", async () => {
-  const [page, layout, css] = await Promise.all([
+  const [page, layout, css, experience] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/experience.css", import.meta.url), "utf8"),
   ]);
   assert.match(layout, /NOCTUA/);
   assert.match(page, /OrbitCanvas/);
   assert.match(page, /SolarSystemCanvas/);
-  assert.match(page, /J2000 即時近似位置/);
+  assert.match(page, /J2000 REAL-TIME APPROXIMATION/);
   assert.match(page, /daysSinceJ2000/);
   assert.match(page, /ORBIT_PREVIEW_DAYS_PER_SECOND = \.45/);
   assert.match(page, /1P \/ HALLEY/);
   assert.match(page, /halleyComet\.eccentricity/);
   assert.match(page, /const solarMoons/);
-  assert.match(page, /木衛二/);
+  assert.match(page, /Europa/);
   assert.match(page, /selectedMoon\.bioScore/);
-  assert.match(page, /REAL-TIME EPHEMERIS/);
+  assert.match(page, /Live ephemeris position/);
   assert.doesNotMatch(page, /setLineDash\(\[5, 7\]\)/);
   assert.match(page, /bioPrediction/);
-  assert.match(page, /OWNER ACCESS/);
+  assert.match(page, /HOLDER ACCESS/);
   assert.match(css, /\.orbit-canvas/);
   assert.match(css, /\.solar-canvas/);
   assert.match(css, /\.comet-orb/);
   assert.match(css, /\.speed-switch/);
   assert.match(css, /\.moon-picker/);
   assert.match(css, /\.moon-orb/);
+  assert.match(experience, /\.observatory-credibility/);
+  assert.match(layout, /<html lang="en">/);
+  assert.match(layout, /noctua-social-v3\.png/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
 });
 
@@ -65,6 +69,23 @@ test("publishes a directory of official global astronomy organizations", async (
   assert.match(css, /\.resource-grid/);
 });
 
+test("keeps every customer-facing interface in English", async () => {
+  const files = await Promise.all([
+    "../app/page.tsx",
+    "../app/resources/page.tsx",
+    "../app/payment/result/page.tsx",
+    "../app/layout.tsx",
+    "../app/components/CelestialExplorer3D.tsx",
+    "../app/api/orders/route.ts",
+    "../app/api/orders/status/route.ts",
+    "../app/api/payments/ecpay/checkout/route.ts",
+    "../app/api/public/registry/route.ts",
+    "../app/api/public/systems/route.ts",
+    "../lib/ecpay.ts",
+  ].map((path) => readFile(new URL(path, import.meta.url), "utf8")));
+  assert.doesNotMatch(files.join("\n"), /[\p{Script=Han}]/u);
+});
+
 test("seeds and exposes a one-click demo holder account", async () => {
   const [page, universe, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -73,7 +94,7 @@ test("seeds and exposes a one-click demo holder account", async () => {
   ]);
   assert.match(page, /DEMO_OWNER_REGISTRY_CODE = "NOR-DEMO2026"/);
   assert.match(page, /openDemoRegistry/);
-  assert.match(page, /一鍵開啟範例星系/);
+  assert.match(page, /OPEN DEMO SYSTEM/);
   assert.match(universe, /id: "ORD-DEMO-OWNER"/);
   assert.match(universe, /registryCode: "NOR-DEMO2026"/);
   assert.match(universe, /namingOrders\)\.values\(demoOwnerOrder\)\.onConflictDoNothing/);
@@ -88,12 +109,12 @@ test("ships the immersive WebGL celestial explorer", async () => {
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
   assert.match(page, /CelestialExplorer3D/);
-  assert.match(page, /開啟 3D VIEW/);
-  assert.match(page, /開啟 3D 專屬星系/);
+  assert.match(page, /OPEN 3D VIEW/);
+  assert.match(page, /OPEN PRIVATE SYSTEM IN 3D/);
   assert.match(explorer, /OrbitControls/);
   assert.match(explorer, /WebGLRenderer/);
-  assert.match(explorer, /宜居帶/);
-  assert.match(explorer, /拖曳旋轉/);
+  assert.match(explorer, /HABITABLE ZONE/);
+  assert.match(explorer, /DRAG TO ROTATE/);
   assert.match(css, /\.celestial-explorer/);
   assert.match(packageJson, /"three"/);
 });
@@ -109,9 +130,9 @@ test("integrates signed ECPay checkout and verified payment callbacks", async ()
     readFile(new URL("../drizzle/0002_chemical_network.sql", import.meta.url), "utf8"),
     readFile(new URL("../app/payment/result/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /ECPay 綠界科技/);
+  assert.match(page, /<b>ECPay<\/b>/);
   assert.match(page, /window\.location\.assign\(data\.checkoutUrl\)/);
-  assert.doesNotMatch(page, /name="card|信用卡卡號|安全碼/);
+  assert.doesNotMatch(page, /name="card|credit card number|security code/i);
   assert.match(orderRoute, /paymentTradeNo/);
   assert.match(orderRoute, /paymentToken/);
   assert.match(checkout, /method=\"post\"/);
@@ -123,7 +144,7 @@ test("integrates signed ECPay checkout and verified payment callbacks", async ()
   assert.match(gateway, /status = "test_paid"/);
   assert.match(schema, /paymentTradeId/);
   assert.match(migration, /naming_orders_payment_trade_no_unique/);
-  assert.match(resultPage, /測試交易，未產生扣款/);
+  assert.match(resultPage, /simulated transaction/);
 });
 
 test("matches ECPay's official SHA-256 CheckMacValue vector", () => {
@@ -135,7 +156,7 @@ test("matches ECPay's official SHA-256 CheckMacValue vector", () => {
 });
 
 test("ships the social preview and no ChatGPT authentication helper", async () => {
-  await access(new URL("../public/og-v2.png", import.meta.url));
+  await access(new URL("../public/noctua-social-v3.png", import.meta.url));
   const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url)));

@@ -96,12 +96,51 @@ async function hydrateSystems<T extends { id: string }>(rows: T[]) {
   }));
 }
 
+type HydratedPlanet = typeof planets.$inferSelect & { composition: Composition[] };
+type HydratedSystem = typeof starSystems.$inferSelect & { planets: HydratedPlanet[] };
+
+const compositionLabels: Record<string, string> = {
+  "矽酸鹽": "Silicates", "鐵鎳核心": "Iron–nickel core", "其他": "Other", "岩石地函": "Rocky mantle",
+  "金屬核心": "Metallic core", "水／冰": "Water / ice", "鐵鎳": "Iron–nickel", "氫氦": "Hydrogen / helium",
+  "冰質物": "Ices", "重元素": "Heavy elements", "岩石": "Rock", "揮發物": "Volatiles",
+};
+
+function publicPlanet(planet: HydratedPlanet) {
+  const hot = planet.equilibriumTemp > 500;
+  const temperate = planet.equilibriumTemp >= 240 && planet.equilibriumTemp <= 330;
+  const giant = planet.massEarth > 55;
+  const subNeptune = planet.massEarth > 9 && !giant;
+  const waterRich = planet.composition.some((item) => /水|ice|water/i.test(item.label) && item.value >= 30);
+  const type = giant ? (hot ? "Hot gas giant" : "Cold gas giant") : subNeptune ? (temperate ? "Temperate mini-Neptune" : "Ice-rich sub-Neptune") : waterRich && temperate ? "Habitable-zone ocean candidate" : hot ? (planet.massEarth > 2.2 ? "Hot super-Earth" : "Lava terrestrial planet") : planet.massEarth > 2.2 ? "Super-Earth" : "Terrestrial planet";
+  const atmosphere = giant || subNeptune ? "Candidate hydrogen, helium and trace methane" : temperate ? "Candidate nitrogen, water vapour and trace carbon dioxide" : hot ? "Thin, high-temperature mineral exosphere candidate" : "Thin carbon-dioxide atmosphere candidate";
+  const state = giant ? "Active cloud bands · large moons possible" : subNeptune ? "Deep atmosphere · high-pressure interior" : temperate ? "Within the model habitable zone" : hot ? "Irradiated surface · possible tidal locking" : "Cold, dry surface conditions";
+  const bioPrediction = planet.bioScore >= 45 ? "The model permits liquid-water conditions and usable energy gradients; spectroscopy is required to test for biosignatures." : planet.bioScore >= 12 ? "Atmospheric chemistry merits follow-up observation, although surface habitability remains uncertain." : giant ? "The planet itself is inhospitable; large moons could preserve subsurface oceans." : "Current conditions are insufficient for known forms of life.";
+  return { ...planet, type, atmosphere, state, bioPrediction, composition: planet.composition.map((item) => ({ ...item, label: compositionLabels[item.label] ?? (/^[\x00-\x7F]*$/.test(item.label) ? item.label : "Estimated material") })) };
+}
+
+function publicSystem(system: HydratedSystem) {
+  const classification = system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
+  return { ...system, classification, summary: `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`, planets: system.planets.map(publicPlanet) };
+}
+
+const englishPackages: Record<string, { name: string; description: string; features: string[] }> = {
+  "PKG-EXPLORER": { name: "Explorer", description: "A private memorial registry for one candidate planet", features: ["Digital naming certificate", "Live orbital animation", "Unique planetary designation"] },
+  "PKG-OBSERVER": { name: "Observer", description: "A star and its complete candidate planetary system", features: ["Unique stellar-system registry", "4K system animation", "Annual position update"] },
+  "PKG-ARCHIVIST": { name: "Archivist", description: "A complete archival record with bespoke presentation", features: ["Print-ready archival certificate", "Custom dedication", "Full orbit and composition report"] },
+};
+
+function publicPackage<T extends { id: string; name: string; description: string; featuresJson: string }>(item: T) {
+  const translated = englishPackages[item.id];
+  const rawFeatures = parseJson<string[]>(item.featuresJson, []);
+  return { ...item, name: translated?.name ?? (/^[\x00-\x7F]*$/.test(item.name) ? item.name : "Celestial Registry"), description: translated?.description ?? (/^[\x00-\x7F]*$/.test(item.description) ? item.description : "A personalised private celestial registry edition"), features: translated?.features ?? rawFeatures.map((feature) => /^[\x00-\x7F]*$/.test(feature) ? feature : "Personalised archival deliverable") };
+}
+
 export async function getPublicUniverse() {
   await ensureUniverseSeeded();
   const db = getDb();
   const systems = await db.select().from(starSystems).where(eq(starSystems.status, "published")).orderBy(desc(starSystems.publishedAt));
   const packages = await db.select().from(namingPackages).where(eq(namingPackages.active, true)).orderBy(asc(namingPackages.sortOrder));
-  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, features: parseJson<string[]>(item.featuresJson, []) })) };
+  return { systems: (await hydrateSystems(systems)).map(publicSystem), packages: packages.map(publicPackage) };
 }
 
 function planetProfile(semiMajorAu: number, massEarth: number, starLuminosity: number) {
@@ -201,5 +240,6 @@ export async function findRegistry(code: string) {
   const [system] = await db.select().from(starSystems).where(eq(starSystems.id, order.systemId));
   if (!system) return null;
   const [hydrated] = await hydrateSystems([system]);
-  return { order, system: hydrated };
+  const publicOrder = order.id === demoOwnerOrder.id ? { ...order, ownerName: "Starlight Demo Holder", dedication: "May every upward glance reveal a light that belongs to you.", packageName: "Observer" } : { ...order, packageName: ({ "探索者": "Explorer", "觀測者": "Observer", "典藏者": "Archivist" } as Record<string, string>)[order.packageName] ?? order.packageName };
+  return { order: publicOrder, system: publicSystem(hydrated) };
 }

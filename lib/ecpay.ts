@@ -38,7 +38,7 @@ export function getEcpayConfig(): EcpayConfig {
     };
   }
   if (!runtime.ECPAY_MERCHANT_ID || !runtime.ECPAY_HASH_KEY || !runtime.ECPAY_HASH_IV) {
-    throw new Error("正式金流尚未完成商店代號與金鑰設定");
+    throw new Error("Production checkout requires a configured ECPay merchant ID and security keys.");
   }
   return {
     mode: "production",
@@ -51,7 +51,7 @@ export function getEcpayConfig(): EcpayConfig {
 
 export function getPaymentPublicInfo() {
   const config = getEcpayConfig();
-  return { provider: "ECPay 綠界科技", mode: config.mode, merchantConfigured: config.mode === "production" };
+  return { provider: "ECPay", mode: config.mode, merchantConfigured: config.mode === "production" };
 }
 
 function ecpayUrlEncode(value: string) {
@@ -88,7 +88,7 @@ function taipeiDateTime(date: Date) {
 }
 
 export async function buildEcpayCheckout(order: typeof namingOrders.$inferSelect, origin: string) {
-  if (!order.paymentTradeNo || !order.paymentToken) throw new Error("此訂單缺少付款識別資料");
+  if (!order.paymentTradeNo || !order.paymentToken) throw new Error("This order is missing its payment identifiers.");
   const config = getEcpayConfig();
   const resultUrl = `${origin}/payment/result?order=${encodeURIComponent(order.id)}&token=${encodeURIComponent(order.paymentToken)}`;
   const parameters: Record<string, string> = {
@@ -97,8 +97,8 @@ export async function buildEcpayCheckout(order: typeof namingOrders.$inferSelect
     MerchantTradeDate: taipeiDateTime(new Date()),
     PaymentType: "aio",
     TotalAmount: String(order.amountTwd),
-    TradeDesc: "NOCTUA天體命名登錄",
-    ItemName: `NOCTUA ${order.packageName} 命名登錄`,
+    TradeDesc: "NOCTUA celestial registry",
+    ItemName: `NOCTUA ${order.packageName} registry`,
     ReturnURL: `${origin}/api/payments/ecpay/notify`,
     ClientBackURL: resultUrl,
     OrderResultURL: `${origin}/api/payments/ecpay/result`,
@@ -118,13 +118,13 @@ function formValues(form: FormData) {
 export async function processEcpayCallback(form: FormData) {
   const values = formValues(form);
   const config = getEcpayConfig();
-  if (!values.CheckMacValue || values.MerchantID !== config.merchantId) return { ok: false, message: "付款來源驗證失敗" };
+  if (!values.CheckMacValue || values.MerchantID !== config.merchantId) return { ok: false, message: "Payment-source verification failed." };
   const expected = await createCheckMacValue(values, config);
-  if (expected !== values.CheckMacValue.toUpperCase()) return { ok: false, message: "付款檢查碼不符" };
+  if (expected !== values.CheckMacValue.toUpperCase()) return { ok: false, message: "The payment checksum does not match." };
 
   const db = getDb();
   const [order] = await db.select().from(namingOrders).where(eq(namingOrders.paymentTradeNo, values.MerchantTradeNo ?? ""));
-  if (!order) return { ok: false, message: "找不到付款訂單" };
+  if (!order) return { ok: false, message: "Payment order not found." };
   const amountMatches = Number(values.TradeAmt) === order.amountTwd;
   const gatewaySuccess = values.RtnCode === "1" && amountMatches;
   const simulated = config.mode === "test" || values.SimulatePaid === "1";
@@ -147,7 +147,7 @@ export async function processEcpayCallback(form: FormData) {
     confirmedAt: status === "confirmed" ? (order.confirmedAt ?? now) : order.confirmedAt,
     paymentTradeId: values.TradeNo?.slice(0, 30) || order.paymentTradeId,
     paymentType: values.PaymentType?.slice(0, 60) || order.paymentType,
-    paymentMessage: amountMatches ? (values.RtnMsg?.slice(0, 200) || null) : "付款金額與訂單不符，需人工核對",
+    paymentMessage: amountMatches ? (values.RtnMsg?.slice(0, 200) || null) : "The payment amount does not match the order and requires manual review.",
     paymentUpdatedAt: now,
     paidAt: gatewaySuccess ? (order.paidAt ?? now) : order.paidAt,
     simulatedPayment: simulated,
@@ -163,7 +163,7 @@ export async function getPaymentOrderStatus(orderId: string, token: string) {
   return {
     id: order.id,
     desiredName: order.desiredName,
-    packageName: order.packageName,
+    packageName: ({ "\u63a2\u7d22\u8005": "Explorer", "\u89c0\u6e2c\u8005": "Observer", "\u5178\u85cf\u8005": "Archivist" } as Record<string, string>)[order.packageName] ?? order.packageName,
     amountTwd: order.amountTwd,
     status: order.status,
     registryCode: order.registryCode,

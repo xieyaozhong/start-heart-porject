@@ -18,19 +18,20 @@ export async function POST(request: Request) {
       db.select().from(starSystems).where(eq(starSystems.id, systemId)),
     ]);
     if (!plan?.active || !system || !desiredName || !ownerName || !email.includes("@")) {
-      return Response.json({ error: "命名登錄資料不完整" }, { status: 400 });
+      return Response.json({ error: "The registry order is incomplete." }, { status: 400 });
     }
     const nonce = crypto.randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase();
     const timestamp = Date.now().toString(36).toUpperCase();
     const id = `ORD-${timestamp}${nonce}`;
     const paymentTradeNo = `N${timestamp}${nonce}`.slice(0, 20);
     const paymentToken = crypto.randomUUID().replaceAll("-", "");
+    const publicPackageName = ({ "PKG-EXPLORER": "Explorer", "PKG-OBSERVER": "Observer", "PKG-ARCHIVIST": "Archivist" } as Record<string, string>)[plan.id] ?? (/^[\x00-\x7F]*$/.test(plan.name) ? plan.name : "Celestial Registry");
     const [order] = await db.insert(namingOrders).values({
-      id, candidateId: systemId, systemId, planetId: payload.planetId ? String(payload.planetId) : null, desiredName: desiredName.slice(0, 40), ownerName: ownerName.slice(0, 60), dedication: String(payload.dedication ?? "").slice(0, 240), email: email.slice(0, 160), packageName: plan.name, amountTwd: plan.priceTwd, status: "payment_pending", paymentProvider: "ecpay", paymentTradeNo, paymentToken, paymentMessage: "訂單已建立，等待前往綠界付款", paymentUpdatedAt: new Date().toISOString(),
+      id, candidateId: systemId, systemId, planetId: payload.planetId ? String(payload.planetId) : null, desiredName: desiredName.slice(0, 40), ownerName: ownerName.slice(0, 60), dedication: String(payload.dedication ?? "").slice(0, 240), email: email.slice(0, 160), packageName: publicPackageName, amountTwd: plan.priceTwd, status: "payment_pending", paymentProvider: "ecpay", paymentTradeNo, paymentToken, paymentMessage: "Order created and awaiting secure ECPay checkout", paymentUpdatedAt: new Date().toISOString(),
     }).returning();
     const checkoutUrl = `/api/payments/ecpay/checkout?order=${encodeURIComponent(order.id)}&token=${encodeURIComponent(paymentToken)}`;
-    return Response.json({ order: { id: order.id, amountTwd: order.amountTwd, status: order.status }, checkoutUrl, message: "訂單已建立，準備前往綠界安全付款。" }, { status: 201 });
+    return Response.json({ order: { id: order.id, amountTwd: order.amountTwd, status: order.status }, checkoutUrl, message: "Order created. Preparing secure ECPay checkout." }, { status: 201 });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "訂單建立失敗" }, { status: 500 });
+    return Response.json({ error: error instanceof Error ? error.message : "Unable to create the order." }, { status: 500 });
   }
 }

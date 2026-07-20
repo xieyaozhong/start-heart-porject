@@ -1,0 +1,297 @@
+/* Premium English public experience — scoped so the Chinese control room stays familiar. */
+.public-site {
+  --bg: #03070b;
+  --panel: #07121b;
+  --panel2: #0c1c27;
+  --line: rgba(180, 205, 216, .14);
+  --text: #f2f4f2;
+  --muted: #8497a0;
+  --amber: #f3a84d;
+  --gold: #f7d49a;
+  --mint: #75d8c0;
+  position: relative;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 18% -8%, rgba(44, 107, 139, .22), transparent 28rem),
+    radial-gradient(circle at 84% 14%, rgba(166, 98, 39, .1), transparent 30rem),
+    linear-gradient(180deg, #050b11 0%, #03070b 55%, #050b11 100%);
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.public-site::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .28;
+  background-image:
+    radial-gradient(circle at 8% 17%, rgba(255,255,255,.55) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 61% 29%, rgba(157,206,227,.45) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 88% 63%, rgba(255,223,172,.42) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 37% 76%, rgba(255,255,255,.35) 0 1px, transparent 1.2px);
+  background-size: 173px 181px, 263px 251px, 347px 331px, 419px 397px;
+  mask-image: linear-gradient(to bottom, #000, transparent 92%);
+}
+
+.public-site > * { position: relative; z-index: 1; }
+.public-site ::selection { color: #10161a; background: var(--gold); }
+.public-site button,
+.public-site a { transition: color .22s ease, border-color .22s ease, background-color .22s ease, transform .22s ease, box-shadow .22s ease; }
+.public-site button:focus-visible,
+.public-site a:focus-visible,
+.public-site input:focus-visible,
+.public-site textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.public-site .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 86px;
+  padding: 0 max(4.5vw, 30px);
+  border-bottom-color: rgba(190, 211, 221, .12);
+  background: rgba(3, 8, 12, .76);
+  backdrop-filter: blur(26px) saturate(135%);
+  box-shadow: 0 18px 60px rgba(0,0,0,.18);
+}
+
+.public-site .brand { gap: 14px; }
+.public-site .brand-sigil {
+  width: 42px;
+  height: 42px;
+  border-color: rgba(243,168,77,.72);
+  background: radial-gradient(circle at 35% 28%, rgba(255,221,164,.13), rgba(243,168,77,.02));
+  box-shadow: 0 0 28px rgba(243,168,77,.09), inset 0 0 15px rgba(243,168,77,.06);
+}
+.public-site .brand b { font-size: 13px; letter-spacing: .29em; }
+.public-site .brand small { margin-top: 5px; color: #728791; font: 7px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .17em; }
+.public-site .site-header nav { gap: 2px; }
+.public-site .site-header nav a,
+.public-site .site-header nav button { position: relative; padding: 0 15px; color: #82949c; font-size: 10px; letter-spacing: .035em; }
+.public-site .site-header nav a::after,
+.public-site .site-header nav button::after { content: ""; position: absolute; left: 15px; right: 15px; bottom: 19px; height: 1px; background: var(--amber); transform: scaleX(0); transition: transform .22s ease; }
+.public-site .site-header nav a:hover::after,
+.public-site .site-header nav button:hover::after,
+.public-site .site-header nav a.active::after { transform: scaleX(1); }
+.public-site .admin-link { padding: 11px 14px; border-color: rgba(184,204,213,.18); border-radius: 999px; color: #9fb0b7; font: 8px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
+.public-site .admin-link:hover { border-color: rgba(243,168,77,.48); color: var(--gold); background: rgba(243,168,77,.06); }
+
+.public-site .science-banner {
+  min-height: 41px;
+  border-bottom-color: rgba(183,204,214,.08);
+  color: #6f828b;
+  background: rgba(7,16,23,.66);
+  font-size: 9px;
+  letter-spacing: .02em;
+}
+.public-site .science-banner b { padding: 4px 8px; border-radius: 999px; border-color: rgba(243,168,77,.32); letter-spacing: .13em; }
+
+.public-site .solar-showcase { max-width: 1680px; padding: 94px max(4.5vw, 30px) 136px; }
+.public-site .solar-showcase::before { width: 900px; height: 900px; left: -360px; top: -360px; background: radial-gradient(circle, rgba(40,111,148,.14), transparent 67%); }
+.public-site .solar-intro { grid-template-columns: minmax(0, 1.35fr) minmax(340px, .5fr); gap: 8vw; margin-bottom: 44px; }
+.public-site .solar-intro h1 { max-width: 1050px; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: clamp(58px, 6.9vw, 108px); line-height: .96; letter-spacing: -.055em; text-wrap: balance; }
+.public-site .solar-intro h1 em { display: inline-block; color: var(--gold); text-shadow: 0 0 60px rgba(243,168,77,.12); }
+.public-site .solar-intro-copy > p { max-width: 540px; margin-bottom: 28px; color: #9aabb2; font-size: 13px; line-height: 1.85; }
+.public-site .solar-intro-copy span { padding: 8px 10px; border-radius: 999px; border-color: rgba(171,196,207,.14); background: rgba(11,24,33,.43); font-size: 7px; letter-spacing: .1em; }
+.public-site .eyebrow { margin-bottom: 17px; color: var(--amber); font-size: 8px; letter-spacing: .24em; }
+
+.observatory-credibility {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: -4px 0 22px;
+  border: 1px solid rgba(175,200,211,.11);
+  background: rgba(5,14,20,.48);
+}
+.observatory-credibility span { padding: 12px 16px; border-right: 1px solid rgba(175,200,211,.11); color: #687e88; font: 7px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
+.observatory-credibility span:last-child { border-right: 0; }
+.observatory-credibility b { margin-right: 6px; color: #b9c8cd; font-weight: 500; }
+
+.public-site .solar-console,
+.public-site .observatory-grid {
+  overflow: hidden;
+  border-color: rgba(173,200,211,.19);
+  border-radius: 22px;
+  background: rgba(4,12,18,.88);
+  box-shadow: 0 60px 170px rgba(0,0,0,.48), 0 0 0 1px rgba(255,255,255,.015) inset, 0 0 100px rgba(31,103,140,.07);
+}
+.public-site .solar-console::after { inset: 9px; border-radius: 14px; }
+.public-site .solar-stage { border-right-color: rgba(175,200,211,.12); }
+.public-site .solar-toolbar,
+.public-site .viewport-toolbar { height: 60px; padding: 0 22px; background: linear-gradient(180deg, rgba(15,31,41,.72), rgba(6,17,24,.42)); }
+.public-site .solar-controls,
+.public-site .mode-switch,
+.public-site .speed-switch { overflow: hidden; border-radius: 999px; border-color: rgba(171,197,208,.15); background: rgba(1,8,12,.55); }
+.public-site .solar-controls button,
+.public-site .mode-switch button,
+.public-site .speed-switch button { padding: 8px 12px; border-right-color: rgba(171,197,208,.1); font-size: 7px; letter-spacing: .05em; }
+.public-site .solar-controls button.active,
+.public-site .mode-switch button.active { background: linear-gradient(135deg, #f5bd6c, #e79638); box-shadow: 0 0 22px rgba(243,168,77,.16); }
+.public-site .solar-canvas { height: 680px; }
+.public-site .solar-foot,
+.public-site .viewport-foot { height: 44px; padding: 0 22px; background: rgba(3,10,15,.65); font-size: 7px; letter-spacing: .08em; }
+.public-site .solar-inspector,
+.public-site .planet-inspector { background: linear-gradient(155deg, rgba(14,32,42,.98), rgba(4,13,20,.99)); }
+.public-site .solar-inspector { padding: 35px 31px; }
+.public-site .solar-planet-title { padding-bottom: 28px; }
+.public-site .solar-planet-title > span { width: 70px; height: 70px; box-shadow: 0 0 46px color-mix(in srgb,var(--planet-accent) 26%,transparent), inset -12px -11px 20px rgba(0,0,0,.58); }
+.public-site .solar-planet-title h2 { margin: 6px 0 4px; font: 400 36px/1 Iowan Old Style, Baskerville, Georgia, serif; letter-spacing: -.03em; }
+.public-site .solar-planet-title p { font-size: 8px; letter-spacing: .08em; }
+.public-site .solar-data-grid { margin: 24px 0; border-radius: 13px; overflow: hidden; background: rgba(3,11,17,.28); }
+.public-site .solar-data-grid div { padding: 15px; }
+.public-site .solar-data-grid span,
+.public-site .solar-climate span { font: 7px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.public-site .solar-climate { padding: 16px; border-radius: 0 12px 12px 0; background: linear-gradient(90deg, rgba(243,168,77,.08), rgba(243,168,77,.025)); }
+.public-site .solar-summary { color: #99a9af; font: 12px/1.75 Iowan Old Style, Baskerville, Georgia, serif; }
+.public-site .planet-picker { gap: 6px; }
+.public-site .planet-picker button { min-height: 50px; border-radius: 8px; background: rgba(105,142,159,.035); }
+.public-site .planet-picker button:hover { transform: translateY(-1px); }
+.public-site .planet-picker button.active { border-color: rgba(243,168,77,.42); box-shadow: 0 0 22px rgba(243,168,77,.05) inset; }
+
+.public-site .observatory { max-width: 1580px; padding: 78px max(4.5vw, 30px) 110px; }
+.public-site .observatory-head { margin-bottom: 34px; }
+.public-site .observatory-head h1,
+.public-site .section-title h2,
+.public-site .registry-copy h2 { font-family: Iowan Old Style, Baskerville, Georgia, serif; letter-spacing: -.045em; }
+.public-site .observatory-head h1 { font-size: clamp(52px, 5.4vw, 82px); }
+.public-site .observatory-head > div > p:last-child { max-width: 660px; color: #93a5ad; font-size: 13px; }
+.public-site .system-coordinates { gap: 9px; padding: 7px; border: 1px solid rgba(170,196,207,.12); border-radius: 13px; background: rgba(6,16,22,.48); }
+.public-site .system-coordinates span { min-width: 118px; padding: 10px 12px; border-right: 1px solid rgba(170,196,207,.1); }
+.public-site .system-coordinates span:last-child { border-right: 0; }
+.public-site .orbit-canvas { height: 600px; }
+.public-site .planet-inspector { padding: 30px; }
+.public-site .inspector-title h2 { margin-bottom: 3px; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: 27px; }
+.public-site .planet-metrics { overflow: hidden; margin: 22px 0; border-radius: 12px; background: rgba(3,11,17,.28); }
+.public-site .planet-metrics div { padding: 15px; }
+.public-site .composition { grid-template-columns: 100px 1fr 34px; }
+.public-site .bio-card { padding: 17px; border-radius: 0 12px 12px 0; background: linear-gradient(90deg, rgba(74,166,134,.09), rgba(74,166,134,.025)); }
+.public-site .open-3d-explorer { padding: 15px; border-radius: 10px; }
+.public-site .open-3d-explorer:hover { transform: translateY(-2px); box-shadow: 0 14px 35px rgba(0,0,0,.22); }
+
+.public-site .discoveries { max-width: 1580px; padding: 0 max(4.5vw, 30px) 130px; }
+.public-site .section-title { padding-top: 38px; margin-bottom: 30px; }
+.public-site .section-title h2 { font-size: clamp(38px, 4vw, 56px); }
+.public-site .system-list { overflow: hidden; border-radius: 18px; border-color: rgba(175,200,211,.16); box-shadow: 0 28px 80px rgba(0,0,0,.18); }
+.public-site .system-row { min-height: 82px; padding: 20px 24px; background: rgba(8,20,28,.58); }
+.public-site .system-row:hover { padding-left: 28px; background: rgba(16,37,49,.88); }
+.public-site .system-row.active { background: linear-gradient(90deg, rgba(243,168,77,.09), rgba(16,37,49,.82) 32%); box-shadow: inset 3px 0 var(--amber); }
+.public-site .system-row b { font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: 15px; }
+
+.public-site .registry-section { max-width: 1580px; padding: 110px max(4.5vw, 30px) 145px; gap: 7vw; border-top-color: rgba(175,200,211,.12); }
+.public-site .registry-section::before { content: ""; position: absolute; inset: 0 0 auto; height: 100%; z-index: -1; pointer-events: none; background: radial-gradient(circle at 12% 45%, rgba(171,93,34,.12), transparent 28rem); }
+.public-site .registry-copy h2 { font-size: clamp(47px, 5vw, 72px); line-height: 1.02; }
+.public-site .registry-copy > p:not(.eyebrow) { max-width: 520px; color: #97a8af; font-size: 13px; }
+.public-site .registry-copy > button { padding: 13px 0; letter-spacing: .06em; }
+.public-site .package-list { gap: 14px; }
+.public-site .package-card { min-height: 380px; padding: 28px 23px; border-radius: 18px; background: linear-gradient(150deg, rgba(13,30,40,.88), rgba(5,15,22,.9)); box-shadow: 0 22px 70px rgba(0,0,0,.16); }
+.public-site .package-card.featured { min-height: 420px; border-color: rgba(243,168,77,.52); background: linear-gradient(150deg, rgba(50,41,29,.88), rgba(9,24,33,.94)); box-shadow: 0 38px 100px rgba(0,0,0,.35), 0 0 55px rgba(243,168,77,.05); transform: translateY(-10px); }
+.public-site .package-card h3 { margin-top: 34px; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: 34px; }
+.public-site .package-card p { font-size: 11px; line-height: 1.75; }
+.public-site .package-card ul { font-size: 8px; letter-spacing: .02em; }
+.public-site .package-card > button { padding: 13px; border-radius: 999px; letter-spacing: .08em; }
+
+.public-site > footer { min-height: 140px; padding: 0 max(4.5vw, 30px); background: rgba(3,9,13,.54); }
+.public-site .footer-links a:hover { color: var(--gold); }
+
+.public-site .modal-shell { z-index: 70; background: rgba(1,5,8,.88); backdrop-filter: blur(20px) saturate(120%); }
+.public-site .order-modal,
+.public-site .owner-modal { border-radius: 22px; border-color: rgba(177,202,212,.2); background: linear-gradient(150deg, #0d202b, #07121a); box-shadow: 0 70px 180px rgba(0,0,0,.66); }
+.public-site .order-modal input,
+.public-site .order-modal textarea,
+.public-site .owner-modal input { border-radius: 9px; background: rgba(2,9,14,.72); }
+.public-site .primary-action,
+.public-site .order-success button { border-radius: 999px; background: linear-gradient(135deg, #f6c273, #e9993b); }
+.public-site .primary-action:hover,
+.public-site .order-success button:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(243,168,77,.18); }
+.public-site .demo-owner-account,
+.public-site .secure-payment { border-radius: 12px; }
+.public-site .owner-certificate { background: linear-gradient(155deg, #142d39, #07141d); }
+
+.resources-page.public-site { overflow: hidden; }
+.public-site .resources-hero { max-width: 1580px; padding: 110px max(4.5vw, 30px) 86px; }
+.public-site .resources-hero h1 { font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: clamp(58px, 6.8vw, 104px); line-height: .96; }
+.public-site .resources-hero-copy > p { color: #9aabb2; font: 13px/1.9 Inter, ui-sans-serif, sans-serif; }
+.public-site .resources-metrics { overflow: hidden; margin-top: 34px; border-radius: 14px; background: rgba(4,13,19,.48); }
+.public-site .resources-metrics div { padding: 18px 15px; }
+.public-site .resources-directory { max-width: 1580px; padding: 84px max(4.5vw, 30px) 130px; }
+.public-site .resource-group { margin-bottom: 78px; }
+.public-site .resource-group-head h2 { font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: 34px; }
+.public-site .resource-grid { gap: 16px; }
+.public-site .resource-card { min-height: 285px; padding: 28px; border-radius: 17px; background: linear-gradient(145deg, rgba(13,31,41,.84), rgba(4,13,19,.9)); box-shadow: 0 20px 60px rgba(0,0,0,.12); }
+.public-site .resource-card:hover { transform: translateY(-7px); box-shadow: 0 30px 80px rgba(0,0,0,.26); }
+.public-site .resource-card h3 { font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: 27px; line-height: 1.08; }
+.public-site .resource-card p { font-size: 11px; line-height: 1.8; }
+.public-site .authority-note { max-width: 1580px; margin-bottom: 110px; padding-top: 30px; padding-bottom: 30px; }
+
+.payment-result-page.public-site { overflow: auto; background: radial-gradient(circle at 50% 30%, rgba(38,100,125,.3), transparent 35rem), radial-gradient(circle at 10% 85%, rgba(159,88,30,.11), transparent 28rem), #03080c; }
+.public-site .payment-result-card { overflow: hidden; padding: 52px 56px; border-radius: 24px; box-shadow: 0 55px 160px rgba(0,0,0,.52); }
+.public-site .payment-result-card h1 { font-family: Iowan Old Style, Baskerville, Georgia, serif; font-size: clamp(34px, 4vw, 48px); }
+.public-site .payment-result-mark { width: 72px; height: 72px; }
+.public-site .payment-main-action { border-radius: 999px; letter-spacing: .05em; }
+
+@media (max-width: 1180px) {
+  .public-site .site-header nav a,
+  .public-site .site-header nav button { padding-left: 10px; padding-right: 10px; font-size: 9px; }
+  .public-site .site-header nav a::after,
+  .public-site .site-header nav button::after { left: 10px; right: 10px; }
+  .public-site .solar-console { grid-template-columns: minmax(0,1.4fr) minmax(300px,.6fr); }
+}
+
+@media (max-width: 900px) {
+  .public-site .site-header { height: 74px; }
+  .public-site .solar-showcase { padding-top: 66px; }
+  .public-site .solar-intro { grid-template-columns: 1fr; gap: 30px; }
+  .public-site .solar-intro h1 { font-size: clamp(52px, 10vw, 82px); }
+  .observatory-credibility { margin-top: 0; }
+  .public-site .solar-console { grid-template-columns: 1fr; }
+  .public-site .solar-stage { border-right: 0; }
+  .public-site .solar-inspector { grid-template-columns: 1fr 1fr; }
+  .public-site .system-coordinates { margin-top: 26px; }
+  .public-site .package-card.featured { transform: none; }
+}
+
+@media (max-width: 700px) {
+  .public-site .site-header { height: 68px; padding: 0 18px; }
+  .public-site .brand-sigil { width: 37px; height: 37px; }
+  .public-site .admin-link::after { content: "CONTROL"; }
+  .public-site .science-banner { padding: 9px 18px; font-size: 8px; line-height: 1.5; }
+  .public-site .solar-showcase,
+  .public-site .observatory,
+  .public-site .discoveries,
+  .public-site .registry-section,
+  .public-site .resources-hero,
+  .public-site .resources-directory { padding-left: 18px; padding-right: 18px; }
+  .public-site .solar-showcase { padding-top: 52px; padding-bottom: 92px; }
+  .public-site .solar-intro h1 { font-size: 48px; }
+  .public-site .solar-intro-copy > p { font-size: 12px; }
+  .observatory-credibility { grid-template-columns: 1fr; }
+  .observatory-credibility span { border-right: 0; border-bottom: 1px solid rgba(175,200,211,.11); }
+  .observatory-credibility span:last-child { border-bottom: 0; }
+  .public-site .solar-console,
+  .public-site .observatory-grid { border-radius: 16px; }
+  .public-site .solar-toolbar { padding: 13px; }
+  .public-site .solar-controls button { padding-left: 8px; padding-right: 8px; }
+  .public-site .solar-canvas { height: 470px; }
+  .public-site .solar-foot span:last-child,
+  .public-site .viewport-foot span:last-child { display: none; }
+  .public-site .solar-inspector { display: block; padding: 27px 20px; }
+  .public-site .observatory-head h1 { font-size: 46px; }
+  .public-site .system-coordinates { width: 100%; grid-template-columns: 1fr; }
+  .public-site .system-coordinates span { border-right: 0; border-bottom: 1px solid rgba(170,196,207,.1); }
+  .public-site .system-coordinates span:last-child { border-bottom: 0; }
+  .public-site .orbit-canvas { height: 440px; }
+  .public-site .registry-section { padding-top: 78px; padding-bottom: 100px; }
+  .public-site .registry-copy h2 { font-size: 48px; }
+  .public-site .package-card,
+  .public-site .package-card.featured { min-height: 320px; }
+  .public-site > footer { min-height: 0; padding-top: 34px; padding-bottom: 34px; }
+  .public-site .resources-hero { padding-top: 70px; }
+  .public-site .resources-hero h1 { font-size: 51px; }
+  .public-site .resource-card { min-height: 245px; }
+  .public-site .payment-result-card { padding: 38px 22px; border-radius: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-site *,
+  .public-site *::before,
+  .public-site *::after { scroll-behavior: auto !important; transition-duration: .001ms !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+}
