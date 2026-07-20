@@ -20,6 +20,11 @@ type SolarBody = {
   color: string; accent: string; epochAngle: number; eccentricity: number; perihelionLongitude: number;
   temperature: string; moons: number; summary: string;
 };
+type SolarMoon = {
+  id: string; parentId: string; name: string; english: string; type: string; radiusEarth: number;
+  orbitalPeriodDays: number; orbitDistanceKm: number; epochAngle: number; color: string; accent: string;
+  composition: string; state: string; bioScore: number; bioPrediction: string;
+};
 
 const solarBodies: SolarBody[] = [
   { id: "mercury", name: "水星", english: "MERCURY", type: "岩質行星", au: .387, periodDays: 87.969, radiusEarth: .383, color: "#8f8b84", accent: "#d6d0c5", epochAngle: 252.2503235, eccentricity: .20563593, perihelionLongitude: 77.45779628, temperature: "−180～430°C", moons: 0, summary: "最接近太陽的行星，表面布滿撞擊坑，晝夜溫差極大。" },
@@ -30,6 +35,18 @@ const solarBodies: SolarBody[] = [
   { id: "saturn", name: "土星", english: "SATURN", type: "環系氣態巨行星", au: 9.537, periodDays: 10759.22, radiusEarth: 9.45, color: "#c7a56c", accent: "#ffe2a5", epochAngle: 49.95424423, eccentricity: .05386179, perihelionLongitude: 92.59887831, temperature: "雲頂約 −140°C", moons: 274, summary: "擁有太陽系最醒目的冰粒環系，密度甚至低於液態水。" },
   { id: "uranus", name: "天王星", english: "URANUS", type: "冰巨行星", au: 19.19, periodDays: 30685.4, radiusEarth: 4.01, color: "#70b9bf", accent: "#c0f5ed", epochAngle: 313.23810451, eccentricity: .04725744, perihelionLongitude: 170.9542763, temperature: "雲頂約 −195°C", moons: 28, summary: "自轉軸幾乎側躺在軌道面上，淡青色來自大氣中的甲烷。" },
   { id: "neptune", name: "海王星", english: "NEPTUNE", type: "冰巨行星", au: 30.07, periodDays: 60189, radiusEarth: 3.88, color: "#3559a8", accent: "#769cff", epochAngle: -55.12002969, eccentricity: .00859048, perihelionLongitude: 44.96476227, temperature: "雲頂約 −200°C", moons: 16, summary: "最外側的主要行星，深藍大氣中吹著太陽系最快的風。" },
+];
+
+const solarMoons: SolarMoon[] = [
+  { id: "moon", parentId: "earth", name: "月球", english: "MOON", type: "岩質衛星", radiusEarth: .273, orbitalPeriodDays: 27.322, orbitDistanceKm: 384400, epochAngle: 218, color: "#aaa9a2", accent: "#eee9dc", composition: "矽酸鹽地殼 · 岩石地函 · 鐵質核心", state: "潮汐鎖定 · 撞擊坑與古老熔岩平原", bioScore: 2, bioPrediction: "未發現原生生命；極區水冰可支援未來載人活動。" },
+  { id: "phobos", parentId: "mars", name: "火衛一", english: "PHOBOS", type: "不規則岩質衛星", radiusEarth: .00176, orbitalPeriodDays: .319, orbitDistanceKm: 9376, epochAngle: 61, color: "#77695b", accent: "#b7a28b", composition: "多孔岩石 · 碳質表土候選", state: "極低軌道 · 緩慢向火星下降", bioScore: 0, bioPrediction: "缺乏大氣與穩定液態水，原生生命可能性極低。" },
+  { id: "io", parentId: "jupiter", name: "木衛一", english: "IO", type: "火山岩質衛星", radiusEarth: .286, orbitalPeriodDays: 1.769, orbitDistanceKm: 421700, epochAngle: 18, color: "#d9b04e", accent: "#fff0a0", composition: "矽酸鹽岩石 · 硫與二氧化硫", state: "太陽系火山活動最旺盛的天體", bioScore: 1, bioPrediction: "強烈輻射與持續火山作用，使已知生命難以生存。" },
+  { id: "europa", parentId: "jupiter", name: "木衛二", english: "EUROPA", type: "冰殼海洋衛星", radiusEarth: .245, orbitalPeriodDays: 3.551, orbitDistanceKm: 671100, epochAngle: 126, color: "#c8b48b", accent: "#eaf7ff", composition: "水冰外殼 · 鹽水海洋候選 · 岩石核心", state: "潮汐加熱 · 冰殼裂隙 · 地下海洋強證據", bioScore: 78, bioPrediction: "地下海洋可能同時具備液態水、化學能與岩水交互作用，是高優先生命候選環境。" },
+  { id: "ganymede", parentId: "jupiter", name: "木衛三", english: "GANYMEDE", type: "大型冰岩衛星", radiusEarth: .413, orbitalPeriodDays: 7.155, orbitDistanceKm: 1070400, epochAngle: 224, color: "#8e8172", accent: "#c8d7dc", composition: "水冰 · 矽酸鹽岩石 · 金屬核心", state: "太陽系最大衛星 · 具有自身磁場與地下海洋", bioScore: 58, bioPrediction: "深層海洋可能存在可居住條件，但冰層厚度與能量來源仍待確認。" },
+  { id: "callisto", parentId: "jupiter", name: "木衛四", english: "CALLISTO", type: "古老冰岩衛星", radiusEarth: .378, orbitalPeriodDays: 16.689, orbitDistanceKm: 1882700, epochAngle: 314, color: "#615c55", accent: "#b9b4aa", composition: "水冰 · 岩石 · 鹽水海洋候選", state: "密集撞擊坑 · 地質活動較低", bioScore: 43, bioPrediction: "可能存在深層鹽水海洋，但可用能量與表面物質交換較有限。" },
+  { id: "enceladus", parentId: "saturn", name: "土衛二", english: "ENCELADUS", type: "噴流海洋衛星", radiusEarth: .0395, orbitalPeriodDays: 1.37, orbitDistanceKm: 238000, epochAngle: 81, color: "#dbe8e8", accent: "#ffffff", composition: "水冰 · 鹽類 · 有機物 · 岩石核心", state: "全球地下海洋 · 南極冰粒與水氣噴流", bioScore: 82, bioPrediction: "噴流顯示海水、熱能與有機物條件，是太陽系最重要的生命探測目標之一。" },
+  { id: "titan", parentId: "saturn", name: "土衛六", english: "TITAN", type: "濃厚大氣冰衛星", radiusEarth: .404, orbitalPeriodDays: 15.945, orbitDistanceKm: 1221870, epochAngle: 249, color: "#b77f34", accent: "#ffd58a", composition: "氮氣大氣 · 甲烷與乙烷 · 水冰地殼", state: "甲烷雲雨循環 · 地表湖海 · 地下水海洋候選", bioScore: 52, bioPrediction: "表面化學與地下海洋皆具研究價值，但低溫環境中的生命形式仍屬高度推測。" },
+  { id: "triton", parentId: "neptune", name: "海衛一", english: "TRITON", type: "逆行冰質衛星", radiusEarth: .212, orbitalPeriodDays: -5.877, orbitDistanceKm: 354800, epochAngle: 173, color: "#b7aca4", accent: "#d6f1f4", composition: "氮冰 · 甲烷冰 · 水冰與岩石", state: "逆行軌道 · 可能為被捕獲的古柏帶天體", bioScore: 24, bioPrediction: "可能保有深層海洋，但低溫、能量來源與物質交換仍不明確。" },
 ];
 
 const halleyComet = {
@@ -166,69 +183,7 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, 54 * sunPulse, 0, Math.PI * 2); ctx.fill();
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00003);
       for (let ray = 0; ray < 18; ray += 1) {
-        ctx.rotate(Math.PI / 9); ctx.strokeStyle = `rgba(255,174,64,${.06 + (ray % 3) * .025})`;
-        ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(34 + (ray % 4) * 5, 0); ctx.stroke();
-      }
-      ctx.restore();
-      const sun = ctx.createRadialGradient(cx - 7, cy - 8, 2, cx, cy, 22);
-      sun.addColorStop(0, "#fffce3"); sun.addColorStop(.36, "#ffe285"); sun.addColorStop(.74, "#ff9e32"); sun.addColorStop(1, "#d95718");
-      ctx.fillStyle = sun; ctx.shadowColor = "#ffb53f"; ctx.shadowBlur = 26; ctx.beginPath(); ctx.arc(cx, cy, 19, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-      ctx.fillStyle = "rgba(255,222,148,.72)";
-      for (let spot = 0; spot < 7; spot += 1) { const a = time * .00012 + spot * 2.31; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (5 + spot % 3 * 3), cy + Math.sin(a * .77) * 9, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
-
-      positionsRef.current = [];
-      const observationTime = Date.now() + simulationDaysRef.current * 86400000;
-      const daysSinceJ2000 = (observationTime - Date.parse("2000-01-01T12:00:00.000Z")) / 86400000;
-      solarBodies.forEach((body, index) => {
-        const orbit = orbitRadius(body.au);
-        const meanLongitude = (body.epochAngle + daysSinceJ2000 / body.periodDays * 360) * Math.PI / 180;
-        const perihelion = body.perihelionLongitude * Math.PI / 180;
-        const meanAnomaly = meanLongitude - perihelion;
-        let eccentricAnomaly = meanAnomaly;
-        for (let iteration = 0; iteration < 7; iteration += 1) eccentricAnomaly -= (eccentricAnomaly - body.eccentricity * Math.sin(eccentricAnomaly) - meanAnomaly) / (1 - body.eccentricity * Math.cos(eccentricAnomaly));
-        const trueAnomaly = 2 * Math.atan2(Math.sqrt(1 + body.eccentricity) * Math.sin(eccentricAnomaly / 2), Math.sqrt(1 - body.eccentricity) * Math.cos(eccentricAnomaly / 2));
-        const angle = trueAnomaly + perihelion;
-        const visualDistance = orbit * (1 - body.eccentricity * Math.cos(eccentricAnomaly));
-        const point = transformPoint(angle, visualDistance);
-        const radius = Math.max(3.3, Math.min(12.5, 3.1 + Math.log2(body.radiusEarth + 1) * 2.45));
-        positionsRef.current.push({ id: body.id, x: point.x, y: point.y, radius: radius + 10 });
-
-        ctx.strokeStyle = `${body.accent}${body.id === selectedId ? "90" : "32"}`; ctx.lineWidth = body.id === selectedId ? 2 : .8;
-        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * flatten, tilt, angle - (body.id === selectedId ? .72 : .22), angle); ctx.stroke();
-
-        if (body.id === "saturn" || body.id === "uranus") {
-          ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(body.id === "uranus" ? 1.12 : -.19);
-          ctx.strokeStyle = body.id === "saturn" ? "rgba(229,205,154,.72)" : "rgba(161,222,221,.42)";
-          ctx.lineWidth = body.id === "saturn" ? 3.2 : 1.4; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.9, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-        }
-
-        const sphere = ctx.createRadialGradient(point.x - radius * .4, point.y - radius * .42, radius * .08, point.x, point.y, radius * 1.1);
-        sphere.addColorStop(0, body.accent); sphere.addColorStop(.48, body.color); sphere.addColorStop(1, "#07101a");
-        ctx.fillStyle = sphere; ctx.shadowColor = body.accent; ctx.shadowBlur = body.id === selectedId ? 22 : 7;
-        ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-
-        if (body.radiusEarth > 3) {
-          ctx.save(); ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.clip();
-          ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = Math.max(.7, radius * .1);
-          for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(point.x - radius, point.y + band * radius * .3); ctx.lineTo(point.x + radius, point.y + band * radius * .3); ctx.stroke(); }
-          ctx.restore();
-        }
-        if (body.id === "earth") {
-          const moonAngle = time * .001; ctx.fillStyle = "#d8d5cc"; ctx.beginPath(); ctx.arc(point.x + Math.cos(moonAngle) * (radius + 5), point.y + Math.sin(moonAngle) * (radius + 5), 1.2, 0, Math.PI * 2); ctx.fill();
-        }
-
-        if (body.id === selectedId) {
-          const pulse = radius + 7 + Math.sin((reduceMotion ? 0 : time) / 260) * 2;
-          ctx.strokeStyle = "rgba(236,247,255,.82)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(point.x, point.y, pulse, 0, Math.PI * 2); ctx.stroke();
-          ctx.strokeStyle = `${body.accent}45`; ctx.beginPath(); ctx.arc(point.x, point.y, pulse + 5, …2952 tokens truncated…strokeStyle = `${planet.orbitColor}${planet.id === selectedId ? "9c" : "35"}`; ctx.lineWidth = planet.id === selectedId ? 1.8 : .7;
-        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, angle - (planet.id === selectedId ? .82 : .24), angle); ctx.stroke();
-        if (planet.radiusEarth > 6) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.22); ctx.strokeStyle = `${planet.orbitColor}72`; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.8, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-        const sphere = ctx.createRadialGradient(x - radius * .42, y - radius * .42, radius * .06, x, y, radius * 1.18);
-        sphere.addColorStop(0, "#f5f0df"); sphere.addColorStop(.28, planet.orbitColor); sphere.addColorStop(1, "#06101a");
-        ctx.fillStyle = sphere; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 22 : 8;
-        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-        if (planet.radiusEarth > 5) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.19)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
-        if (planet.radiusEarth > 4) { const moonAngle = (reduceMotion ? 0 : time) * .0012 + index; ctx.fillStyle = "#c9d4d5"; ctx.beginPath(); ctx.arc(x + Math.cos(moonAngle) * (radius + 5), y + Math.sin(moonAngle) * (radius + 5), 1.1, 0, Math.PI * 2); ctx.fill(); }
+        ctx.rotate(Math.PI / 9); ctx.strokeStyle…5006 tokens truncated…h.PI * 2); ctx.fill(); }
         if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
         ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
       });
@@ -280,8 +235,10 @@ export default function Home() {
 
   const system = useMemo(() => systems.find((item) => item.id === systemId) ?? systems[0], [systems, systemId]);
   const planet = useMemo(() => system.planets.find((item) => item.id === planetId) ?? system.planets[0], [system, planetId]);
-  const solarPlanet = useMemo(() => solarBodies.find((item) => item.id === solarPlanetId) ?? solarBodies[2], [solarPlanetId]);
+  const selectedMoon = useMemo(() => solarMoons.find((item) => item.id === solarPlanetId), [solarPlanetId]);
+  const solarPlanet = useMemo(() => solarBodies.find((item) => item.id === solarPlanetId) ?? solarBodies.find((item) => item.id === selectedMoon?.parentId) ?? solarBodies[2], [solarPlanetId, selectedMoon]);
   const isHalleySelected = solarPlanetId === halleyComet.id;
+  const isMoonSelected = Boolean(selectedMoon);
 
   function chooseSystem(next: StarSystem) { setSystemId(next.id); setPlanetId(next.planets[0]?.id ?? ""); document.getElementById("observatory")?.scrollIntoView({ behavior: "smooth" }); }
 
@@ -312,8 +269,8 @@ export default function Home() {
 
       <section className="solar-showcase" id="solar-system">
         <div className="solar-intro" id="top">
-          <div><p className="eyebrow">HOME SYSTEM / LIVE SIMULATION</p><h1>從我們的太陽出發，<br /><em>看見行星與彗星正在移動。</em></h1></div>
-          <div className="solar-intro-copy"><p>依 J2000 參考曆元、公轉週期與目前 UTC 時間推算的互動式太陽系。點擊行星或哈雷彗星，即時查看位置、週期與環境概況。</p><div><span><i />即時星曆位置</span><span>8 PLANETS + 1P/HALLEY</span><span>35.25 AU</span></div></div>
+          <div><p className="eyebrow">HOME SYSTEM / LIVE SIMULATION</p><h1>從我們的太陽出發，<br /><em>看見行星、衛星與彗星正在移動。</em></h1></div>
+          <div className="solar-intro-copy"><p>依 J2000 參考曆元、公轉週期與目前 UTC 時間推算的互動式太陽系。點擊行星、知名衛星或哈雷彗星，即時查看位置與環境概況。</p><div><span><i />即時星曆位置</span><span>8 PLANETS · 9 FEATURED MOONS</span><span>1P / HALLEY</span></div></div>
         </div>
         <div className="solar-console">
           <article className="solar-stage">
@@ -326,14 +283,16 @@ export default function Home() {
               </div>
             </div>
             <SolarSystemCanvas selectedId={solarPlanetId} onSelect={setSolarPlanetId} mode={solarMode} speed={solarSpeed} paused={solarPaused} />
-            <div className="solar-foot"><span>J2000 即時近似位置 · 哈雷彗星不顯示軌道線</span><span>點擊星體選取</span></div>
+            <div className="solar-foot"><span>J2000 即時近似位置 · 衛星軌道採放大顯示</span><span>點擊星體選取</span></div>
           </article>
           <aside className="solar-inspector">
-            <div className="solar-planet-title"><span className={isHalleySelected ? "comet-orb" : ""} style={{ "--planet-color": isHalleySelected ? halleyComet.color : solarPlanet.color, "--planet-accent": isHalleySelected ? halleyComet.accent : solarPlanet.accent } as React.CSSProperties} /><div><small>{isHalleySelected ? halleyComet.english : solarPlanet.english} / SELECTED</small><h2>{isHalleySelected ? halleyComet.name : solarPlanet.name}</h2><p>{isHalleySelected ? halleyComet.type : solarPlanet.type}</p></div></div>
-            {isHalleySelected ? <div className="solar-data-grid"><div><span>近日點</span><b>{halleyComet.perihelionAu} AU</b></div><div><span>遠日點</span><b>{halleyComet.aphelionAu} AU</b></div><div><span>平均週期</span><b>76.1 年</b></div><div><span>軌道離心率</span><b>{halleyComet.eccentricity}</b></div></div> : <div className="solar-data-grid"><div><span>平均距離</span><b>{solarPlanet.au} AU</b></div><div><span>公轉週期</span><b>{solarPlanet.periodDays.toLocaleString()} 日</b></div><div><span>半徑</span><b>{solarPlanet.radiusEarth} R⊕</b></div><div><span>已知衛星</span><b>{solarPlanet.moons}</b></div></div>}
-            <div className="solar-climate"><span>{isHalleySelected ? "彗核／下次回歸" : "溫度概況"}</span><b>{isHalleySelected ? `${halleyComet.nucleus} · ${halleyComet.nextReturn}` : solarPlanet.temperature}</b></div>
-            <p className="solar-summary">{isHalleySelected ? halleyComet.summary : solarPlanet.summary}</p>
+            <div className="solar-planet-title"><span className={isHalleySelected ? "comet-orb" : isMoonSelected ? "moon-orb" : ""} style={{ "--planet-color": isHalleySelected ? halleyComet.color : selectedMoon?.color ?? solarPlanet.color, "--planet-accent": isHalleySelected ? halleyComet.accent : selectedMoon?.accent ?? solarPlanet.accent } as React.CSSProperties} /><div><small>{isHalleySelected ? halleyComet.english : selectedMoon?.english ?? solarPlanet.english} / SELECTED</small><h2>{isHalleySelected ? halleyComet.name : selectedMoon?.name ?? solarPlanet.name}</h2><p>{isHalleySelected ? halleyComet.type : selectedMoon?.type ?? solarPlanet.type}</p></div></div>
+            {selectedMoon ? <div className="solar-data-grid"><div><span>母行星</span><b>{solarPlanet.name}</b></div><div><span>公轉週期</span><b>{Math.abs(selectedMoon.orbitalPeriodDays).toFixed(3)} 日{selectedMoon.orbitalPeriodDays < 0 ? " · 逆行" : ""}</b></div><div><span>平均軌道距離</span><b>{selectedMoon.orbitDistanceKm.toLocaleString()} km</b></div><div><span>半徑</span><b>{selectedMoon.radiusEarth} R⊕</b></div></div> : isHalleySelected ? <div className="solar-data-grid"><div><span>近日點</span><b>{halleyComet.perihelionAu} AU</b></div><div><span>遠日點</span><b>{halleyComet.aphelionAu} AU</b></div><div><span>平均週期</span><b>76.1 年</b></div><div><span>軌道離心率</span><b>{halleyComet.eccentricity}</b></div></div> : <div className="solar-data-grid"><div><span>平均距離</span><b>{solarPlanet.au} AU</b></div><div><span>公轉週期</span><b>{solarPlanet.periodDays.toLocaleString()} 日</b></div><div><span>半徑</span><b>{solarPlanet.radiusEarth} R⊕</b></div><div><span>已知衛星</span><b>{solarPlanet.moons}</b></div></div>}
+            <div className="solar-climate"><span>{selectedMoon ? "主要成分" : isHalleySelected ? "彗核／下次回歸" : "溫度概況"}</span><b>{selectedMoon ? selectedMoon.composition : isHalleySelected ? `${halleyComet.nucleus} · ${halleyComet.nextReturn}` : solarPlanet.temperature}</b></div>
+            <p className={selectedMoon ? "solar-summary moon-summary" : "solar-summary"}>{selectedMoon ? <><span>生命條件模型 {selectedMoon.bioScore}%</span>{selectedMoon.state}。{selectedMoon.bioPrediction}</> : isHalleySelected ? halleyComet.summary : solarPlanet.summary}</p>
             <div className="planet-picker" aria-label="選擇太陽系星體">{solarBodies.map((body) => <button key={body.id} className={body.id === solarPlanetId ? "active" : ""} onClick={() => setSolarPlanetId(body.id)}><i style={{ background: body.color, boxShadow: `0 0 9px ${body.accent}` }} /><span>{body.name}</span></button>)}<button className={isHalleySelected ? "active" : ""} onClick={() => setSolarPlanetId(halleyComet.id)}><i className="comet-dot" /><span>哈雷彗星</span></button></div>
+            <p className="picker-label">FEATURED MOONS / 知名衛星</p>
+            <div className="planet-picker moon-picker" aria-label="選擇知名衛星">{solarMoons.map((moon) => <button key={moon.id} className={moon.id === solarPlanetId ? "active" : ""} onClick={() => setSolarPlanetId(moon.id)}><i style={{ background: moon.color, boxShadow: `0 0 8px ${moon.accent}` }} /><span>{moon.name}</span><small>{solarBodies.find((body) => body.id === moon.parentId)?.name}</small></button>)}</div>
           </aside>
         </div>
       </section>

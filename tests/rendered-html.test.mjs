@@ -15,6 +15,9 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(page, /daysSinceJ2000/);
   assert.match(page, /1P \/ HALLEY/);
   assert.match(page, /halleyComet\.eccentricity/);
+  assert.match(page, /const solarMoons/);
+  assert.match(page, /木衛二/);
+  assert.match(page, /selectedMoon\.bioScore/);
   assert.match(page, /REAL-TIME EPHEMERIS/);
   assert.doesNotMatch(page, /setLineDash\(\[5, 7\]\)/);
   assert.match(page, /bioPrediction/);
@@ -23,6 +26,8 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(css, /\.solar-canvas/);
   assert.match(css, /\.comet-orb/);
   assert.match(css, /\.speed-switch/);
+  assert.match(css, /\.moon-picker/);
+  assert.match(css, /\.moon-orb/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
 });
 
