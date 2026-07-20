@@ -11,10 +11,12 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(layout, /NOCTUA/);
   assert.match(page, /OrbitCanvas/);
   assert.match(page, /SolarSystemCanvas/);
-  assert.match(page, /SOLAR DYNAMICS/);
+  assert.match(page, /J2000 即時近似位置/);
+  assert.match(page, /daysSinceJ2000/);
   assert.match(page, /1P \/ HALLEY/);
   assert.match(page, /halleyComet\.eccentricity/);
   assert.match(page, /REAL-TIME EPHEMERIS/);
+  assert.doesNotMatch(page, /setLineDash\(\[5, 7\]\)/);
   assert.match(page, /bioPrediction/);
   assert.match(page, /OWNER ACCESS/);
   assert.match(css, /\.orbit-canvas/);
@@ -46,3 +48,4 @@ test("ships the social preview and no ChatGPT authentication helper", async () =
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url)));
 });
+
