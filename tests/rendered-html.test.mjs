@@ -79,6 +79,24 @@ test("seeds and exposes a one-click demo holder account", async () => {
   assert.match(css, /\.demo-owner-account/);
 });
 
+test("ships the immersive WebGL celestial explorer", async () => {
+  const [page, explorer, css, packageJson] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/CelestialExplorer3D.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /CelestialExplorer3D/);
+  assert.match(page, /開啟 3D VIEW/);
+  assert.match(page, /開啟 3D 專屬星系/);
+  assert.match(explorer, /OrbitControls/);
+  assert.match(explorer, /WebGLRenderer/);
+  assert.match(explorer, /宜居帶/);
+  assert.match(explorer, /拖曳旋轉/);
+  assert.match(css, /\.celestial-explorer/);
+  assert.match(packageJson, /"three"/);
+});
+
 test("ships the social preview and no ChatGPT authentication helper", async () => {
   await access(new URL("../public/og-v2.png", import.meta.url));
   const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");

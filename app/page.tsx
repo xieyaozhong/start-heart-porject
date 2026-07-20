@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 type Composition = { label: string; value: number; color: string };
 type Planet = {
@@ -15,6 +15,8 @@ type StarSystem = {
 };
 type NamingPackage = { id: string; name: string; priceTwd: number; description: string; features: string[] };
 type Registry = { order: { registryCode: string; desiredName: string; ownerName: string; dedication: string; packageName: string }; system: StarSystem };
+type ExplorerTarget = { system: StarSystem; planetId: string; ownerLabel?: string; registryCode?: string };
+const CelestialExplorer3D = lazy(() => import("./components/CelestialExplorer3D"));
 type SolarBody = {
   id: string; name: string; english: string; type: string; au: number; periodDays: number; radiusEarth: number;
   color: string; accent: string; epochAngle: number; eccentricity: number; perihelionLongitude: number;
@@ -110,5 +112,464 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
   const simulationDaysRef = useRef(0);
   const previousTimeRef = useRef<number | null>(null);
   const selectRef = useRef(onSelect);
-  selectRef.current×MôÚÚ$z{-®éÜj×4æÖSÒ'6—FRÖ†VFW"#à¢Æ6Æ74æÖSÒ&'&æB"‡&VcÒ"7F÷#ãÇ7â6Æ74æÖSÒ&'&æB×6–v–Â#äãÂ÷7ããÇ7ããÆ#ääô5ETÂö#ãÇ6ÖÆÃîi©~ZIÎZJš¹NŠxkŠÎXûÂ÷6ÖÆÃãÂ÷7ããÂöà¢ÆæcãÆ‡&VcÒ"76öÆ"×7—7FVÒ#îZJ®™›Ş{;³ÂöãÆ‡&VcÒ"6ö'6W'fF÷'’#îX	˜i‰ş{;³ÂöãÆ‡&VcÒ"6F—66÷fW&–W2#îiÈiky›Î[ˆ3ÂöãÆ‡&VcÒ"7&Vv—7G'’#î{H[û^YŞYÓÂöãÆ‡&VcÒ"÷&W6÷W&6W2#îXZy>ZJih~j™şjx³ÂöãÆ'WGFöâöä6Æ–6³×²‚’Óâ6WE&Vv—7G'”÷Vâ‡G'VR—ÓîhÈiÈˆ^XZ^Xú3Âö'WGFöããÂöæcà¢Æ6Æ74æÖSÒ&FÖ–âÖÆ–æ²"‡&VcÒ"öFÖ–â#î[èÎXûzêyb(isÂöà¢Âö†VFW#à¢ÆF—b6Æ74æÖSÒ'66–Væ6RÖ&ææW"#ãÆ#äÔôDTÂ4äD”DDSÂö#âh˜iÈZJš¹Ny¨nx+®Šˆ®‰™şhêkÉNX	˜š¹NûÈÎ[	®™ÙîjÚ>[ÈşZJih~y›ÎxûîûÉ¾KØŞ{ÚîKéŞ‹¸Î˜>˜iÉşˆˆ~Xø>ˆ>i¸nXX>XÛ>i˜.Šˆzé~8#ÂöF—cà ¢Ç6V7F–öâ6Æ74æÖSÒ'6öÆ"×6†÷v66R"–CÒ'6öÆ"×7—7FVÒ#à¢ÆF—b6Æ74æÖSÒ'6öÆ"Ö–çG&ò"–CÒ'F÷#à¢ÆF—cãÇ6Æ74æÖSÒ&W–V'&÷r#ä„ôÔR5•5DTÒòÄ•dR4”ÕTÄD”ôãÂ÷ãÆƒî[éîh‰X	y¨NZJ®™›ŞX{®y›ÎûÈÃÆ'"óãÆVÓîyÈ¾Šh¾ŠÎi‰ş8Š¾i‰şˆˆ~[Ù~i‰şjÚ>YÊz{¾X¹^8#ÂöVÓãÂöƒãÂöF—cà¢ÆF—b6Æ74æÖSÒ'6öÆ"Ö–çG&òÖ6÷’#ãÇîKéÒ£#Xø>ˆ>i¸nXX>8XZÎ‹Ø˜iÉşˆˆ~yºîX˜ÒUD2i˜.™i>hêzé~y¨NK©.X¹^[ÈşZJ®™›Ş{;¾8.›¹îi8®ŠÎi‰ş8yú^YŞŠ¾i‰şh‰nY8™»~[Ù~i‰şûÈÎXÛ>i˜.iú^yÈ¾KØŞ{Úîˆˆ~y+Z(>jh.k88#Â÷ãÆF—cãÇ7ããÆ’óîXÛ>i˜.i‰şi¸nKØŞ{ÚãÂ÷7ããÇ7ãã‚ÄäUE2+r’dTEU$TBÔôôå3Â÷7ããÇ7ããò„ÄÄU“Â÷7ããÂöF—cãÂöF—cà¢ÂöF—cà¢ÆF—b6Æ74æÖSÒ'6öÆ"Ö6öç6öÆR#à¢Æ'F–6ÆR6Æ74æÖSÒ'6öÆ"×7FvR#à¢ÆF—b6Æ74æÖSÒ'6öÆ"×FööÆ&"#à¢ÆF—cãÇ7â6Æ74æÖSÒ&Æ—fR×VÇ6R"óâ4ôÄ"õ$$•DÂd”UrÇ6ÖÆÃî‹¸Î˜>‹yŞ™º.hêŠinŠk®Z9>{ŠãÂ÷6ÖÆÃãÂöF—cà¢ÆF—b6Æ74æÖSÒ'6öÆ"Ö6öçG&öÇ2#à¢Æ'WGFöâ6Æ74æÖS×·6öÆ$ÖöFRÓÓÒ&Æ—fR"ò&7F—fR"¢"'Ò&–×&W76VC×·6öÆ$ÖöFRÓÓÒ&Æ—fR'Òöä6Æ–6³×²‚’Óâ²6WE6öÆ$ÖöFR‚&Æ—fR"“²6WE6öÆ%W6VB†fÇ6R“²×ÓîXÛ>i˜.KØŞ{ÚãÂö'WGFöãà¢Æ'WGFöâ6Æ74æÖS×·6öÆ$ÖöFRÓÓÒ&æ–ÖF–öâ"ò&7F—fR"¢"'Ò&–×&W76VC×·6öÆ$ÖöFRÓÓÒ&æ–ÖF–öâ'Òöä6Æ–6³×²‚’Óâ6WE6öÆ$ÖöFR‚&æ–ÖF–öâ"—ÓîX¹^yZ¾š	ŠkÓÂö'WGFöãà¢·6öÆ$ÖöFRÓÓÒ&æ–ÖF–öâ"bbÃçµ³ÂbÂ#EÒæÖ‚‡fÇVR’ÓâÆ'WGFöâ¶W“×·fÇVWÒ6Æ74æÖS×·6öÆ%7VVBÓÓÒfÇVRò&7F—fR"¢"'Ò&–×&W76VC×·6öÆ%7VVBÓÓÒfÇVWÒöä6Æ–6³×²‚’Óâ6WE6öÆ%7VVB‡fÇVR—Óç·fÇVWÜ9sÂö'WGFöãâ—ÓÆ'WGFöâ6Æ74æÖS×·6öÆ%W6VBò&7F—fRW6R"¢'W6R'Ò&–×&W76VC×·6öÆ%W6VGÒöä6Æ–6³×²‚’Óâ6WE6öÆ%W6VB‚‡fÇVR’ÓâfÇVR—Óç·6öÆ%W6VBò.{›Î{¨Â"¢.iª¾XÂ'ÓÂö'WGFöããÂóçĞ¢ÂöF—cà¢ÂöF—cà¢Å6öÆ%7—7FVÔ6çf26VÆV7FVD–C×·6öÆ%ÆæWD–GÒöå6VÆV7C×·6WE6öÆ%ÆæWD–GÒÖöFS×·6öÆ$ÖöFWÒ7VVC×·6öÆ%7VVGÒW6VC×·6öÆ%W6VGÒóà¢ÆF—b6Æ74æÖSÒ'6öÆ"Öfö÷B#ãÇ7ãä£#XÛ>i˜.‹ùKËÎKØŞ{Úâ+rŠ¾i‰ş‹¸Î˜>hêiKîZJ~šşzK£Â÷7ããÇ7ãã9rÒãCRjŠi:Îiz^ûÈşzy#Â÷7ããÂöF—cà¢Âö'F–6ÆSà¢Æ6–FR6Æ74æÖSÒ'6öÆ"Ö–ç7V7F÷"#à¢ÆF—b6Æ74æÖSÒ'6öÆ"×ÆæWB×F—FÆR#ãÇ7â6Æ74æÖS×¶—4†ÆÆW•6VÆV7FVBò&6öÖWBÖ÷&""¢—4Öööå6VÆV7FVBò&ÖööâÖ÷&""¢"'Ò7G–ÆS×·²"Ò×ÆæWBÖ6öÆ÷"#¢—4†ÆÆW•6VÆV7FVBò†ÆÆW”6öÖWBæ6öÆ÷"¢6VÆV7FVDÖööãòæ6öÆ÷"óò6öÆ%ÆæWBæ6öÆ÷"Â"Ò×ÆæWBÖ66VçB#¢—4†ÆÆW•6VÆV7FVBò†ÆÆW”6öÖWBæ66VçB¢6VÆV7FVDÖööãòæ66VçBóò6öÆ%ÆæWBæ66VçBÒ2&V7Bä555&÷W'F–W7ÒóãÆF—cãÇ6ÖÆÃç¶—4†ÆÆW•6VÆV7FVBò†ÆÆW”6öÖWBæVævÆ—6‚¢6VÆV7FVDÖööãòæVævÆ—6‚óò6öÆ%ÆæWBæVævÆ—6‡Òò4TÄT5DTCÂ÷6ÖÆÃãÆƒ#ç¶—4†ÆÆW•6VÆV7FVBò†ÆÆW”6öÖWBææÖR¢6VÆV7FVDÖööãòææÖRóò6öÆ%ÆæWBææÖWÓÂöƒ#ãÇç¶—4†ÆÆW•6VÆV7FVBò†ÆÆW”6öÖWBçG—R¢6VÆV7FVDÖööãòçG—Róò6öÆ%ÆæWBçG—WÓÂ÷ãÂöF—cãÂöF—cà¢·6VÆV7FVDÖööâòÆF—b6Æ74æÖSÒ'6öÆ"ÖFFÖw&–B#ãÆF—cãÇ7ãîjøŞŠÎi‰óÂ÷7ããÆ#ç·6öÆ%ÆæWBææÖWÓÂö#ãÂöF—cãÆF—cãÇ7ãîXZÎ‹Ø˜iÉóÂ÷7ããÆ#ç´ÖF‚æ'2‡6VÆV7FVDÖööâæ÷&&—FÅW&–öDF—2’çFôf—†VBƒ2—ÒizW·6VÆV7FVDÖööâæ÷&&—FÅW&–öDF—2Âò"+r˜nŠÂ"¢"'ÓÂö#ãÂöF—cãÆF—cãÇ7ãî[›>YØ~‹¸Î˜>‹yŞ™º#Â÷7ããÆ#ç·6VÆV7FVDÖööâæ÷&&—DF—7Fæ6T¶ÒçFôÆö6ÆU7G&–ær‚—Ò¶ÓÂö#ãÂöF—cãÆF—cãÇ7ãîXØ®[éÂ÷7ããÆ#ç·6VÆV7FVDÖööâç&F—W4V'F‡Ò.(©SÂö#ãÂöF—cãÂöF—câ¢—4†ÆÆW•6VÆV7FVBòÆF—b6Æ74æÖSÒ'6öÆ"ÖFFÖw&–B#ãÆF—cãÇ7ãî‹ùiz^›¹ãÂ÷7ããÆ#ç¶†ÆÆW”6öÖWBçW&–†VÆ–öäWÒSÂö#ãÂöF—cãÆF—cãÇ7ãî˜iz^›¹ãÂ÷7ããÆ#ç¶†ÆÆW”6öÖWBæ†VÆ–öäWÒSÂö#ãÂöF—cãÆF—cãÇ7ãî[›>YØ~˜iÉóÂ÷7ããÆ#ãsbã[›CÂö#ãÂöF—cãÆF—cãÇ7ãî‹¸Î˜>™º.[ø>xèsÂ÷7ããÆ#ç¶†ÆÆW”6öÖWBæV66VçG&–6—G—ÓÂö#ãÂöF—cãÂöF—câ¢ÆF—b6Æ74æÖSÒ'6öÆ"ÖFFÖw&–B#ãÆF—cãÇ7ãî[›>YØ~‹yŞ™º#Â÷7ããÆ#ç·6öÆ%ÆæWBæWÒSÂö#ãÂöF—cãÆF—cãÇ7ãîXZÎ‹Ø˜iÉóÂ÷7ããÆ#ç·6öÆ%ÆæWBçW&–öDF—2çFôÆö6ÆU7G&–ær‚—ÒizSÂö#ãÂöF—cãÆF—cãÇ7ãîXØ®[éÂ÷7ããÆ#ç·6öÆ%ÆæWBç&F—W4V'F‡Ò.(©SÂö#ãÂöF—cãÆF—cãÇ7ãî[{.yú^Š¾i‰óÂ÷7ããÆ#ç·6öÆ%ÆæWBæÖööç7ÓÂö#ãÂöF—cãÂöF—cçĞ¢ÆF—b6Æ74æÖSÒ'6öÆ"Ö6Æ–ÖFR#ãÇ7ãç·6VÆV7FVDÖööâò.K‹¾Šhh‰Xˆb"¢—4†ÆÆW•6VÆV7FVBò.[Ù~jûÈşKˆ¾jÊY¹îjÛ‚"¢.kª¾[ªnjh.k8'ÓÂ÷7ããÆ#ç·6VÆV7FVDÖööâò6VÆV7FVDÖööâæ6ö×÷6—F–öâ¢—4†ÆÆW•6VÆV7FVBòG¶†ÆÆW”6öÖWBæçV6ÆWW7Ò+rG¶†ÆÆW”6öÖWBææW‡E&WGW&çÖ¢6öÆ%ÆæWBçFV×W&GW&WÓÂö#ãÂöF—cà¢Ç6Æ74æÖS×·6VÆV7FVDÖööâò'6öÆ"×7VÖÖ'’Öööâ×7VÖÖ'’"¢'6öÆ"×7VÖÖ'’'Óç·6VÆV7FVDÖööâòÃãÇ7ãîyIşYŞj)ŞK»njŠYè²·6VÆV7FVDÖööâæ&–õ66÷&WÒSÂ÷7ãç·6VÆV7FVDÖööâç7FFWŞ8'·6VÆV7FVDÖööâæ&–õ&VF–7F–öçÓÂóâ¢—4†ÆÆW•6VÆV7FVBò†ÆÆW”6öÖWBç7VÖÖ'’¢6öÆ%ÆæWBç7VÖÖ'—ÓÂ÷à¢ÆF—b6Æ74æÖSÒ'ÆæWB×–6¶W""&–ÖÆ&VÃÒ.˜i8~ZJ®™›Ş{;¾i‰şš¹B#ç·6öÆ$&öF–W2æÖ‚†&öG’’ÓâÆ'WGFöâ¶W“×¶&öG’æ–GÒ6Æ74æÖS×¶&öG’æ–BÓÓÒ6öÆ%ÆæWD–Bò&7F—fR"¢"'Òöä6Æ–6³×²‚’Óâ6WE6öÆ%ÆæWD–B†&öG’æ–B—ÓãÆ’7G–ÆS×·²&6¶w&÷VæC¢&öG’æ6öÆ÷"Â&÷…6†F÷s¢—‚G¶&öG’æ66VçGÖ×ÒóãÇ7ãç¶&öG’ææÖWÓÂ÷7ããÂö'WGFöãâ—ÓÆ'WGFöâ6Æ74æÖS×¶—4†ÆÆW•6VÆV7FVBò&7F—fR"¢"'Òöä6Æ–6³×²‚’Óâ6WE6öÆ%ÆæWD–B††ÆÆW”6öÖWBæ–B—ÓãÆ’6Æ74æÖSÒ&6öÖWBÖF÷B"óãÇ7ãîY8™»~[Ù~i‰óÂ÷7ããÂö'WGFöããÂöF—cà¢Ç6Æ74æÖSÒ'–6¶W"ÖÆ&VÂ#ädTEU$TBÔôôå2òyú^YŞŠ¾i‰óÂ÷à¢ÆF—b6Æ74æÖSÒ'ÆæWB×–6¶W"Öööâ×–6¶W""&–ÖÆ&VÃÒ.˜i8~yú^YŞŠ¾i‰ò#ç·6öÆ$Öööç2æÖ‚†Öööâ’ÓâÆ'WGFöâ¶W“×¶Öööâæ–GÒ6Æ74æÖS×¶Öööâæ–BÓÓÒ6öÆ%ÆæWD–Bò&7F—fR"¢"'Òöä6Æ–6³×²‚’Óâ6WE6öÆ%ÆæWD–B†Öööâæ–B—ÓãÆ’7G–ÆS×·²&6¶w&÷VæC¢Öööâæ6öÆ÷"Â&÷…6†F÷s¢‡‚G¶Öööâæ66VçGÖ×ÒóãÇ7ãç¶ÖööâææÖWÓÂ÷7ããÇ6ÖÆÃç·6öÆ$&öF–W2æf–æB‚†&öG’’Óâ&öG’æ–BÓÓÒÖööâç&VçD–B“òææÖWÓÂ÷6ÖÆÃãÂö'WGFöãâ—ÓÂöF—cà¢Âö6–FSà¢ÂöF—cà¢Â÷6V7F–öãà ¢Ç6V7F–öâ6Æ74æÖSÒ&ö'6W'fF÷'’"–CÒ&ö'6W'fF÷'’#à¢ÆF—b6Æ74æÖSÒ&ö'6W'fF÷'’Ö†VB#à¢ÆF—cãÇ6Æ74æÖSÒ&W–V'&÷r#äÄ•dR5•5DTÒò·7—7FVÒæ–GÓÂ÷ãÆƒç·7—7FVÒæF—7Æ”æÖRóò7—7FVÒæFW6–væF–öçÓÂöƒãÇç·7—7FVÒç7VÖÖ'—ÓÂ÷ãÂöF—cà¢ÆF—b6Æ74æÖSÒ'7—7FVÒÖ6ö÷&F–æFW2#ãÇ7ãå$Æ#ç¶f÷&ÖE&‡7—7FVÒç&†÷W'2—ÓÂö#ãÂ÷7ããÇ7ãäDT2Æ#ç¶f÷&ÖDFV2‡7—7FVÒæFV4FVr—ÓÂö#ãÂ÷7ããÇ7ãäD•5BÆ#ç·7—7FVÒæF—7Fæ6U2çFôf—†VBƒ—Ò3Âö#ãÂ÷7ããÂöF—cà¢ÂöF—cà¢ÆF—b6Æ74æÖSÒ&ö'6W'fF÷'’Öw&–B#à¢Æ'F–6ÆR6Æ74æÖSÒ'7—7FVÒ×f–Ww÷'B#à¢ÆF—b6Æ74æÖSÒ'f–Ww÷'B×FööÆ&"#ãÆF—cãÆ’óâÄ•dRõ4•D”ôâÇ7ãç·7—7FVÒçÆæWG2æÆVæwF‡ÒÄäUE3Â÷7ããÂöF—cãÆF—b6Æ74æÖSÒ'f–Ww÷'BÖ7F–öç2#ãÆF—b6Æ74æÖSÒ&ÖöFR×7v—F6‚#ãÆ'WGFöâ6Æ74æÖS×¶ÖöFRÓÓÒ&Æ—fR"ò&7F—fR"¢"'Òöä6Æ–6³×²‚’Óâ²6WDÖöFR‚&Æ—fR"“²6WE7—7FVÕW6VB†fÇ6R“²×ÓîXÛ>i˜.KØŞ{ÚãÂö'WGFöããÆ'WGFöâ6Æ74æÖS×¶ÖöFRÓÓÒ&æ–ÖF–öâ"ò&7F—fR"¢"'Òöä6Æ–6³×²‚’Óâ6WDÖöFR‚&æ–ÖF–öâ"—ÓîX¹^yZ¾š	ŠkÓÂö'WGFöããÂöF—cç¶ÖöFRÓÓÒ&æ–ÖF–öâ"bbÆF—b6Æ74æÖSÒ'7VVB×7v—F6‚#çµ³ÂbÂ#EÒæÖ‚‡fÇVR’ÓâÆ'WGFöâ¶W“×·fÇVWÒ6Æ74æÖS×·7—7FVÕ7VVBÓÓÒfÇVRò&7F—fR"¢"'Ò&–×&W76VC×·7—7FVÕ7VVBÓÓÒfÇVWÒöä6Æ–6³×²‚’Óâ6WE7—7FVÕ7VVB‡fÇVR—Óç·fÇVWÜ9sÂö'WGFöãâ—ÓÆ'WGFöâ6Æ74æÖS×·7—7FVÕW6VBò&7F—fR"¢"'Ò&–×&W76VC×·7—7FVÕW6VGÒöä6Æ–6³×²‚’Óâ6WE7—7FVÕW6VB‚‡fÇVR’ÓâfÇVR—Óç·7—7FVÕW6VBò.{›Î{¨Â"¢.iª¾XÂ'ÓÂö'WGFöããÂöF—cçÓÂöF—cãÂöF—cà¢Ä÷&&—D6çf27—7FVÓ×·7—7FV×Ò6VÆV7FVD–C×·ÆæWBæ–GÒöå6VÆV7C×·6WEÆæWD–GÒÖöFS×¶ÖöFWÒ7VVC×·7—7FVÕ7VVGÒW6VC×·7—7FVÕW6VGÒóà¢ÆF—b6Æ74æÖSÒ'f–Ww÷'BÖfö÷B#ãÇ7ãîŠin˜xîûÉ®{HB´ÖF‚æÖ‚‚ââç7—7FVÒçÆæWG2æÖ‚†—FVÒ’Óâ—FVÒç6VÖ”Ö¦÷$R’’çFôf—†VBƒ"—ÒSÂ÷7ããÇ7ãîhZ.˜	şš	ŠkÒ+r9rÒãCRjŠi:Îiz^ûÈşzy#Â÷7ããÂöF—cà¢Âö'F–6ÆSà¢Æ6–FR6Æ74æÖSÒ'ÆæWBÖ–ç7V7F÷"#à¢ÆF—b6Æ74æÖSÒ&–ç7V7F÷"×F—FÆR#ãÇ7â7G–ÆS×·²&6¶w&÷VæC¢ÆæWBæ÷&&—D6öÆ÷"×ÒóãÆF—cãÇå4TÄT5DTB$ôE“Â÷ãÆƒ#ç·ÆæWBæF—7Æ”æÖRóòÆæWBæ6öFWÓÂöƒ#ãÇ6ÖÆÃç·ÆæWBçG—WÓÂ÷6ÖÆÃãÂöF—cãÂöF—cà¢ÆF—b6Æ74æÖSÒ'ÆæWBÖÖWG&–72#ãÆF—cãÇ7ãî‹:®˜xóÂ÷7ããÆ#ç·ÆæWBæÖ74V'F‚çFôf—†VBƒ"—ÒŞ(©SÂö#ãÂöF—cãÆF—cãÇ7ãîXØ®[éÂ÷7ããÆ#ç·ÆæWBç&F—W4V'F‚çFôf—†VBƒ"—Ò.(©SÂö#ãÂöF—cãÆF—cãÇ7ãîXZÎ‹Ø˜iÉóÂ÷7ããÆ#ç·ÆæWBçW&–öDF—2çFôf—†VBƒ"—ÒizSÂö#ãÂöF—cãÆF—cãÇ7ãî[›>Škª¾[ªcÂ÷7ããÆ#ç·ÆæWBæWV–Æ–'&—VÕFV×Ò³Âö#ãÂöF—cãÂöF—cà¢ÆF—b6Æ74æÖSÒ&FFÖ&Æö6²#ãÇîK‹¾Šhh‰XˆcÂ÷ç·ÆæWBæ6ö×÷6—F–öâæÖ‚†—FVÒ’ÓâÆF—b6Æ74æÖSÒ&6ö×÷6—F–öâ"¶W“×¶—FVÒæÆ&VÇÓãÇ7ãç¶—FVÒæÆ&VÇÓÂ÷7ããÆ“ãÆ"7G–ÆS×·²v–GFƒ¢G¶—FVÒçfÇVWÒVÂ&6¶w&÷VæC¢—FVÒæ6öÆ÷"×ÒóãÂö“ãÇ7G&öæsç¶—FVÒçfÇVWÒSÂ÷7G&öæsãÂöF—câ—ÓÂöF—cà¢ÆF—b6Æ74æÖSÒ&FFÖ&Æö6²6ö×7B#ãÇîZJ~k
->ˆˆ~x¸hX³Â÷ãÆ#ç·ÆæWBæFÖ÷7†W&WÓÂö#ãÇ6ÖÆÃç·ÆæWBç7FFWÓÂ÷6ÖÆÃãÂöF—cà¢ÆF—b6Æ74æÖSÒ&&–òÖ6&B#ãÆF—cãÇ7ãîyIşxšj)ŞK»nš	kŠÃÂ÷7ããÆ#ç·ÆæWBæ&–õ66÷&WÒSÂö#ãÂöF—cãÆ“ãÆ"7G–ÆS×·²v–GFƒ¢G·ÆæWBæ&–õ66÷&WÒV×ÒóãÂö“ãÇç·ÆæWBæ&–õ&VF–7F–öçÓÂ÷ãÂöF—cà¢Âö6–FSà¢ÂöF—cà¢Â÷6V7F–öãà ¢Ç6V7F–öâ6Æ74æÖSÒ&F—66÷fW&–W2"–CÒ&F—66÷fW&–W2#à¢ÆF—b6Æ74æÖSÒ'6V7F–öâ×F—FÆR#ãÆF—cãÇ6Æ74æÖSÒ&W–V'&÷r#åT$Ä•4„TB5•5DTÕ3Â÷ãÆƒ#îiÈiky›Î[ˆ>y¨NX	˜i‰ş{;³Âöƒ#ãÂöF—cãÇ7ãî[èÎXûZúj[èÎXZÎ™h²+r‹8~iiXÛ>i˜.i»NikÂ÷7ããÂöF—cà¢ÆF—b6Æ74æÖSÒ'7—7FVÒÖÆ—7B#à¢·7—7FV×2æÖ‚†—FVÒÂ–æFW‚’ÓâÆ'WGFöâ¶W“×¶—FVÒæ–GÒ6Æ74æÖS×¶—FVÒæ–BÓÓÒ7—7FVÒæ–Bò'7—7FVÒ×&÷r7F—fR"¢'7—7FVÒ×&÷r'Òöä6Æ–6³×²‚’Óâ6†ö÷6U7—7FVÒ†—FVÒ—ÓãÇ7â6Æ74æÖSÒ'7—7FVÒÖ–æFW‚#çµ7G&–ær†–æFW‚²’çE7F'Bƒ"Â#"—ÓÂ÷7ããÇ7ããÆ#ç¶—FVÒæFW6–væF–öçÓÂö#ãÇ6ÖÆÃç¶—FVÒæ6Æ76–f–6F–öçÓÂ÷6ÖÆÃãÂ÷7ããÇ7ããÆ#ç¶—FVÒçÆæWG2æÆVæwF‡ÓÂö#ãÇ6ÖÆÃîŠÎi‰şX	˜š¹CÂ÷6ÖÆÃãÂ÷7ããÇ7ããÆ#ç¶—FVÒæ6öæf–FVæ6WÒSÂö#ãÇ6ÖÆÃîjŠYè¾Kú[ø3Â÷6ÖÆÃãÂ÷7ããÇ7ããÆ#ç¶—FVÒæF—7Fæ6U2çFôf—†VBƒ—Ò3Âö#ãÇ6ÖÆÃç¶—FVÒçV&Æ—6†VDBòæWrFFR†—FVÒçV&Æ—6†VDB’çFôÆö6ÆTFFU7G&–ær‚'¦‚ÕEr"’¢.[è^y›Î[ˆ2'ÓÂ÷6ÖÆÃãÂ÷7ããÇ7ãî™h¾YYşi‰ş{;²(i#Â÷7ããÂö'WGFöãâ—Ğ¢ÂöF—cà¢Â÷6V7F–öãà ¢Ç6V7F–öâ6Æ74æÖSÒ'&Vv—7G'’×6V7F–öâ"–CÒ'&Vv—7G'’#à¢ÆF—b6Æ74æÖSÒ'&Vv—7G'’Ö6÷’#ãÇ6Æ74æÖSÒ&W–V'&÷r#å$•dDR4TÄU5D”Â$Tt•5E%“Â÷ãÆƒ#îh¨®KˆX¾YŞZÙ~ûÈÃÆ'"óãÆVÓîyYYÊZè>y¨N‹¸Î˜>Kˆ®8#ÂöVÓãÂöƒ#ãÇîZèÎh‰z+®Š¨Ş[èÎûÈÎhÈiÈˆ^iÈ>Xùn[é~YJşKˆhni‰şš¹N{;¾{z‰™ş8X¾K«®XÉnYŞYŞŠØi»ûÈÎKº^Xø®KéŞXÛ>i˜.‹¸Î˜>‹8~iiyIşh‰y¨N[[ÎX¹^yZ¾8#Â÷ãÆ'WGFöâöä6Æ–6³×²‚’Óâ6WE&Vv—7G'”÷Vâ‡G'VR—Óî[{.iÈy›¾˜ÈN{z‰™şûÉş™h¾YYş[[Îi‰ş{;²(i#Âö'WGFöããÂöF—cà¢ÆF—b6Æ74æÖSÒ'6¶vRÖÆ—7B#ç·6¶vW2æÖ‚†—FVÒÂ–æFW‚’ÓâÆ'F–6ÆR¶W“×¶—FVÒæ–GÒ6Æ74æÖS×¶–æFW‚ÓÓÒò'6¶vRÖ6&BfVGW&VB"¢'6¶vRÖ6&B'ÓãÆF—cãÇ7ãç¶—FVÒææÖWÓÂ÷7ãç¶–æFW‚ÓÓÒbbÆ“îhê‰jcÂö“çÓÂöF—cãÆƒ3äåBB¶—FVÒç&–6UGvBçFôÆö6ÆU7G&–ær‚—ÓÂöƒ3ãÇç¶—FVÒæFW67&—F–öçÓÂ÷ãÇVÃç¶—FVÒæfVGW&W2æÖ‚†fVGW&R’ÓâÆÆ’¶W“×¶fVGW&WÓîûÈ²¶fVGW&WÓÂöÆ“â—ÓÂ÷VÃãÆ'WGFöâöä6Æ–6³×²‚’Óâ²6WD÷&FW%Æâ†—FVÒ“²6WD÷&FW$FöæR†çVÆÂ“²×Óî˜i8~jÚNikjƒÂö'WGFöããÂö'F–6ÆSâ—ÓÂöF—cà¢Â÷6V7F–öãà ¢Æfö÷FW#ãÆF—b6Æ74æÖSÒ&'&æB#ãÇ7â6Æ74æÖSÒ&'&æB×6–v–Â6ÖÆÂ#äãÂ÷7ããÇ7ããÆ#ääô5ETÂö#ãÇ6ÖÆÃîi©~ZIÎZJš¹NŠxkŠÎXûÂ÷6ÖÆÃãÂ÷7ããÂöF—cãÇîzyZÛjŠYè¾‹ËX{®X8^Ké¾iYˆ+.8z	Nz›nX~ŠŠŞˆˆ~zxK«®{H[û^yJ˜	N8.{H[û^YŞYŞKˆŞiŠò”RZéikYŞYŞ8#Â÷ãÆF—b6Æ74æÖSÒ&fö÷FW"ÖÆ–æ·2#ãÆ‡&VcÒ"÷&W6÷W&6W2#îXZy>ZJih~j™şjx³ÂöãÆ‡&VcÒ"öFÖ–â#îzêyn[èÎXûÂöãÂöF—cãÂöfö÷FW#à ¢¶÷&FW%ÆâbbÆF—b6Æ74æÖSÒ&ÖöFÂ×6†VÆÂ"öäÖ÷W6TF÷vã×²‚’Óâ6WD÷&FW%Æâ†çVÆÂ—ÓãÇ6V7F–öâ6Æ74æÖSÒ&÷&FW"ÖÖöFÂ"öäÖ÷W6TF÷vã×²†WfVçB’ÓâWfVçBç7F÷&÷vF–öâ‚—ÓãÆ'WGFöâ6Æ74æÖSÒ&ÖöFÂÖ6Æ÷6R"öä6Æ–6³×²‚’Óâ6WD÷&FW%Æâ†çVÆÂ—Óì9sÂö'WGFöãç¶÷&FW$FöæRòÆF—b6Æ74æÖSÒ&÷&FW"×7V66W72#ãÇ7ãî)É3Â÷7ããÇîy›¾˜ÈNyK>Š¸¾[{.[»®z¸³Â÷ãÆƒ#ç¶÷&FW$FöæWÓÂöƒ#ãÇ6ÖÆÃîK¹jËîz+®Š¨Ş[èÎûÈÎzêynY:iÈ>jy›Î[[Îy›¾˜ÈN{z‰™şˆˆ~X¹^yZ¾XZ^Xú>8#Â÷6ÖÆÃãÆ'WGFöâöä6Æ–6³×²‚’Óâ6WD÷&FW%Æâ†çVÆÂ—ÓîZèÎh‰Âö'WGFöããÂöF—câ¢Æf÷&Òöå7V&Ö—C×·7V&Ö—D÷&FW'ÓãÇ6Æ74æÖSÒ&W–V'&÷r#äÔTÔõ$”Âõ$DU#Â÷ãÆƒ#ç¶÷&FW%ÆâææÖWŞikjƒÂöƒ#ãÆF—b6Æ74æÖSÒ&÷&FW"×F&vWB#ãÇ7ãîy›¾˜ÈNyºîj‰“Â÷7ããÆ#ç·7—7FVÒæFW6–væF–öçÒ+r·ÆæWBæ6öFRç7Æ—B‚""’æB‚Ó—ÓÂö#ãÂöF—cãÆÆ&VÃî{H[û^YŞz‹Æ–çWBæÖSÒ&FW6—&VDæÖR"&WV—&VBÖ„ÆVæwFƒ×³CÒÆ6V†öÆFW#Ò.Kè¾Zh"7FW&–"óãÂöÆ&VÃãÆÆ&VÃîhÈiÈˆ^Zy>YÓÆ–çWBæÖSÒ&÷væW$æÖR"&WV—&VBÖ„ÆVæwFƒ×³cÒóãÂöÆ&VÃãÆÆ&VÃî™»¾ZÙ˜;^K»cÆ–çWBæÖSÒ&VÖ–Â"&WV—&VBG—SÒ&VÖ–Â"óãÂöÆ&VÃãÆÆ&VÃîxÛ¾Š™ãÇFW‡F&VæÖSÒ&FVF–6F–öâ"Ö„ÆVæwFƒ×³#CÒ&÷w3×³7ÒÆ6V†öÆFW#Ò.h;>yYYÊŠØi»Kˆ®y¨NKˆXú^Š›"óãÂöÆ&VÃãÆF—b6Æ74æÖSÒ&FVÖò×–ÖVçB#îyºîX˜Şx+®Šˆ.Yjîˆˆ~y›¾˜ÈNkXzˆ¾ûÉ¾jÚ>[ÈşiKnjËî™Èhê^Kˆ®˜ykXiÈŞX¹8#ÂöF—cãÆ'WGFöâ6Æ74æÖSÒ'&–Ö'’Ö7F–öâ"G—SÒ'7V&Ö—B#î[»®z¸²åBB¶÷&FW%Æâç&–6UGvBçFôÆö6ÆU7G&–ær‚—Òy›¾˜ÈNyK>Š¸²(i#Âö'WGFöããÂöf÷&ÓçÓÂ÷6V7F–öããÂöF—cçĞ ¢·&Vv—7G'”÷VâbbÆF—b6Æ74æÖSÒ&ÖöFÂ×6†VÆÂ"öäÖ÷W6TF÷vã×²‚’Óâ6WE&Vv—7G'”÷Vâ†fÇ6R—ÓãÇ6V7F–öâ6Æ74æÖS×·&Vv—7G'’ò&÷væW"ÖÖöFÂ7F—fR"¢&÷væW"ÖÖöFÂ'ÒöäÖ÷W6TF÷vã×²†WfVçB’ÓâWfVçBç7F÷&÷vF–öâ‚—ÓãÆ'WGFöâ6Æ74æÖSÒ&ÖöFÂÖ6Æ÷6R"öä6Æ–6³×²‚’Óâ²6WE&Vv—7G'”÷Vâ†fÇ6R“²6WE&Vv—7G'’†çVÆÂ“²×Óì9sÂö'WGFöãç²&Vv—7G'’òÆf÷&Òöå7V&Ö—C×¶Æöö·W&Vv—7G'—ÓãÇ6Æ74æÖSÒ&W–V'&÷r#äõtäU"44U53Â÷ãÆƒ#î™h¾YYşKÚy¨N[[Îi‰ş{;³Âöƒ#ãÇî‹ËXZ^K¹jËîz+®Š¨Ş[èÎXùn[é~y¨Bäô5ETy›¾˜ÈN{z‰™ş8#Â÷ãÆF—b6Æ74æÖSÒ&FVÖòÖ÷væW"Ö66÷VçB#ãÆF—cãÇ7ãäDTÔò„ôÄDU"44õTåCÂ÷7ããÆ#ä7FW&–æö7GVÂö#ãÇ6ÖÆÃîzøNKè¾hÈiÈˆR+ri‰şšzK®zøNˆSÂ÷6ÖÆÃãÂöF—cãÆ6öFSç´DTÔõôõtäU%õ$Tt•5E%•ô4ôDWÓÂö6öFSãÆ'WGFöâG—SÒ&'WGFöâ"öä6Æ–6³×¶÷VäFVÖõ&Vv—7G'—ÓîKˆ˜Û^™h¾YYşzøNKè¾i‰ş{;²(i#Âö'WGFöããÂöF—cãÆF—b6Æ74æÖSÒ&÷væW"Ö66÷VçBÖF—f–FW"#ãÇ7ãîh‰nKÛşyJhÈiÈˆ^y›¾˜ÈN{z‰™óÂ÷7ããÂöF—cãÆÆ&VÃîy›¾˜ÈN{z‰™óÆ–çWBfÇVS×·&Vv—7G'”6öFWÒöä6†ævS×²†WfVçB’Óâ6WE&Vv—7G'”6öFR†WfVçBçF&vWBçfÇVRçFõWW$66R‚’—Ò&WV—&VBÆ6V†öÆFW#Ò$äõ"Õ…………………‚"óãÂöÆ&VÃç·&Vv—7G'”W'&÷"bbÇ7â6Æ74æÖSÒ&f÷&ÒÖW'&÷"#ç·&Vv—7G'”W'&÷'ÓÂ÷7ãçÓÆ'WGFöâ6Æ74æÖSÒ'&–Ö'’Ö7F–öâ"G—SÒ'7V&Ö—B#îš™~ŠØKŠn™h¾YYò(i#Âö'WGFöããÂöf÷&Óâ¢ÆF—b6Æ74æÖSÒ&÷væW"ÖW‡W&–Væ6R#ãÆF—b6Æ74æÖSÒ&÷væW"×6·’#ãÄ÷&&—D6çf27—7FVÓ×·&Vv—7G'’ç7—7FV×Ò6VÆV7FVD–C×·&Vv—7G'’ç7—7FVÒçÆæWG5³Òæ–GÒöå6VÆV7C×²‚’ÓâVæFVf–æVGÒÖöFSÒ&æ–ÖF–öâ"÷væW$Æ&VÃ×·&Vv—7G'’æ÷&FW"æFW6—&VDæÖWÒóãÂöF—cãÆF—b6Æ74æÖSÒ&÷væW"Ö6W'F–f–6FR#ãÇääô5ET$•dDR$Tt•5E%“Â÷ãÆƒ#ç·&Vv—7G'’æ÷&FW"æFW6—&VDæÖWÓÂöƒ#ãÇ7ãî{H[û^y›¾˜ÈNhÈiÈˆR+r·&Vv—7G'’æ÷&FW"æ÷væW$æÖWÓÂ÷7ããÆF—cãÇ6ÖÆÃî[[Îhni‰şš¹N{;¾{z‰™óÂ÷6ÖÆÃãÆ#ç·&Vv—7G'’æ÷&FW"ç&Vv—7G'”6öFWÓÂö#ãÇ6ÖÆÃîzyZÛ{z‰™óÂ÷6ÖÆÃãÆ#ç·&Vv—7G'’ç7—7FVÒæFW6–væF–öçÓÂö#ãÂöF—cç·&Vv—7G'’æ÷&FW"æFVF–6F–öâbbÆ&Æö6·V÷FSî8Ç·&Vv—7G'’æ÷&FW"æFVF–6F–öçŞ8ÓÂö&Æö6·V÷FSçÓÆ'WGFöâöä6Æ–6³×²‚’Óâ²6WE&Vv—7G'’†çVÆÂ“²6WE&Vv—7G'”6öFR‚""“²×Óî‹ùNY¹îiú^Šš#Âö'WGFöããÂöF—cãÂöF—cçÓÂ÷6V7F–öããÂöF—cçĞ¢ÂöÖ–ãà¢“°§Ğ 
+  selectRef.current = onSelect;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (mode === "live") simulationDaysRef.current = 0;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = 0;
+    let observer: ResizeObserver | null = null;
+    const draw = (time: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
+        canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const previous = previousTimeRef.current ?? time;
+      const deltaSeconds = Math.min((time - previous) / 1000, .1);
+      previousTimeRef.current = time;
+      if (mode === "animation" && !paused && !reduceMotion) simulationDaysRef.current += deltaSeconds * speed * ORBIT_PREVIEW_DAYS_PER_SECOND;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const w = rect.width; const h = rect.height; const cx = w * .5; const cy = h * .51;
+      const space = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .78);
+      space.addColorStop(0, "#0c2032"); space.addColorStop(.42, "#061322"); space.addColorStop(1, "#01050b");
+      ctx.fillStyle = space; ctx.fillRect(0, 0, w, h);
+
+      const nebula = ctx.createRadialGradient(w * .16, h * .18, 0, w * .16, h * .18, w * .55);
+      nebula.addColorStop(0, "rgba(40,94,139,.17)"); nebula.addColorStop(.5, "rgba(33,49,92,.06)"); nebula.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
+      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(120, Math.floor(w * h / 3300)));
+
+      const tilt = -.11; const flatten = .47; const maxOrbit = Math.min(w * .455, h * .455);
+      const orbitRadius = (au: number) => 34 + Math.pow(au / 30.07, .24) * (maxOrbit - 34);
+      const transformPoint = (angle: number, radius: number) => {
+        const ox = Math.cos(angle) * radius; const oy = Math.sin(angle) * radius * flatten;
+        return { x: cx + ox * Math.cos(tilt) - oy * Math.sin(tilt), y: cy + ox * Math.sin(tilt) + oy * Math.cos(tilt) };
+      };
+      const halleySemi = maxOrbit * .96;
+      const halleyPeri = Math.max(27, maxOrbit * .105);
+      const halleyFocus = halleySemi - halleyPeri;
+      const halleyMinor = Math.sqrt(halleySemi ** 2 - halleyFocus ** 2) * .62;
+      const halleyRotation = .72;
+      const halleyPoint = (eccentricAnomaly: number) => {
+        const localX = -halleyFocus + Math.cos(eccentricAnomaly) * halleySemi;
+        const localY = Math.sin(eccentricAnomaly) * halleyMinor;
+        return { x: cx + localX * Math.cos(halleyRotation) - localY * Math.sin(halleyRotation), y: cy + localX * Math.sin(halleyRotation) + localY * Math.cos(halleyRotation) };
+      };
+      const daysSinceHalleyPerihelion = (Date.now() - new Date("1986-02-09T00:00:00.000Z").getTime()) / 86400000 + simulationDaysRef.current;
+      const halleyMeanAnomaly = ((daysSinceHalleyPerihelion / halleyComet.periodDays) * Math.PI * 2) % (Math.PI * 2);
+      let halleyEccentricAnomaly = halleyMeanAnomaly;
+      for (let iteration = 0; iteration < 8; iteration += 1) halleyEccentricAnomaly -= (halleyEccentricAnomaly - halleyComet.eccentricity * Math.sin(halleyEccentricAnomaly) - halleyMeanAnomaly) / (1 - halleyComet.eccentricity * Math.cos(halleyEccentricAnomaly));
+      const halleyPosition = halleyPoint(-halleyEccentricAnomaly);
+
+      const beltInner = orbitRadius(2.1); const beltOuter = orbitRadius(3.35);
+      for (let index = 0; index < 330; index += 1) {
+        const beltRadius = beltInner + seeded(index, 22) * (beltOuter - beltInner);
+        const angle = seeded(index, 19) * Math.PI * 2 + simulationDaysRef.current * .00035;
+        const dot = transformPoint(angle, beltRadius);
+        ctx.fillStyle = `rgba(184,177,161,${.09 + seeded(index, 4) * .23})`;
+        ctx.fillRect(dot.x, dot.y, .45 + seeded(index, 9), .45 + seeded(index, 9));
+      }
+
+      solarBodies.forEach((body) => {
+        const orbit = orbitRadius(body.au);
+        ctx.strokeStyle = body.id === selectedId ? `${body.accent}8c` : "rgba(146,178,199,.16)";
+        ctx.lineWidth = body.id === selectedId ? 1.45 : .7;
+        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * flatten, tilt, 0, Math.PI * 2); ctx.stroke();
+      });
+      const sunPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 700) * .035;
+      const corona = ctx.createRadialGradient(cx, cy, 3, cx, cy, 54 * sunPulse);
+      corona.addColorStop(0, "rgba(255,248,201,1)"); corona.addColorStop(.2, "rgba(255,194,78,.9)"); corona.addColorStop(.48, "rgba(255,122,34,.25)"); corona.addColorStop(1, "rgba(255,104,20,0)");
+      ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, 54 * sunPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00003);
+      for (let ray = 0; ray < 18; ray += 1) {
+        ctx.rotate(Math.PI / 9); ctx.strokeStyle = `rgba(255,174,64,${.06 + (ray % 3) * .025})`;
+        ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(34 + (ray % 4) * 5, 0); ctx.stroke();
+      }
+      ctx.restore();
+      const sun = ctx.createRadialGradient(cx - 7, cy - 8, 2, cx, cy, 22);
+      sun.addColorStop(0, "#fffce3"); sun.addColorStop(.36, "#ffe285"); sun.addColorStop(.74, "#ff9e32"); sun.addColorStop(1, "#d95718");
+      ctx.fillStyle = sun; ctx.shadowColor = "#ffb53f"; ctx.shadowBlur = 26; ctx.beginPath(); ctx.arc(cx, cy, 19, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255,222,148,.72)";
+      for (let spot = 0; spot < 7; spot += 1) { const a = time * .00012 + spot * 2.31; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (5 + spot % 3 * 3), cy + Math.sin(a * .77) * 9, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
+
+      positionsRef.current = [];
+      const observationTime = Date.now() + simulationDaysRef.current * 86400000;
+      const daysSinceJ2000 = (observationTime - Date.parse("2000-01-01T12:00:00.000Z")) / 86400000;
+      const selectedMoonBody = solarMoons.find((moon) => moon.id === selectedId);
+      solarBodies.forEach((body, index) => {
+        const bodyActive = body.id === selectedId || selectedMoonBody?.parentId === body.id;
+        const orbit = orbitRadius(body.au);
+        const meanLongitude = (body.epochAngle + daysSinceJ2000 / body.periodDays * 360) * Math.PI / 180;
+        const perihelion = body.perihelionLongitude * Math.PI / 180;
+        const meanAnomaly = meanLongitude - perihelion;
+        let eccentricAnomaly = meanAnomaly;
+        for (let iteration = 0; iteration < 7; iteration += 1) eccentricAnomaly -= (eccentricAnomaly - body.eccentricity * Math.sin(eccentricAnomaly) - meanAnomaly) / (1 - body.eccentricity * Math.cos(eccentricAnomaly));
+        const trueAnomaly = 2 * Math.atan2(Math.sqrt(1 + body.eccentricity) * Math.sin(eccentricAnomaly / 2), Math.sqrt(1 - body.eccentricity) * Math.cos(eccentricAnomaly / 2));
+        const angle = trueAnomaly + perihelion;
+        const visualDistance = orbit * (1 - body.eccentricity * Math.cos(eccentricAnomaly));
+        const point = transformPoint(angle, visualDistance);
+        const radius = Math.max(3.3, Math.min(12.5, 3.1 + Math.log2(body.radiusEarth + 1) * 2.45));
+        positionsRef.current.push({ id: body.id, x: point.x, y: point.y, radius: radius + 10 });
+
+        ctx.strokeStyle = `${body.accent}${bodyActive ? "90" : "32"}`; ctx.lineWidth = bodyActive ? 2 : .8;
+        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * flatten, tilt, angle - (bodyActive ? .72 : .22), angle); ctx.stroke();
+
+        if (body.id === "saturn" || body.id === "uranus") {
+          ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(body.id === "uranus" ? 1.12 : -.19);
+          ctx.strokeStyle = body.id === "saturn" ? "rgba(229,205,154,.72)" : "rgba(161,222,221,.42)";
+          ctx.lineWidth = body.id === "saturn" ? 3.2 : 1.4; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.9, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+        }
+
+        const sphere = ctx.createRadialGradient(point.x - radius * .4, point.y - radius * .42, radius * .08, point.x, point.y, radius * 1.1);
+        sphere.addColorStop(0, body.accent); sphere.addColorStop(.48, body.color); sphere.addColorStop(1, "#07101a");
+        ctx.fillStyle = sphere; ctx.shadowColor = body.accent; ctx.shadowBlur = bodyActive ? 22 : 7;
+        ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+
+        if (body.radiusEarth > 3) {
+          ctx.save(); ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.clip();
+          ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = Math.max(.7, radius * .1);
+          for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(point.x - radius, point.y + band * radius * .3); ctx.lineTo(point.x + radius, point.y + band * radius * .3); ctx.stroke(); }
+          ctx.restore();
+        }
+        const parentMoons = solarMoons.filter((moon) => moon.parentId === body.id);
+        const farthestMoonKm = Math.max(1, ...parentMoons.map((moon) => moon.orbitDistanceKm));
+        parentMoons.forEach((moon) => {
+          const moonOrbit = radius + 7 + Math.pow(moon.orbitDistanceKm / farthestMoonKm, .36) * (body.radiusEarth > 3 ? 24 : 15);
+          const moonAngle = (moon.epochAngle + daysSinceJ2000 / moon.orbitalPeriodDays * 360) * Math.PI / 180;
+          const moonX = point.x + Math.cos(moonAngle) * moonOrbit;
+          const moonY = point.y + Math.sin(moonAngle) * moonOrbit * .54;
+          const moonRadius = Math.max(1.45, Math.min(3.5, 1.25 + Math.sqrt(moon.radiusEarth) * 3.4));
+          const moonSelected = moon.id === selectedId;
+          ctx.strokeStyle = moonSelected ? `${moon.accent}a8` : "rgba(181,205,216,.13)"; ctx.lineWidth = moonSelected ? 1.15 : .55;
+          ctx.beginPath(); ctx.ellipse(point.x, point.y, moonOrbit, moonOrbit * .54, 0, 0, Math.PI * 2); ctx.stroke();
+          const moonSphere = ctx.createRadialGradient(moonX - moonRadius * .4, moonY - moonRadius * .4, .2, moonX, moonY, moonRadius * 1.2);
+          moonSphere.addColorStop(0, moon.accent); moonSphere.addColorStop(.5, moon.color); moonSphere.addColorStop(1, "#111820");
+          ctx.fillStyle = moonSphere; ctx.shadowColor = moon.accent; ctx.shadowBlur = moonSelected ? 15 : 4;
+          ctx.beginPath(); ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+          if (moonSelected) { const pulse = moonRadius + 5 + Math.sin((reduceMotion ? 0 : time) / 250) * 1.5; ctx.strokeStyle = "rgba(241,249,250,.9)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(moonX, moonY, pulse, 0, Math.PI * 2); ctx.stroke(); }
+          positionsRef.current.push({ id: moon.id, x: moonX, y: moonY, radius: Math.max(7, moonRadius + 5) });
+          if (moonSelected || bodyActive || ["moon", "europa", "enceladus", "titan", "triton"].includes(moon.id)) {
+            ctx.fillStyle = moonSelected ? "#f4fbfc" : "rgba(184,205,216,.68)"; ctx.font = `${moonSelected ? "600" : "400"} 7px ui-monospace, monospace`;
+            ctx.fillText(moon.name, moonX + moonRadius + 3, moonY - moonRadius - 2);
+          }
+        });
+
+        if (bodyActive) {
+          const pulse = radius + 7 + Math.sin((reduceMotion ? 0 : time) / 260) * 2;
+          ctx.strokeStyle = "rgba(236,247,255,.82)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(point.x, point.y, pulse, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = `${body.accent}45`; ctx.beginPath(); ctx.arc(point.x, point.y, pulse + 5, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.fillStyle = bodyActive ? "#f4f9fb" : "rgba(184,205,216,.64)";
+        ctx.font = `${bodyActive ? "600" : "400"} 9px ui-monospace, monospace`;
+        const labelX = point.x > cx ? point.x + radius + 7 : point.x - radius - 7 - ctx.measureText(body.name).width;
+        ctx.fillText(body.name, labelX, point.y - radius - 3);
+        if (body.id === selectedId) {
+          ctx.fillStyle = "rgba(132,163,181,.7)"; ctx.font = "7px ui-monospace, monospace";
+          ctx.fillText(`${body.au.toFixed(body.au < 10 ? 3 : 2)} AU`, labelX, point.y - radius + 8);
+        }
+      });
+
+      const cometDx = halleyPosition.x - cx; const cometDy = halleyPosition.y - cy;
+      const cometDistance = Math.max(1, Math.hypot(cometDx, cometDy));
+      const tailDirectionX = cometDx / cometDistance; const tailDirectionY = cometDy / cometDistance;
+      const nearSunFactor = 1 - Math.min(1, cometDistance / (maxOrbit * 1.08));
+      const ionTailLength = 30 + nearSunFactor * 82; const dustTailLength = 22 + nearSunFactor * 57;
+      ctx.save(); ctx.lineCap = "round";
+      for (let stream = 0; stream < 7; stream += 1) {
+        const spread = (stream - 3) * (1.5 + nearSunFactor * 1.8);
+        ctx.strokeStyle = `rgba(113,217,244,${.08 + nearSunFactor * .07})`; ctx.lineWidth = Math.max(.7, 3.2 - stream * .28);
+        ctx.beginPath(); ctx.moveTo(halleyPosition.x, halleyPosition.y);
+        ctx.quadraticCurveTo(halleyPosition.x + tailDirectionX * ionTailLength * .45 - tailDirectionY * spread, halleyPosition.y + tailDirectionY * ionTailLength * .45 + tailDirectionX * spread, halleyPosition.x + tailDirectionX * ionTailLength - tailDirectionY * spread * 2.2, halleyPosition.y + tailDirectionY * ionTailLength + tailDirectionX * spread * 2.2); ctx.stroke();
+      }
+      ctx.strokeStyle = `rgba(255,202,128,${.14 + nearSunFactor * .2})`; ctx.lineWidth = 5 + nearSunFactor * 7;
+      ctx.beginPath(); ctx.moveTo(halleyPosition.x, halleyPosition.y);
+      ctx.quadraticCurveTo(halleyPosition.x + tailDirectionX * dustTailLength * .42 + tailDirectionY * 8, halleyPosition.y + tailDirectionY * dustTailLength * .42 - tailDirectionX * 8, halleyPosition.x + tailDirectionX * dustTailLength + tailDirectionY * 17, halleyPosition.y + tailDirectionY * dustTailLength - tailDirectionX * 17); ctx.stroke();
+      ctx.restore();
+      const coma = ctx.createRadialGradient(halleyPosition.x - 1, halleyPosition.y - 1, 0, halleyPosition.x, halleyPosition.y, 12 + nearSunFactor * 7);
+      coma.addColorStop(0, "rgba(255,255,236,1)"); coma.addColorStop(.18, "rgba(173,239,237,.92)"); coma.addColorStop(.5, "rgba(92,207,226,.28)"); coma.addColorStop(1, "rgba(62,173,213,0)");
+      ctx.fillStyle = coma; ctx.beginPath(); ctx.arc(halleyPosition.x, halleyPosition.y, 12 + nearSunFactor * 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#27333a"; ctx.shadowColor = "#b8f7f1"; ctx.shadowBlur = 10; ctx.beginPath(); ctx.ellipse(halleyPosition.x, halleyPosition.y, 3.8, 2.4, -.45, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      if (selectedId === halleyComet.id) { const cometPulse = 12 + Math.sin((reduceMotion ? 0 : time) / 250) * 2; ctx.strokeStyle = "rgba(202,249,250,.85)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(halleyPosition.x, halleyPosition.y, cometPulse, 0, Math.PI * 2); ctx.stroke(); }
+      positionsRef.current.push({ id: halleyComet.id, x: halleyPosition.x, y: halleyPosition.y, radius: 16 });
+      ctx.fillStyle = selectedId === halleyComet.id ? "#d9fbfb" : "rgba(165,219,225,.72)"; ctx.font = `${selectedId === halleyComet.id ? "600" : "400"} 9px ui-monospace, monospace`;
+      ctx.fillText("1P / å“ˆé›·", halleyPosition.x + 10, halleyPosition.y - 10);
+
+      ctx.fillStyle = "rgba(137,167,184,.5)"; ctx.font = "8px ui-monospace, monospace";
+      const ephemerisLabel = mode === "live" ? "LIVE UTC" : `SIM +${simulationDaysRef.current.toFixed(1)} DAYS`;
+      ctx.fillText(`REAL-TIME EPHEMERIS Â· ${new Date(observationTime).toISOString().slice(0, 19)} UTC Â· ${ephemerisLabel}`, 18, h - 17);
+      frame = requestAnimationFrame(draw);
+    };
+    observer = new ResizeObserver(() => undefined); observer.observe(canvas); frame = requestAnimationFrame(draw);
+    const click = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      const hit = [...positionsRef.current].reverse().find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
+      if (hit) selectRef.current(hit.id);
+    };
+    const move = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      canvas.style.cursor = positionsRef.current.some((position) => Math.hypot(position.x - x, position.y - y) <= position.radius) ? "pointer" : "crosshair";
+    };
+    canvas.addEventListener("click", click); canvas.addEventListener("mousemove", move);
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
+  }, [selectedId, mode, speed, paused]);
+
+  return <canvas ref={canvasRef} className="solar-canvas" aria-label="å¤ªé™½ã€å…«å¤§è¡Œæ˜Ÿèˆ‡ä¹é¡†çŸ¥åè¡›æ˜Ÿçš„å³æ™‚è¿‘ä¼¼ä½ç½®ï¼Œä»¥åŠä¸é¡¯ç¤ºè»Œé“ç·šçš„å“ˆé›·å½—æ˜Ÿï¼›é»æ“Šæ˜Ÿé«”å¯æŸ¥çœ‹è³‡è¨Š" />;
+}
+
+function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1, paused = false }: { system: StarSystem; selectedId: string; onSelect: (id: string) => void; mode: "live" | "animation"; ownerLabel?: string; speed?: number; paused?: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const positionsRef = useRef<{ id: string; x: number; y: number; radius: number }[]>([]);
+  const simulationDaysRef = useRef(0);
+  const previousTimeRef = useRef<number | null>(null);
+  const selectRef = useRef(onSelect);
+  selectRef.current = onSelect;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = 0;
+    let observer: ResizeObserver | null = null;
+    const draw = (time: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
+        canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const previous = previousTimeRef.current ?? time;
+      const deltaSeconds = Math.min((time - previous) / 1000, .1);
+      previousTimeRef.current = time;
+      if (mode === "animation" && !paused && !reduceMotion) simulationDaysRef.current += deltaSeconds * speed * ORBIT_PREVIEW_DAYS_PER_SECOND;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const w = rect.width; const h = rect.height; const cx = w * .49; const cy = h * .5;
+      const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .72);
+      gradient.addColorStop(0, "#102b3c"); gradient.addColorStop(.42, "#071827"); gradient.addColorStop(1, "#02070d");
+      ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
+      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(90, Math.floor(w * h / 4200)));
+      const scan = ctx.createLinearGradient(0, 0, 0, h);
+      scan.addColorStop(0, "rgba(80,151,188,.02)"); scan.addColorStop(.5, "rgba(80,151,188,.08)"); scan.addColorStop(.501, "rgba(80,151,188,.015)"); scan.addColorStop(1, "rgba(80,151,188,.02)");
+      ctx.fillStyle = scan; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(135,174,194,.065)"; ctx.lineWidth = 1;
+      const grid = 48;
+      for (let x = cx % grid; x < w; x += grid) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let y = cy % grid; y < h; y += grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      const maxOrbit = Math.min(w * .42, h * .43); const maxAu = Math.max(...system.planets.map((planet) => planet.semiMajorAu), 1);
+      const habitableInner = 48 + Math.sqrt(Math.min(.8 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
+      const habitableOuter = 48 + Math.sqrt(Math.min(1.5 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
+      ctx.save(); ctx.strokeStyle = "rgba(78,183,142,.06)"; ctx.lineWidth = Math.max(4, (habitableOuter - habitableInner) * .55); ctx.beginPath();
+      ctx.ellipse(cx, cy, (habitableInner + habitableOuter) * .5, (habitableInner + habitableOuter) * .28, -.18, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      positionsRef.current = [];
+      ctx.setLineDash([2, 6]);
+      system.planets.forEach((planet) => {
+        const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
+        ctx.strokeStyle = planet.id === selectedId ? `${planet.orbitColor}aa` : "rgba(132,164,181,.2)";
+        ctx.lineWidth = planet.id === selectedId ? 1.6 : .8; ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      const starRadius = 9 + system.starRadius * 5;
+      const starPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 680) * .045;
+      const corona = ctx.createRadialGradient(cx, cy, starRadius * .2, cx, cy, starRadius * 4.2 * starPulse);
+      corona.addColorStop(0, "rgba(255,246,194,1)"); corona.addColorStop(.24, "rgba(255,190,75,.78)"); corona.addColorStop(.6, "rgba(255,117,34,.16)"); corona.addColorStop(1, "rgba(255,102,24,0)");
+      ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, starRadius * 4.2 * starPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00005);
+      for (let ray = 0; ray < 14; ray += 1) { ctx.rotate(Math.PI / 7); ctx.strokeStyle = "rgba(255,181,74,.11)"; ctx.beginPath(); ctx.moveTo(starRadius * 1.25, 0); ctx.lineTo(starRadius * (1.8 + ray % 3 * .25), 0); ctx.stroke(); }
+      ctx.restore();
+      const stellarSurface = ctx.createRadialGradient(cx - starRadius * .35, cy - starRadius * .38, 1, cx, cy, starRadius);
+      stellarSurface.addColorStop(0, "#fffde3"); stellarSurface.addColorStop(.42, "#ffe18a"); stellarSurface.addColorStop(.78, "#ff9d35"); stellarSurface.addColorStop(1, "#ce4b18");
+      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(cx, cy, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(180,83,34,.26)";
+      for (let spot = 0; spot < 5; spot += 1) { const spotAngle = (reduceMotion ? 0 : time) * .00011 + spot * 1.71; ctx.beginPath(); ctx.arc(cx + Math.cos(spotAngle) * starRadius * .48, cy + Math.sin(spotAngle * .83) * starRadius * .42, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
+      const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
+      system.planets.forEach((planet, index) => {
+        const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
+        const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + simulationDaysRef.current / planet.periodDays * 360;
+        const angle = degrees * Math.PI / 180;
+        const x = cx + Math.cos(angle) * orbit * Math.cos(.18) - Math.sin(angle) * orbit * .56 * Math.sin(-.18);
+        const y = cy + Math.cos(angle) * orbit * Math.sin(-.18) + Math.sin(angle) * orbit * .56 * Math.cos(.18);
+        const radius = Math.max(4, Math.min(10, 3 + Math.log2(planet.radiusEarth + 1) * 2));
+        positionsRef.current.push({ id: planet.id, x, y, radius: radius + 7 });
+        ctx.strokeStyle = `${planet.orbitColor}${planet.id === selectedId ? "9c" : "35"}`; ctx.lineWidth = planet.id === selectedId ? 1.8 : .7;
+        ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, angle - (planet.id === selectedId ? .82 : .24), angle); ctx.stroke();
+        if (planet.radiusEarth > 6) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.22); ctx.strokeStyle = `${planet.orbitColor}72`; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.8, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+        const sphere = ctx.createRadialGradient(x - radius * .42, y - radius * .42, radius * .06, x, y, radius * 1.18);
+        sphere.addColorStop(0, "#f5f0df"); sphere.addColorStop(.28, planet.orbitColor); sphere.addColorStop(1, "#06101a");
+        ctx.fillStyle = sphere; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 22 : 8;
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        if (planet.radiusEarth > 5) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.19)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
+        if (planet.radiusEarth > 4) { const moonAngle = (reduceMotion ? 0 : time) * .0012 + index; ctx.fillStyle = "#c9d4d5"; ctx.beginPath(); ctx.arc(x + Math.cos(moonAngle) * (radius + 5), y + Math.sin(moonAngle) * (radius + 5), 1.1, 0, Math.PI * 2); ctx.fill(); }
+        if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
+      });
+      ctx.fillStyle = "rgba(148,179,194,.46)"; ctx.font = "9px ui-monospace, monospace"; ctx.fillText(`REAL-TIME EPHEMERIS Â· ${new Date().toISOString().slice(0, 19)} UTC`, 18, h - 18);
+      frame = requestAnimationFrame(draw);
+    };
+    observer = new ResizeObserver(() => undefined); observer.observe(canvas); frame = requestAnimationFrame(draw);
+    const click = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      const hit = positionsRef.current.find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
+      if (hit) selectRef.current(hit.id);
+    };
+    const move = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      canvas.style.cursor = positionsRef.current.some((position) => Math.hypot(position.x - x, position.y - y) <= position.radius) ? "pointer" : "crosshair";
+    };
+    canvas.addEventListener("click", click); canvas.addEventListener("mousemove", move);
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
+  }, [system, selectedId, mode, ownerLabel, speed, paused]);
+
+  return <canvas ref={canvasRef} className="orbit-canvas" aria-label={`${system.designation} å³æ™‚è¡Œæ˜Ÿè»Œé“åœ–ï¼›é»æ“Šè¡Œæ˜Ÿå¯æŸ¥çœ‹è©³æƒ…`} />;
+}
+
+export default function Home() {
+  const [systems, setSystems] = useState<StarSystem[]>(fallbackSystems);
+  const [packages, setPackages] = useState<NamingPackage[]>(fallbackPackages);
+  const [solarPlanetId, setSolarPlanetId] = useState("earth");
+  const [solarMode, setSolarMode] = useState<"live" | "animation">("live");
+  const [solarSpeed, setSolarSpeed] = useState(1);
+  const [solarPaused, setSolarPaused] = useState(false);
+  const [systemId, setSystemId] = useState(fallbackSystems[0].id);
+  const [planetId, setPlanetId] = useState(fallbackSystems[0].planets[2].id);
+  const [mode, setMode] = useState<"live" | "animation">("live");
+  const [systemSpeed, setSystemSpeed] = useState(1);
+  const [systemPaused, setSystemPaused] = useState(false);
+  const [orderPlan, setOrderPlan] = useState<NamingPackage | null>(null);
+  const [orderDone, setOrderDone] = useState<string | null>(null);
+  const [registryOpen, setRegistryOpen] = useState(false);
+  const [registryCode, setRegistryCode] = useState("");
+  const [registry, setRegistry] = useState<Registry | null>(null);
+  const [registryError, setRegistryError] = useState("");
+  const [explorerTarget, setExplorerTarget] = useState<ExplorerTarget | null>(null);
+
+  useEffect(() => {
+    fetch("/api/public/systems").then((response) => response.ok ? response.json() : Promise.reject()).then((data) => {
+      if (data.systems?.length) { setSystems(data.systems); setSystemId(data.systems[0].id); setPlanetId(data.systems[0].planets[0]?.id ?? ""); }
+      if (data.packages?.length) setPackages(data.packages);
+    }).catch(() => undefined);
+  }, []);
+
+  const system = useMemo(() => systems.find((item) => item.id === systemId) ?? systems[0], [systems, systemId]);
+  const planet = useMemo(() => system.planets.find((item) => item.id === planetId) ?? system.planets[0], [system, planetId]);
+  const selectedMoon = useMemo(() => solarMoons.find((item) => item.id === solarPlanetId), [solarPlanetId]);
+  const solarPlanet = useMemo(() => solarBodies.find((item) => item.id === solarPlanetId) ?? solarBodies.find((item) => item.id === selectedMoon?.parentId) ?? solarBodies[2], [solarPlanetId, selectedMoon]);
+  const isHalleySelected = solarPlanetId === halleyComet.id;
+  const isMoonSelected = Boolean(selectedMoon);
+
+  function chooseSystem(next: StarSystem) { setSystemId(next.id); setPlanetId(next.planets[0]?.id ?? ""); document.getElementById("observatory")?.scrollIntoView({ behavior: "smooth" }); }
+
+  async function submitOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!orderPlan) return;
+    const form = new FormData(event.currentTarget);
+    const response = await fetch("/api/orders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ packageId: orderPlan.id, systemId: system.id, planetId: planet.id, desiredName: form.get("desiredName"), ownerName: form.get("ownerName"), email: form.get("email"), dedication: form.get("dedication") }) });
+    const data = await response.json();
+    if (!response.ok) return window.alert(data.error ?? "ç”³è«‹å¤±æ•—");
+    setOrderDone(data.order.id);
+  }
+
+  async function loadRegistry(code: string) {
+    setRegistryError(""); setRegistry(null);
+    const response = await fetch(`/api/public/registry?code=${encodeURIComponent(code)}`); const data = await response.json();
+    if (!response.ok) return setRegistryError(data.error ?? "æŸ¥è©¢å¤±æ•—");
+    setRegistry(data.registry);
+  }
+
+  async function lookupRegistry(event: FormEvent) {
+    event.preventDefault();
+    await loadRegistry(registryCode);
+  }
+
+  async function openDemoRegistry() {
+    setRegistryCode(DEMO_OWNER_REGISTRY_CODE);
+    await loadRegistry(DEMO_OWNER_REGISTRY_CODE);
+  }
+
+  return (
+    <main>
+      <header className="site-header">
+        <a className="brand" href="#top"><span className="brand-sigil">N</span><span><b>NOCTUA</b><small>æš—å¤œå¤©é«”è§€æ¸¬å°</small></span></a>
+        <nav><a href="#solar-system">å¤ªé™½ç³»</a><a href="#observatory">å€™é¸æ˜Ÿç³»</a><a href="#discoveries">æœ€æ–°ç™¼å¸ƒ</a><a href="#registry">ç´€å¿µå‘½å</a><a href="/resources">å…¨çƒå¤©æ–‡æ©Ÿæ§‹</a><button onClick={() => setRegistryOpen(true)}>æŒæœ‰è€…å…¥å£</button></nav>
+        <a className="admin-link" href="/admin">å¾Œå°ç®¡ç† â†—</a>
+      </header>
+      <div className="science-banner"><b>MODEL CANDIDATE</b> æ‰€æœ‰å¤©é«”çš†ç‚ºè¨Šè™Ÿæ¨æ¼”å€™é¸é«”ï¼Œå°šéæ­£å¼å¤©æ–‡ç™¼ç¾ï¼›ä½ç½®ä¾è»Œé“é€±æœŸèˆ‡åƒè€ƒæ›†å…ƒå³æ™‚è¨ˆç®—ã€‚</div>
+
+      <section className="solar-showcase" id="solar-system">
+        <div className="solar-intro" id="top">
+          <div><p className="eyebrow">HOME SYSTEM / LIVE SIMULATION</p><h1>å¾æˆ‘å€‘çš„å¤ªé™½å‡ºç™¼ï¼Œ<br /><em>çœ‹è¦‹è¡Œæ˜Ÿã€è¡›æ˜Ÿèˆ‡å½—æ˜Ÿæ­£åœ¨ç§»å‹•ã€‚</em></h1></div>
+          <div className="solar-intro-copy"><p>ä¾ J2000 åƒè€ƒæ›†å…ƒã€å…¬è½‰é€±æœŸèˆ‡ç›®å‰ UTC æ™‚é–“æ¨ç®—çš„äº’å‹•å¼å¤ªé™½ç³»ã€‚é»æ“Šè¡Œæ˜Ÿã€çŸ¥åè¡›æ˜Ÿæˆ–å“ˆé›·å½—æ˜Ÿï¼Œå³æ™‚æŸ¥çœ‹ä½ç½®èˆ‡ç’°å¢ƒæ¦‚æ³ã€‚</p><div><span><i />å³æ™‚æ˜Ÿæ›†ä½ç½®</span><span>8 PLANETS Â· 9 FEATURED MOONS</span><span>1P / HALLEY</span></div></div>
+        </div>
+        <div className="solar-console">
+          <article className="solar-stage">
+            <div className="solar-toolbar">
+              <div><span className="live-pulse" /> SOLAR ORBITAL VIEW <small>è»Œé“è·é›¢æ¡è¦–è¦ºå£“ç¸®</small></div>
+              <div className="solar-controls">
+                <button className={solarMode === "live" ? "active" : ""} aria-pressed={solarMode === "live"} onClick={() => { setSolarMode("live"); setSolarPaused(false); }}>å³æ™‚ä½ç½®</button>
+                <button className={solarMode === "animation" ? "active" : ""} aria-pressed={solarMode === "animation"} onClick={() => setSolarMode("animation")}>å‹•ç•«é è¦½</button>
+                {solarMode === "animation" && <>{[1, 6, 24].map((value) => <button key={value} className={solarSpeed === value ? "active" : ""} aria-pressed={solarSpeed === value} onClick={() => setSolarSpeed(value)}>{value}Ã—</button>)}<button className={solarPaused ? "active pause" : "pause"} aria-pressed={solarPaused} onClick={() => setSolarPaused((value) => !value)}>{solarPaused ? "ç¹¼çºŒ" : "æš«åœ"}</button></>}
+              </div>
+            </div>
+            <SolarSystemCanvas selectedId={solarPlanetId} onSelect={setSolarPlanetId} mode={solarMode} speed={solarSpeed} paused={solarPaused} />
+            <div className="solar-foot"><span>J2000 å³æ™‚è¿‘ä¼¼ä½ç½® Â· è¡›æ˜Ÿè»Œé“æ¡æ”¾å¤§é¡¯ç¤º</span><span>1Ã— = 0.45 æ¨¡æ“¬æ—¥ï¼ç§’</span></div>
+          </article>
+          <aside className="solar-inspector">
+            <div className="solar-planet-title"><span className={isHalleySelected ? "comet-orb" : isMoonSelected ? "moon-orb" : ""} style={{ "--planet-color": isHalleySelected ? halleyComet.color : selectedMoon?.color ?? solarPlanet.color, "--planet-accent": isHalleySelected ? halleyComet.accent : selectedMoon?.accent ?? solarPlanet.accent } as React.CSSProperties} /><div><small>{isHalleySelected ? halleyComet.english : selectedMoon?.english ?? solarPlanet.english} / SELECTED</small><h2>{isHalleySelected ? halleyComet.name : selectedMoon?.name ?? solarPlanet.name}</h2><p>{isHalleySelected ? halleyComet.type : selectedMoon?.type ?? solarPlanet.type}</p></div></div>
+            {selectedMoon ? <div className="solar-data-grid"><div><span>æ¯è¡Œæ˜Ÿ</span><b>{solarPlanet.name}</b></div><div><span>å…¬è½‰é€±æœŸ</span><b>{Math.abs(selectedMoon.orbitalPeriodDays).toFixed(3)} æ—¥{selectedMoon.orbitalPeriodDays < 0 ? " Â· é€†è¡Œ" : ""}</b></div><div><span>å¹³å‡è»Œé“è·é›¢</span><b>{selectedMoon.orbitDistanceKm.toLocaleString()} km</b></div><div><span>åŠå¾‘</span><b>{selectedMoon.radiusEarth} RâŠ•</b></div></div> : isHalleySelected ? <div className="solar-data-grid"><div><span>è¿‘æ—¥é»</span><b>{halleyComet.perihelionAu} AU</b></div><div><span>é æ—¥é»</span><b>{halleyComet.aphelionAu} AU</b></div><div><span>å¹³å‡é€±æœŸ</span><b>76.1 å¹´</b></div><div><span>è»Œé“é›¢å¿ƒç‡</span><b>{halleyComet.eccentricity}</b></div></div> : <div className="solar-data-grid"><div><span>å¹³å‡è·é›¢</span><b>{solarPlanet.au} AU</b></div><div><span>å…¬è½‰é€±æœŸ</span><b>{solarPlanet.periodDays.toLocaleString()} æ—¥</b></div><div><span>åŠå¾‘</span><b>{solarPlanet.radiusEarth} RâŠ•</b></div><div><span>å·²çŸ¥è¡›æ˜Ÿ</span><b>{solarPlanet.moons}</b></div></div>}
+            <div className="solar-climate"><span>{selectedMoon ? "ä¸»è¦æˆåˆ†" : isHalleySelected ? "å½—æ ¸ï¼ä¸‹æ¬¡å›æ­¸" : "æº«åº¦æ¦‚æ³"}</span><b>{selectedMoon ? selectedMoon.composition : isHalleySelected ? `${halleyComet.nucleus} Â· ${halleyComet.nextReturn}` : solarPlanet.temperature}</b></div>
+            <p className={selectedMoon ? "solar-summary moon-summary" : "solar-summary"}>{selectedMoon ? <><span>ç”Ÿå‘½æ¢ä»¶æ¨¡å‹ {selectedMoon.bioScore}%</span>{selectedMoon.state}ã€‚{selectedMoon.bioPrediction}</> : isHalleySelected ? halleyComet.summary : solarPlanet.summary}</p>
+            <div className="planet-picker" aria-label="é¸æ“‡å¤ªé™½ç³»æ˜Ÿé«”">{solarBodies.map((body) => <button key={body.id} className={body.id === solarPlanetId ? "active" : ""} onClick={() => setSolarPlanetId(body.id)}><i style={{ background: body.color, boxShadow: `0 0 9px ${body.accent}` }} /><span>{body.name}</span></button>)}<button className={isHalleySelected ? "active" : ""} onClick={() => setSolarPlanetId(halleyComet.id)}><i className="comet-dot" /><span>å“ˆé›·å½—æ˜Ÿ</span></button></div>
+            <p className="picker-label">FEATURED MOONS / çŸ¥åè¡›æ˜Ÿ</p>
+            <div className="planet-picker moon-picker" aria-label="é¸æ“‡çŸ¥åè¡›æ˜Ÿ">{solarMoons.map((moon) => <button key={moon.id} className={moon.id === solarPlanetId ? "active" : ""} onClick={() => setSolarPlanetId(moon.id)}><i style={{ background: moon.color, boxShadow: `0 0 8px ${moon.accent}` }} /><span>{moon.name}</span><small>{solarBodies.find((body) => body.id === moon.parentId)?.name}</small></button>)}</div>
+          </aside>
+        </div>
+      </section>
+
+      <section className="observatory" id="observatory">
+        <div className="observatory-head">
+          <div><p className="eyebrow">LIVE SYSTEM / {system.id}</p><h1>{system.displayName ?? system.designation}</h1><p>{system.summary}</p></div>
+          <div className="system-coordinates"><span>RA <b>{formatRa(system.raHours)}</b></span><span>DEC <b>{formatDec(system.decDeg)}</b></span><span>DIST <b>{system.distancePc.toFixed(1)} pc</b></span></div>
+        </div>
+        <div className="observatory-grid">
+          <article className="system-viewport">
+            <div className="viewport-toolbar"><div><i /> LIVE POSITION <span>{system.planets.length} PLANETS</span></div><div className="viewport-actions"><div className="mode-switch"><button className={mode === "live" ? "active" : ""} onClick={() => { setMode("live"); setSystemPaused(false); }}>å³æ™‚ä½ç½®</button><button className={mode === "animation" ? "active" : ""} onClick={() => setMode("animation")}>å‹•ç•«é è¦½</button></div>{mode === "animation" && <div className="speed-switch">{[1, 6, 24].map((value) => <button key={value} className={systemSpeed === value ? "active" : ""} aria-pressed={systemSpeed === value} onClick={() => setSystemSpeed(value)}>{value}Ã—</button>)}<button className={systemPaused ? "active" : ""} aria-pressed={systemPaused} onClick={() => setSystemPaused((value) => !value)}>{systemPaused ? "ç¹¼çºŒ" : "æš«åœ"}</button></div>}</div></div>
+            <OrbitCanvas system={system} selectedId={planet.id} onSelect={setPlanetId} mode={mode} speed={systemSpeed} paused={systemPaused} />
+            <div className="viewport-foot"><span>è¦–é‡ï¼šç´„ {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>æ…¢é€Ÿé è¦½ Â· 1Ã— = 0.45 æ¨¡æ“¬æ—¥ï¼ç§’</span></div>
+          </article>
+          <aside className="planet-inspector">
+            <div className="inspector-title"><span style={{ background: planet.orbitColor }} /><div><p>SELECTED BODY</p><h2>{planet.displayName ?? planet.code}</h2><small>{planet.type}</small></div></div>
+            <div className="planet-metrics"><div><span>è³ªé‡</span><b>{planet.massEarth.toFixed(2)} MâŠ•</b></div><div><span>åŠå¾‘</span><b>{planet.radiusEarth.toFixed(2)} RâŠ•</b></div><div><span>å…¬è½‰é€±æœŸ</span><b>{planet.periodDays.toFixed(2)} æ—¥</b></div><div><span>å¹³è¡¡æº«åº¦</span><b>{planet.equilibriumTemp} K</b></div></div>
+            <div className="data-block"><p>ä¸»è¦æˆåˆ†</p>{planet.composition.map((item) => <div className="composition" key={item.label}><span>{item.label}</span><i><b style={{ width: `${item.value}%`, background: item.color }} /></i><strong>{item.value}%</strong></div>)}</div>
+            <div className="data-block compact"><p>å¤§æ°£èˆ‡ç‹€æ…‹</p><b>{planet.atmosphere}</b><small>{planet.state}</small></div>
+            <div className="bio-card"><div><span>ç”Ÿç‰©æ¢ä»¶é æ¸¬</span><b>{planet.bioScore}%</b></div><i><b style={{ width: `${planet.bioScore}%` }} /></i><p>{planet.bioPrediction}</p></div>
+            <button className="open-3d-explorer" onClick={() => setExplorerTarget({ system, planetId: planet.id })}><span>æ²‰æµ¸å¼å¤©é«”æ¢ç´¢</span><b>é–‹å•Ÿ 3D VIEW â†—</b></button>
+          </aside>
+        </div>
+      </section>
+
+      <section className="discoveries" id="discoveries">
+        <div className="section-title"><div><p className="eyebrow">PUBLISHED SYSTEMS</p><h2>æœ€æ–°ç™¼å¸ƒçš„å€™é¸æ˜Ÿç³»</h2></div><span>å¾Œå°å¯©æ ¸å¾Œå…¬é–‹ Â· è³‡æ–™å³æ™‚æ›´æ–°</span></div>
+        <div className="system-list">
+          {systems.map((item, index) => <button key={item.id} className={item.id === system.id ? "system-row active" : "system-row"} onClick={() => chooseSystem(item)}><span className="system-index">{String(index + 1).padStart(2, "0")}</span><span><b>{item.designation}</b><small>{item.classification}</small></span><span><b>{item.planets.length}</b><small>è¡Œæ˜Ÿå€™é¸é«”</small></span><span><b>{item.confidence}%</b><small>æ¨¡å‹ä¿¡å¿ƒ</small></span><span><b>{item.distancePc.toFixed(1)} pc</b><small>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("zh-TW") : "å¾…ç™¼å¸ƒ"}</small></span><span>é–‹å•Ÿæ˜Ÿç³» â†’</span></button>)}
+        </div>
+      </section>
+
+      <section className="registry-section" id="registry">
+        <div className="registry-copy"><p className="eyebrow">PRIVATE CELESTIAL REGISTRY</p><h2>æŠŠä¸€å€‹åå­—ï¼Œ<br /><em>ç•™åœ¨å®ƒçš„è»Œé“ä¸Šã€‚</em></h2><p>å®Œæˆç¢ºèªå¾Œï¼ŒæŒæœ‰è€…æœƒå–å¾—å”¯ä¸€æ†æ˜Ÿé«”ç³»ç·¨è™Ÿã€å€‹äººåŒ–å‘½åè­‰æ›¸ï¼Œä»¥åŠä¾å³æ™‚è»Œé“è³‡æ–™ç”Ÿæˆçš„å°ˆå±¬å‹•ç•«ã€‚</p><button onClick={() => setRegistryOpen(true)}>å·²æœ‰ç™»éŒ„ç·¨è™Ÿï¼Ÿé–‹å•Ÿå°ˆå±¬æ˜Ÿç³» â†’</button></div>
+        <div className="package-list">{packages.map((item, index) => <article key={item.id} className={index === 1 ? "package-card featured" : "package-card"}><div><span>{item.name}</span>{index === 1 && <i>æ¨è–¦</i>}</div><h3>NT$ {item.priceTwd.toLocaleString()}</h3><p>{item.description}</p><ul>{item.features.map((feature) => <li key={feature}>ï¼‹ {feature}</li>)}</ul><button onClick={() => { setOrderPlan(item); setOrderDone(null); }}>é¸æ“‡æ­¤æ–¹æ¡ˆ</button></article>)}</div>
+      </section>
+
+      <footer><div className="brand"><span className="brand-sigil small">N</span><span><b>NOCTUA</b><small>æš—å¤œå¤©é«”è§€æ¸¬å°</small></span></div><p>ç§‘å­¸æ¨¡å‹è¼¸å‡ºåƒ…ä¾›æ•™è‚²ã€ç ”ç©¶å‡è¨­èˆ‡ç§äººç´€å¿µç”¨é€”ã€‚ç´€å¿µå‘½åä¸æ˜¯ IAU å®˜æ–¹å‘½åã€‚</p><div className="footer-links"><a href="/resources">å…¨çƒå¤©æ–‡æ©Ÿæ§‹</a><a href="/admin">ç®¡ç†å¾Œå°</a></div></footer>
+
+      {orderPlan && <div className="modal-shell" onMouseDown={() => setOrderPlan(null)}><section className="order-modal" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setOrderPlan(null)}>Ã—</button>{orderDone ? <div className="order-success"><span>âœ“</span><p>ç™»éŒ„ç”³è«‹å·²å»ºç«‹</p><h2>{orderDone}</h2><small>ä»˜æ¬¾ç¢ºèªå¾Œï¼Œç®¡ç†å“¡æœƒæ ¸ç™¼å°ˆå±¬ç™»éŒ„ç·¨è™Ÿèˆ‡å‹•ç•«å…¥å£ã€‚</small><button onClick={() => setOrderPlan(null)}>å®Œæˆ</button></div> : <form onSubmit={submitOrder}><p className="eyebrow">MEMORIAL ORDER</p><h2>{orderPlan.name}æ–¹æ¡ˆ</h2><div className="order-target"><span>ç™»éŒ„ç›®æ¨™</span><b>{system.designation} Â· {planet.code.split(" ").at(-1)}</b></div><label>ç´€å¿µåç¨±<input name="desiredName" required maxLength={40} placeholder="ä¾‹å¦‚ Asteria" /></label><label>æŒæœ‰è€…å§“å<input name="ownerName" required maxLength={60} /></label><label>é›»å­éƒµä»¶<input name="email" required type="email" /></label><label>ç»è©<textarea name="dedication" maxLength={240} rows={3} placeholder="æƒ³ç•™åœ¨è­‰æ›¸ä¸Šçš„ä¸€å¥è©±" /></label><div className="demo-payment">ç›®å‰ç‚ºè¨‚å–®èˆ‡ç™»éŒ„æµç¨‹ï¼›æ­£å¼æ”¶æ¬¾éœ€æ¥ä¸Šé‡‘æµæœå‹™ã€‚</div><button className="primary-action" type="submit">å»ºç«‹ NT$ {orderPlan.priceTwd.toLocaleString()} ç™»éŒ„ç”³è«‹ â†’</button></form>}</section></div>}
+
+      {registryOpen && <div className="modal-shell" onMouseDown={() => setRegistryOpen(false)}><section className={registry ? "owner-modal active" : "owner-modal"} onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => { setRegistryOpen(false); setRegistry(null); }}>Ã—</button>{!registry ? <form onSubmit={lookupRegistry}><p className="eyebrow">OWNER ACCESS</p><h2>é–‹å•Ÿä½ çš„å°ˆå±¬æ˜Ÿç³»</h2><p>è¼¸å…¥ä»˜æ¬¾ç¢ºèªå¾Œå–å¾—çš„ NOCTUA ç™»éŒ„ç·¨è™Ÿã€‚</p><div className="demo-owner-account"><div><span>DEMO HOLDER ACCOUNT</span><b>Asteria Noctua</b><small>ç¯„ä¾‹æŒæœ‰è€… Â· æ˜Ÿé¡˜ç¤ºç¯„è€…</small></div><code>{DEMO_OWNER_REGISTRY_CODE}</code><button type="button" onClick={openDemoRegistry}>ä¸€éµé–‹å•Ÿç¯„ä¾‹æ˜Ÿç³» â†’</button></div><div className="owner-account-divider"><span>æˆ–ä½¿ç”¨æŒæœ‰è€…ç™»éŒ„ç·¨è™Ÿ</span></div><label>ç™»éŒ„ç·¨è™Ÿ<input value={registryCode} onChange={(event) => setRegistryCode(event.target.value.toUpperCase())} required placeholder="NOR-XXXXXXXX" /></label>{registryError && <span className="form-error">{registryError}</span>}<button className="primary-action" type="submit">é©—è­‰ä¸¦é–‹å•Ÿ â†’</button></form> : <div className="owner-experience"><div className="owner-sky"><OrbitCanvas system={registry.system} selectedId={registry.system.planets[0].id} onSelect={() => undefined} mode="animation" ownerLabel={registry.order.desiredName} /></div><div className="owner-certificate"><p>NOCTUA PRIVATE REGISTRY</p><h2>{registry.order.desiredName}</h2><span>ç´€å¿µç™»éŒ„æŒæœ‰è€… Â· {registry.order.ownerName}</span><div><small>å°ˆå±¬æ†æ˜Ÿé«”ç³»ç·¨è™Ÿ</small><b>{registry.order.registryCode}</b><small>ç§‘å­¸ç·¨è™Ÿ</small><b>{registry.system.designation}</b></div>{registry.order.dedication && <blockquote>ã€Œ{registry.order.dedication}ã€</blockquote>}<button className="owner-3d-button" onClick={() => setExplorerTarget({ system: registry.system, planetId: registry.system.planets[0].id, ownerLabel: registry.order.desiredName, registryCode: registry.order.registryCode })}>é–‹å•Ÿ 3D å°ˆå±¬æ˜Ÿç³» â†—</button><button onClick={() => { setRegistry(null); setRegistryCode(""); }}>è¿”å›æŸ¥è©¢</button></div></div>}</section></div>}
+
+      {explorerTarget && <Suspense fallback={<div className="explorer-loading"><span>N</span><b>æ­£åœ¨è¼‰å…¥ 3D å®‡å®™â€¦</b></div>}><CelestialExplorer3D system={explorerTarget.system} initialPlanetId={explorerTarget.planetId} ownerLabel={explorerTarget.ownerLabel} registryCode={explorerTarget.registryCode} onClose={() => setExplorerTarget(null)} /></Suspense>}
+    </main>
+  );
+}
