@@ -32,6 +32,8 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(css, /\.moon-picker/);
   assert.match(css, /\.moon-orb/);
   assert.match(experience, /\.observatory-credibility/);
+  assert.match(experience, /:focus-visible/);
+  assert.match(experience, /prefers-reduced-motion/);
   assert.match(layout, /<html lang="en">/);
   assert.match(layout, /og-v5\.png/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
