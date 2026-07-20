@@ -93,6 +93,15 @@ export const namingOrders = sqliteTable("naming_orders", {
   registryCode: text("registry_code"),
   animationTheme: text("animation_theme").default("amber"),
   confirmedAt: text("confirmed_at"),
+  paymentProvider: text("payment_provider").default("ecpay"),
+  paymentTradeNo: text("payment_trade_no").unique(),
+  paymentTradeId: text("payment_trade_id"),
+  paymentType: text("payment_type"),
+  paymentMessage: text("payment_message"),
+  paymentToken: text("payment_token").unique(),
+  paymentUpdatedAt: text("payment_updated_at"),
+  paidAt: text("paid_at"),
+  simulatedPayment: integer("simulated_payment", { mode: "boolean" }).notNull().default(false),
 });
 
 export const systemSettings = sqliteTable("system_settings", {

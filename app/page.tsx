@@ -442,6 +442,7 @@ export default function Home() {
   const [systemPaused, setSystemPaused] = useState(false);
   const [orderPlan, setOrderPlan] = useState<NamingPackage | null>(null);
   const [orderDone, setOrderDone] = useState<string | null>(null);
+  const [orderBusy, setOrderBusy] = useState(false);
   const [registryOpen, setRegistryOpen] = useState(false);
   const [registryCode, setRegistryCode] = useState("");
   const [registry, setRegistry] = useState<Registry | null>(null);
@@ -452,6 +453,10 @@ export default function Home() {
     fetch("/api/public/systems").then((response) => response.ok ? response.json() : Promise.reject()).then((data) => {
       if (data.systems?.length) { setSystems(data.systems); setSystemId(data.systems[0].id); setPlanetId(data.systems[0].planets[0]?.id ?? ""); }
       if (data.packages?.length) setPackages(data.packages);
+    }).catch(() => undefined);
+    const holderCode = new URLSearchParams(window.location.search).get("registry")?.trim().toUpperCase();
+    if (holderCode) fetch(`/api/public/registry?code=${encodeURIComponent(holderCode)}`).then(async (response) => ({ response, data: await response.json() })).then(({ response, data }) => {
+      if (response.ok) { setRegistryCode(holderCode); setRegistry(data.registry); setRegistryOpen(true); }
     }).catch(() => undefined);
   }, []);
 
@@ -466,11 +471,13 @@ export default function Home() {
 
   async function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!orderPlan) return;
+    setOrderBusy(true);
     const form = new FormData(event.currentTarget);
     const response = await fetch("/api/orders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ packageId: orderPlan.id, systemId: system.id, planetId: planet.id, desiredName: form.get("desiredName"), ownerName: form.get("ownerName"), email: form.get("email"), dedication: form.get("dedication") }) });
     const data = await response.json();
-    if (!response.ok) return window.alert(data.error ?? "申請失敗");
-    setOrderDone(data.order.id);
+    if (!response.ok) { setOrderBusy(false); return window.alert(data.error ?? "申請失敗"); }
+    if (data.checkoutUrl) return window.location.assign(data.checkoutUrl);
+    setOrderBusy(false); setOrderDone(data.order.id);
   }
 
   async function loadRegistry(code: string) {
@@ -560,12 +567,12 @@ export default function Home() {
 
       <section className="registry-section" id="registry">
         <div className="registry-copy"><p className="eyebrow">PRIVATE CELESTIAL REGISTRY</p><h2>把一個名字，<br /><em>留在它的軌道上。</em></h2><p>完成確認後，持有者會取得唯一恆星體系編號、個人化命名證書，以及依即時軌道資料生成的專屬動畫。</p><button onClick={() => setRegistryOpen(true)}>已有登錄編號？開啟專屬星系 →</button></div>
-        <div className="package-list">{packages.map((item, index) => <article key={item.id} className={index === 1 ? "package-card featured" : "package-card"}><div><span>{item.name}</span>{index === 1 && <i>推薦</i>}</div><h3>NT$ {item.priceTwd.toLocaleString()}</h3><p>{item.description}</p><ul>{item.features.map((feature) => <li key={feature}>＋ {feature}</li>)}</ul><button onClick={() => { setOrderPlan(item); setOrderDone(null); }}>選擇此方案</button></article>)}</div>
+        <div className="package-list">{packages.map((item, index) => <article key={item.id} className={index === 1 ? "package-card featured" : "package-card"}><div><span>{item.name}</span>{index === 1 && <i>推薦</i>}</div><h3>NT$ {item.priceTwd.toLocaleString()}</h3><p>{item.description}</p><ul>{item.features.map((feature) => <li key={feature}>＋ {feature}</li>)}</ul><button onClick={() => { setOrderPlan(item); setOrderDone(null); setOrderBusy(false); }}>選擇此方案</button></article>)}</div>
       </section>
 
       <footer><div className="brand"><span className="brand-sigil small">N</span><span><b>NOCTUA</b><small>暗夜天體觀測台</small></span></div><p>科學模型輸出僅供教育、研究假設與私人紀念用途。紀念命名不是 IAU 官方命名。</p><div className="footer-links"><a href="/resources">全球天文機構</a><a href="/admin">管理後台</a></div></footer>
 
-      {orderPlan && <div className="modal-shell" onMouseDown={() => setOrderPlan(null)}><section className="order-modal" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setOrderPlan(null)}>×</button>{orderDone ? <div className="order-success"><span>✓</span><p>登錄申請已建立</p><h2>{orderDone}</h2><small>付款確認後，管理員會核發專屬登錄編號與動畫入口。</small><button onClick={() => setOrderPlan(null)}>完成</button></div> : <form onSubmit={submitOrder}><p className="eyebrow">MEMORIAL ORDER</p><h2>{orderPlan.name}方案</h2><div className="order-target"><span>登錄目標</span><b>{system.designation} · {planet.code.split(" ").at(-1)}</b></div><label>紀念名稱<input name="desiredName" required maxLength={40} placeholder="例如 Asteria" /></label><label>持有者姓名<input name="ownerName" required maxLength={60} /></label><label>電子郵件<input name="email" required type="email" /></label><label>獻詞<textarea name="dedication" maxLength={240} rows={3} placeholder="想留在證書上的一句話" /></label><div className="demo-payment">目前為訂單與登錄流程；正式收款需接上金流服務。</div><button className="primary-action" type="submit">建立 NT$ {orderPlan.priceTwd.toLocaleString()} 登錄申請 →</button></form>}</section></div>}
+      {orderPlan && <div className="modal-shell" onMouseDown={() => !orderBusy && setOrderPlan(null)}><section className="order-modal" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" disabled={orderBusy} onClick={() => setOrderPlan(null)}>×</button>{orderDone ? <div className="order-success"><span>✓</span><p>登錄申請已建立</p><h2>{orderDone}</h2><small>付款確認後，管理員會核發專屬登錄編號與動畫入口。</small><button onClick={() => setOrderPlan(null)}>完成</button></div> : <form onSubmit={submitOrder}><p className="eyebrow">MEMORIAL ORDER</p><h2>{orderPlan.name}方案</h2><div className="order-target"><span>登錄目標</span><b>{system.designation} · {planet.code.split(" ").at(-1)}</b></div><label>紀念名稱<input name="desiredName" required maxLength={40} placeholder="例如 Asteria" /></label><label>持有者姓名<input name="ownerName" required maxLength={60} /></label><label>電子郵件<input name="email" required type="email" /></label><label>獻詞<textarea name="dedication" maxLength={240} rows={3} placeholder="想留在證書上的一句話" /></label><div className="secure-payment"><div><span>SECURE CHECKOUT</span><b>ECPay 綠界科技</b></div><p>信用卡 · ATM · 超商代碼 · 行動支付</p><small>付款資料將在綠界加密頁面輸入，NOCTUA 不會接觸或儲存卡號。</small></div><button className="primary-action" type="submit" disabled={orderBusy}>{orderBusy ? "正在建立安全付款…" : `前往付款 · NT$ ${orderPlan.priceTwd.toLocaleString()} →`}</button><p className="payment-terms">送出即代表你了解：私人紀念命名不是 IAU 官方天體命名。</p></form>}</section></div>}
 
       {registryOpen && <div className="modal-shell" onMouseDown={() => setRegistryOpen(false)}><section className={registry ? "owner-modal active" : "owner-modal"} onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => { setRegistryOpen(false); setRegistry(null); }}>×</button>{!registry ? <form onSubmit={lookupRegistry}><p className="eyebrow">OWNER ACCESS</p><h2>開啟你的專屬星系</h2><p>輸入付款確認後取得的 NOCTUA 登錄編號。</p><div className="demo-owner-account"><div><span>DEMO HOLDER ACCOUNT</span><b>Asteria Noctua</b><small>範例持有者 · 星願示範者</small></div><code>{DEMO_OWNER_REGISTRY_CODE}</code><button type="button" onClick={openDemoRegistry}>一鍵開啟範例星系 →</button></div><div className="owner-account-divider"><span>或使用持有者登錄編號</span></div><label>登錄編號<input value={registryCode} onChange={(event) => setRegistryCode(event.target.value.toUpperCase())} required placeholder="NOR-XXXXXXXX" /></label>{registryError && <span className="form-error">{registryError}</span>}<button className="primary-action" type="submit">驗證並開啟 →</button></form> : <div className="owner-experience"><div className="owner-sky"><OrbitCanvas system={registry.system} selectedId={registry.system.planets[0].id} onSelect={() => undefined} mode="animation" ownerLabel={registry.order.desiredName} /></div><div className="owner-certificate"><p>NOCTUA PRIVATE REGISTRY</p><h2>{registry.order.desiredName}</h2><span>紀念登錄持有者 · {registry.order.ownerName}</span><div><small>專屬恆星體系編號</small><b>{registry.order.registryCode}</b><small>科學編號</small><b>{registry.system.designation}</b></div>{registry.order.dedication && <blockquote>「{registry.order.dedication}」</blockquote>}<button className="owner-3d-button" onClick={() => setExplorerTarget({ system: registry.system, planetId: registry.system.planets[0].id, ownerLabel: registry.order.desiredName, registryCode: registry.order.registryCode })}>開啟 3D 專屬星系 ↗</button><button onClick={() => { setRegistry(null); setRegistryCode(""); }}>返回查詢</button></div></div>}</section></div>}
 

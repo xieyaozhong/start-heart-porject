@@ -20,11 +20,16 @@ export async function POST(request: Request) {
     if (!plan?.active || !system || !desiredName || !ownerName || !email.includes("@")) {
       return Response.json({ error: "命名登錄資料不完整" }, { status: 400 });
     }
-    const id = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const nonce = crypto.randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase();
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const id = `ORD-${timestamp}${nonce}`;
+    const paymentTradeNo = `N${timestamp}${nonce}`.slice(0, 20);
+    const paymentToken = crypto.randomUUID().replaceAll("-", "");
     const [order] = await db.insert(namingOrders).values({
-      id, candidateId: systemId, systemId, planetId: payload.planetId ? String(payload.planetId) : null, desiredName: desiredName.slice(0, 40), ownerName: ownerName.slice(0, 60), dedication: String(payload.dedication ?? "").slice(0, 240), email: email.slice(0, 160), packageName: plan.name, amountTwd: plan.priceTwd, status: "pending",
+      id, candidateId: systemId, systemId, planetId: payload.planetId ? String(payload.planetId) : null, desiredName: desiredName.slice(0, 40), ownerName: ownerName.slice(0, 60), dedication: String(payload.dedication ?? "").slice(0, 240), email: email.slice(0, 160), packageName: plan.name, amountTwd: plan.priceTwd, status: "payment_pending", paymentProvider: "ecpay", paymentTradeNo, paymentToken, paymentMessage: "訂單已建立，等待前往綠界付款", paymentUpdatedAt: new Date().toISOString(),
     }).returning();
-    return Response.json({ order, message: "登錄申請已建立，管理員確認付款後會產生專屬編號。" }, { status: 201 });
+    const checkoutUrl = `/api/payments/ecpay/checkout?order=${encodeURIComponent(order.id)}&token=${encodeURIComponent(paymentToken)}`;
+    return Response.json({ order: { id: order.id, amountTwd: order.amountTwd, status: order.status }, checkoutUrl, message: "訂單已建立，準備前往綠界安全付款。" }, { status: 201 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "訂單建立失敗" }, { status: 500 });
   }

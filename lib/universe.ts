@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { inferenceRuns, namingOrders, namingPackages, planets, starSystems, systemSettings } from "@/db/schema";
+import { getPaymentPublicInfo } from "@/lib/ecpay";
 
 export type Composition = { label: string; value: number; color: string };
 
@@ -163,7 +164,7 @@ export async function getAdminDashboard() {
     db.select().from(inferenceRuns).orderBy(desc(inferenceRuns.startedAt)).limit(20),
     db.select().from(systemSettings),
   ]);
-  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, features: parseJson<string[]>(item.featuresJson, []) })), orders, runs, settings: Object.fromEntries(settings.map((item) => [item.key, item.value])) };
+  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, features: parseJson<string[]>(item.featuresJson, []) })), orders, runs, settings: Object.fromEntries(settings.map((item) => [item.key, item.value])), payment: getPaymentPublicInfo() };
 }
 
 export async function publishSystem(id: string, published: boolean) {

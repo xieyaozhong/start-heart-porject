@@ -15,6 +15,13 @@
       "when": 1784472830491,
       "tag": "0001_previous_timeslip",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784517108911,
+      "tag": "0002_chemical_network",
+      "breakpoints": true
     }
   ]
 }

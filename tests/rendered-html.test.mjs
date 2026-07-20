@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -95,6 +96,42 @@ test("ships the immersive WebGL celestial explorer", async () => {
   assert.match(explorer, /拖曳旋轉/);
   assert.match(css, /\.celestial-explorer/);
   assert.match(packageJson, /"three"/);
+});
+
+test("integrates signed ECPay checkout and verified payment callbacks", async () => {
+  const [page, orderRoute, checkout, notify, gateway, schema, migration, resultPage] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/orders/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/payments/ecpay/checkout/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/payments/ecpay/notify/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/ecpay.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0002_chemical_network.sql", import.meta.url), "utf8"),
+    readFile(new URL("../app/payment/result/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /ECPay 綠界科技/);
+  assert.match(page, /window\.location\.assign\(data\.checkoutUrl\)/);
+  assert.doesNotMatch(page, /name="card|信用卡卡號|安全碼/);
+  assert.match(orderRoute, /paymentTradeNo/);
+  assert.match(orderRoute, /paymentToken/);
+  assert.match(checkout, /method=\"post\"/);
+  assert.match(gateway, /payment-stage\.ecpay\.com\.tw/);
+  assert.match(notify, /"1\|OK"/);
+  assert.match(gateway, /SHA-256/);
+  assert.match(gateway, /expected !== values\.CheckMacValue/);
+  assert.match(gateway, /Number\(values\.TradeAmt\) === order\.amountTwd/);
+  assert.match(gateway, /status = "test_paid"/);
+  assert.match(schema, /paymentTradeId/);
+  assert.match(migration, /naming_orders_payment_trade_no_unique/);
+  assert.match(resultPage, /測試交易，未產生扣款/);
+});
+
+test("matches ECPay's official SHA-256 CheckMacValue vector", () => {
+  const parameters = { TradeDesc: "促銷方案", PaymentType: "aio", MerchantTradeDate: "2023/03/12 15:30:23", MerchantTradeNo: "ecpay20230312153023", MerchantID: "3002607", ReturnURL: "https://www.ecpay.com.tw/receive.php", ItemName: "Apple iphone 15", TotalAmount: "30000", ChoosePayment: "ALL", EncryptType: "1" };
+  const content = Object.keys(parameters).sort((left, right) => left.toLowerCase().localeCompare(right.toLowerCase())).map((key) => `${key}=${parameters[key]}`).join("&");
+  const encoded = encodeURIComponent(`HashKey=pwFHCqoQZGmho4w6&${content}&HashIV=EkRm7iFT261dpevs`).replace(/%20/g, "+").replace(/~/g, "%7E").replace(/'/g, "%27").toLowerCase();
+  const actual = createHash("sha256").update(encoded).digest("hex").toUpperCase();
+  assert.equal(actual, "6C51C9E6888DE861FD62FB1DD17029FC742634498FD813DC43D4243B5685B840");
 });
 
 test("ships the social preview and no ChatGPT authentication helper", async () => {
