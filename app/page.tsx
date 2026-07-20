@@ -402,22 +402,30 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       ctx.setLineDash([]);
       const starRadius = 9 + system.starRadius * 5;
       const starPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 680) * .045;
-      const corona = ctx.createRadialGradient(cx, cy, starRadius * .2, cx, cy, starRadius * 4.2 * starPulse);
+      const pairAngle = (reduceMotion ? 0 : time) * .00016;
+      const primaryOrbitRadius = binarySystem ? starRadius * .84 : 0;
+      const companionOrbitRadius = binarySystem ? starRadius * 1.16 : 0;
+      const primaryX = cx - Math.cos(pairAngle) * primaryOrbitRadius;
+      const primaryY = cy - Math.sin(pairAngle) * primaryOrbitRadius * .46;
+      const pairX = cx + Math.cos(pairAngle) * companionOrbitRadius;
+      const pairY = cy + Math.sin(pairAngle) * companionOrbitRadius * .46;
+      if (binarySystem) {
+        ctx.save(); ctx.setLineDash([2,4]); ctx.strokeStyle = "rgba(243,168,77,.22)"; ctx.lineWidth = .7;
+        ctx.beginPath(); ctx.ellipse(cx, cy, primaryOrbitRadius, primaryOrbitRadius * .46, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(cx, cy, companionOrbitRadius, companionOrbitRadius * .46, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
+      const corona = ctx.createRadialGradient(primaryX, primaryY, starRadius * .2, primaryX, primaryY, starRadius * 4.2 * starPulse);
       corona.addColorStop(0, "rgba(255,246,194,1)"); corona.addColorStop(.24, "rgba(255,190,75,.78)"); corona.addColorStop(.6, "rgba(255,117,34,.16)"); corona.addColorStop(1, "rgba(255,102,24,0)");
-      ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, starRadius * 4.2 * starPulse, 0, Math.PI * 2); ctx.fill();
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00005);
+      ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(primaryX, primaryY, starRadius * 4.2 * starPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.translate(primaryX, primaryY); ctx.rotate(time * .00005);
       for (let ray = 0; ray < 14; ray += 1) { ctx.rotate(Math.PI / 7); ctx.strokeStyle = "rgba(255,181,74,.11)"; ctx.beginPath(); ctx.moveTo(starRadius * 1.25, 0); ctx.lineTo(starRadius * (1.8 + ray % 3 * .25), 0); ctx.stroke(); }
       ctx.restore();
-      const stellarSurface = ctx.createRadialGradient(cx - starRadius * .35, cy - starRadius * .38, 1, cx, cy, starRadius);
+      const stellarSurface = ctx.createRadialGradient(primaryX - starRadius * .35, primaryY - starRadius * .38, 1, primaryX, primaryY, starRadius);
       stellarSurface.addColorStop(0, "#fffde3"); stellarSurface.addColorStop(.42, "#ffe18a"); stellarSurface.addColorStop(.78, "#ff9d35"); stellarSurface.addColorStop(1, "#ce4b18");
-      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(cx, cy, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(primaryX, primaryY, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
       ctx.fillStyle = "rgba(180,83,34,.26)";
-      for (let spot = 0; spot < 5; spot += 1) { const spotAngle = (reduceMotion ? 0 : time) * .00011 + spot * 1.71; ctx.beginPath(); ctx.arc(cx + Math.cos(spotAngle) * starRadius * .48, cy + Math.sin(spotAngle * .83) * starRadius * .42, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
+      for (let spot = 0; spot < 5; spot += 1) { const spotAngle = (reduceMotion ? 0 : time) * .00011 + spot * 1.71; ctx.beginPath(); ctx.arc(primaryX + Math.cos(spotAngle) * starRadius * .48, primaryY + Math.sin(spotAngle * .83) * starRadius * .42, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
       if (binarySystem) {
-        const pairAngle = (reduceMotion ? 0 : time) * .00016;
-        const pairDistance = starRadius * 2.35;
-        const pairX = cx + Math.cos(pairAngle) * pairDistance;
-        const pairY = cy + Math.sin(pairAngle) * pairDistance * .46;
         const pairRadius = starRadius * .72;
         const pairCorona = ctx.createRadialGradient(pairX, pairY, 0, pairX, pairY, pairRadius * 4.4);
         pairCorona.addColorStop(0, "rgba(255,239,196,1)"); pairCorona.addColorStop(.25, "rgba(255,151,55,.7)"); pairCorona.addColorStop(1, "rgba(255,91,25,0)");
@@ -428,6 +436,7 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       }
       ctx.fillStyle = "rgba(237,229,203,.7)"; ctx.font = "7px ui-monospace, monospace"; ctx.textAlign = "center";
       ctx.fillText(`${system.id} / ${system.designation}${binarySystem ? " / STARS A+B" : " / STAR A"}`, cx, cy - starRadius - 22);
+      if (binarySystem) { ctx.fillStyle = "rgba(243,168,77,.58)"; ctx.font = "6px ui-monospace, monospace"; ctx.fillText("MUTUAL BARYCENTRIC ORBIT / 9.4 DAYS", cx, cy + starRadius + 27); }
       ctx.textAlign = "start";
       const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
       system.planets.forEach((planet, index) => {
@@ -437,15 +446,20 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
         const x = cx + Math.cos(angle) * orbit * Math.cos(.18) - Math.sin(angle) * orbit * .56 * Math.sin(-.18);
         const y = cy + Math.cos(angle) * orbit * Math.sin(-.18) + Math.sin(angle) * orbit * .56 * Math.cos(.18);
         const radius = Math.max(4, Math.min(10, 3 + Math.log2(planet.radiusEarth + 1) * 2));
+        const gaseousPlanet = /gas|giant|neptune|jovian/i.test(planet.type);
+        const oceanPlanet = /ocean|water/i.test(planet.type) || planet.composition.some((item) => /water/i.test(item.label) && item.value >= 30);
+        const moltenPlanet = /lava|molten|hot/i.test(planet.type) || planet.equilibriumTemp > 650;
         positionsRef.current.push({ id: planet.id, x, y, radius: radius + 7 });
         ctx.strokeStyle = `${planet.orbitColor}${planet.id === selectedId ? "9c" : "35"}`; ctx.lineWidth = planet.id === selectedId ? 1.8 : .7;
         ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, angle - (planet.id === selectedId ? .82 : .24), angle); ctx.stroke();
-        if (planet.radiusEarth > 6) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.22); ctx.strokeStyle = `${planet.orbitColor}72`; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.8, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+        if (gaseousPlanet && planet.radiusEarth > 6) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.22); ctx.strokeStyle = `${planet.orbitColor}72`; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.8, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
         const sphere = ctx.createRadialGradient(x - radius * .42, y - radius * .42, radius * .06, x, y, radius * 1.18);
         sphere.addColorStop(0, "#f5f0df"); sphere.addColorStop(.28, planet.orbitColor); sphere.addColorStop(1, "#06101a");
         ctx.fillStyle = sphere; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 22 : 8;
         ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-        if (planet.radiusEarth > 5) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.19)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
+        if (gaseousPlanet) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.21)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
+        if (oceanPlanet && !gaseousPlanet) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.fillStyle = "rgba(42,111,86,.72)"; ctx.beginPath(); ctx.ellipse(x - radius * .18, y + radius * .08, radius * .34, radius * .18, -.35, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = "rgba(235,249,255,.46)"; ctx.lineWidth = .75; ctx.beginPath(); ctx.arc(x, y - radius * .12, radius * .78, .15, 2.7); ctx.stroke(); ctx.restore(); }
+        if (moltenPlanet && !gaseousPlanet) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,140,52,.88)"; ctx.lineWidth = .7; for (let crack = 0; crack < 3; crack += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y - radius * .45 + crack * radius * .42); ctx.lineTo(x - radius * .2, y + radius * (.1 + crack * .11)); ctx.lineTo(x + radius, y - radius * (.28 - crack * .18)); ctx.stroke(); } ctx.restore(); }
         if (planet.radiusEarth > 4) { const moonAngle = (reduceMotion ? 0 : time) * .0012 + index; ctx.fillStyle = "#c9d4d5"; ctx.beginPath(); ctx.arc(x + Math.cos(moonAngle) * (radius + 5), y + Math.sin(moonAngle) * (radius + 5), 1.1, 0, Math.PI * 2); ctx.fill(); }
         if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
         const completePlanetLabel = ownerLabel && index === 0 ? `${ownerLabel} / ${planet.id} / ${planet.code}` : `${planet.id} / ${planet.code}`;

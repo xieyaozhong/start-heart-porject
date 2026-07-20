@@ -25,6 +25,7 @@ export type ExplorerPlanet = {
 };
 
 export type ExplorerSystem = {
+  id: string;
   designation: string;
   displayName: string | null;
   classification: string;
@@ -68,6 +69,9 @@ function planetTexture(planet: ExplorerPlanet, resolution = 512) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const gaseous = /gas|giant|neptune|jovian/i.test(planet.type);
+  const oceanic = /ocean|water/i.test(planet.type) || planet.composition.some((item) => /water/i.test(item.label) && item.value >= 30);
+  const molten = /lava|molten|hot/i.test(planet.type) || planet.equilibriumTemp > 650;
+  const icy = /ice|frozen|cold/i.test(planet.type) && !gaseous;
   let seed = [...planet.id].reduce((total, char) => total + char.charCodeAt(0), 0);
   const random = () => {
     seed = (seed * 9301 + 49297) % 233280;
@@ -80,6 +84,32 @@ function planetTexture(planet: ExplorerPlanet, resolution = 512) {
       ctx.fillStyle = `${colorWithLightness(base, random() * 0.32 - 0.16)}${Math.floor(35 + random() * 55).toString(16).padStart(2, "0")}`;
       ctx.fillRect(0, y, canvas.width, height);
     }
+  } else if (oceanic) {
+    ctx.fillStyle = colorWithLightness(base, -0.1);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let continent = 0; continent < (resolution <= 320 ? 24 : 38); continent += 1) {
+      const x = random() * canvas.width;
+      const y = random() * canvas.height;
+      const radius = 8 + random() * 38;
+      ctx.fillStyle = `rgba(${35 + Math.floor(random() * 30)},${92 + Math.floor(random() * 45)},${72 + Math.floor(random() * 38)},${.28 + random() * .32})`;
+      ctx.beginPath(); ctx.ellipse(x, y, radius * (1.2 + random()), radius * .42, random() * .8, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(238,249,255,.34)"; ctx.lineWidth = Math.max(1, resolution / 280);
+    for (let cloud = 0; cloud < 12; cloud += 1) { const y = random() * canvas.height; ctx.beginPath(); ctx.moveTo(-10, y); ctx.bezierCurveTo(canvas.width * .3, y - 14, canvas.width * .65, y + 18, canvas.width + 10, y - 4); ctx.stroke(); }
+  } else if (molten) {
+    ctx.fillStyle = "#24100d"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "rgba(255,102,29,.9)"; ctx.lineWidth = Math.max(1.4, resolution / 190); ctx.shadowColor = "#ff6b23"; ctx.shadowBlur = resolution / 45;
+    for (let fissure = 0; fissure < (resolution <= 320 ? 24 : 38); fissure += 1) {
+      let x = random() * canvas.width; let y = random() * canvas.height;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      for (let segment = 0; segment < 5; segment += 1) { x += (random() - .5) * resolution * .08; y += (random() - .5) * resolution * .05; ctx.lineTo(x, y); }
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+  } else if (icy) {
+    ctx.fillStyle = colorWithLightness(base, .18); ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "rgba(224,248,255,.52)"; ctx.lineWidth = Math.max(1, resolution / 320);
+    for (let fracture = 0; fracture < 28; fracture += 1) { const x = random() * canvas.width; const y = random() * canvas.height; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (random() - .5) * resolution * .16, y + (random() - .5) * resolution * .1); ctx.stroke(); }
   } else {
     for (let mark = 0; mark < (resolution <= 320 ? 48 : 76); mark += 1) {
       const x = random() * canvas.width;
@@ -127,18 +157,19 @@ function createStars(scene: THREE.Scene, lowPower: boolean) {
   return stars;
 }
 
-function createStar(scene: THREE.Scene, temperatureK: number, large = false) {
+function createStar(scene: THREE.Scene, temperatureK: number, large = false, radiusScale = 1) {
   const warm = temperatureK < 5200;
   const color = warm ? 0xffa83d : temperatureK > 6800 ? 0x9fc9ff : 0xffd180;
   const group = new THREE.Group();
+  const stellarRadius = (large ? 1.55 : 0.42) * radiusScale;
   const star = new THREE.Mesh(
-    new THREE.SphereGeometry(large ? 1.55 : 0.42, large ? 48 : 32, large ? 48 : 32),
+    new THREE.SphereGeometry(stellarRadius, large ? 48 : 32, large ? 48 : 32),
     new THREE.MeshBasicMaterial({ color }),
   );
   group.add(star);
   for (let layer = 1; layer <= 3; layer += 1) {
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry((large ? 1.55 : 0.42) * (1 + layer * 0.12), 28, 28),
+      new THREE.SphereGeometry(stellarRadius * (1 + layer * 0.12), 28, 28),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.12 / layer, side: THREE.BackSide, blending: THREE.AdditiveBlending }),
     );
     group.add(glow);
@@ -147,6 +178,18 @@ function createStar(scene: THREE.Scene, temperatureK: number, large = false) {
   group.add(light);
   scene.add(group);
   return group;
+}
+
+function createBinaryOrbitPath(scene: THREE.Scene, radius: number, lowPower: boolean) {
+  const segments = lowPower ? 48 : 72;
+  const path = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(Array.from({ length: segments }, (_, index) => {
+      const angle = index / segments * Math.PI * 2;
+      return new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius * .38);
+    })),
+    new THREE.LineBasicMaterial({ color: 0xd99543, transparent: true, opacity: .28 }),
+  );
+  scene.add(path);
 }
 
 export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabel, registryCode, onClose }: Props) {
@@ -163,6 +206,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
   const systemMeshesRef = useRef(new Map<string, THREE.Mesh>());
 
   const selected = useMemo(() => system.planets.find((planet) => planet.id === selectedId) ?? system.planets[0], [selectedId, system]);
+  const isBinarySystem = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
   useEffect(() => { speedRef.current = speed; }, [speed]);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
   useEffect(() => {
@@ -194,7 +238,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const compact = window.matchMedia("(max-width: 720px)").matches;
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
     const lowPower = compact || navigator.hardwareConcurrency <= 4 || memory <= 4;
-    const binarySystem = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
+    const binarySystem = isBinarySystem;
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: !lowPower, alpha: true, powerPreference: "high-performance" });
@@ -275,7 +319,11 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.maxDistance = 28;
       controls.maxPolarAngle = Math.PI * 0.76;
       starGroup = createStar(scene, system.temperatureK);
-      if (binarySystem) companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250));
+      if (binarySystem) {
+        companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), false, .76);
+        createBinaryOrbitPath(scene, .42, lowPower);
+        createBinaryOrbitPath(scene, .62, lowPower);
+      }
       if (showHabitable) {
         const innerAu = Math.sqrt(Math.max(system.luminosity, 0.05) / 1.1);
         const outerAu = Math.sqrt(Math.max(system.luminosity, 0.05) / 0.53);
@@ -319,7 +367,11 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.minDistance = 3.8;
       controls.maxDistance = 13;
       starGroup = createStar(scene, system.temperatureK, true);
-      if (binarySystem) companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), true);
+      if (binarySystem) {
+        companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), true, .76);
+        createBinaryOrbitPath(scene, 1.32, lowPower);
+        createBinaryOrbitPath(scene, 1.92, lowPower);
+      }
       const corona = new THREE.Mesh(
           new THREE.TorusGeometry(2.15, 0.018, 8, lowPower ? 72 : 112),
         new THREE.MeshBasicMaterial({ color: 0xffad43, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }),
@@ -365,9 +417,10 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       if (companionStarGroup) companionStarGroup.rotation.y -= delta * 0.028;
       if (starGroup && companionStarGroup) {
         const pairAngle = simulationDays / 9.4 * Math.PI * 2;
-        const pairSeparation = view === "star" ? 1.72 : .54;
-        starGroup.position.set(Math.cos(pairAngle) * -pairSeparation, Math.sin(pairAngle) * -.12, Math.sin(pairAngle) * -pairSeparation * .38);
-        companionStarGroup.position.set(Math.cos(pairAngle) * pairSeparation, Math.sin(pairAngle) * .12, Math.sin(pairAngle) * pairSeparation * .38);
+        const primarySeparation = view === "star" ? 1.32 : .42;
+        const companionSeparation = view === "star" ? 1.92 : .62;
+        starGroup.position.set(Math.cos(pairAngle) * -primarySeparation, 0, Math.sin(pairAngle) * -primarySeparation * .38);
+        companionStarGroup.position.set(Math.cos(pairAngle) * companionSeparation, 0, Math.sin(pairAngle) * companionSeparation * .38);
       }
       if (view === "system") {
         const epochDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
@@ -425,6 +478,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         <h1>{view === "planet" ? (ownerName ?? selected.code) : (system.displayName ?? system.designation)}</h1>
         <div className="explorer-subtitle"><span>{view === "planet" ? selected.type : system.classification}</span><i /> <span>{system.distancePc.toFixed(1)} pc</span></div>
         <code className="explorer-model-code">{view === "planet" ? `${system.id} / ${system.designation} / ${selected.id} / ${selected.code}` : `${system.id} / ${system.designation}`}</code>
+        {isBinarySystem && view !== "planet" && <span className="explorer-binary-note">MUTUAL BARYCENTRIC ORBIT · 9.4-DAY STELLAR PERIOD</span>}
         {view === "planet" ? <>
           <div className="explorer-metrics"><div><small>MASS</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>RADIUS</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>TEMPERATURE</small><b>{selected.equilibriumTemp} K</b></div><div><small>ASTROBIOLOGY</small><b>{selected.bioScore}%</b></div></div>
           <p className="explorer-description">{selected.atmosphere} · {selected.state}. {selected.bioPrediction}</p>

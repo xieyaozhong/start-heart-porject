@@ -627,6 +627,7 @@ body { background: #02070b; }
   box-shadow: 0 24px 55px rgba(0,0,0,.25);
 }
 .public-site .registry-guide-link { transition: color .2s ease,border-color .2s ease,background .2s ease; }
+.explorer-binary-note { display: inline-block; margin-top: 9px; padding: 6px 9px; border: 1px solid rgba(243,168,77,.32); border-radius: 999px; background: rgba(243,168,77,.065); color: #e5ac60; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .1em; }
 
 @media(max-width:900px){
   .public-site .solar-console,

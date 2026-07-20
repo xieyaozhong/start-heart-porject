@@ -174,7 +174,16 @@ test("adds a binary-star candidate, complete orbital labels, and a Sun-centred d
   assert.match(page, /LIGHT-TRAVEL DISTANCE/);
   assert.match(page, /completePlanetLabel/);
   assert.match(page, /STARS A\+B/);
+  assert.match(page, /MUTUAL BARYCENTRIC ORBIT/);
+  assert.match(page, /primaryOrbitRadius/);
+  assert.match(page, /oceanPlanet/);
+  assert.match(page, /moltenPlanet/);
   assert.match(explorer, /companionStarGroup/);
+  assert.match(explorer, /createBinaryOrbitPath/);
+  assert.match(explorer, /primarySeparation/);
+  assert.match(explorer, /MUTUAL BARYCENTRIC ORBIT/);
+  assert.match(explorer, /const oceanic/);
+  assert.match(explorer, /const molten/);
   assert.match(experience, /\.universe-distance-map/);
   assert.match(experience, /\.binary-star-mark/);
 });
