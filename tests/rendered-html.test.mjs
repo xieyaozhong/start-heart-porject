@@ -48,10 +48,25 @@ test("defines protected administration and scheduled inference", async () => {
   assert.match(workflow, /NOCTUA_CRON_SECRET/);
 });
 
+test("publishes a directory of official global astronomy organizations", async () => {
+  const [page, resources, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/resources/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /href="\/resources"/);
+  assert.match(resources, /NASA/);
+  assert.match(resources, /https:\/\/science\.nasa\.gov\/universe\//);
+  assert.match(resources, /https:\/\/www\.iau\.org\//);
+  assert.match(resources, /https:\/\/www\.asiaa\.sinica\.edu\.tw\//);
+  assert.match(resources, /target="_blank"/);
+  assert.match(resources, /rel="noreferrer noopener"/);
+  assert.match(css, /\.resource-grid/);
+});
+
 test("ships the social preview and no ChatGPT authentication helper", async () => {
   await access(new URL("../public/og-v2.png", import.meta.url));
   const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url)));
 });
-
