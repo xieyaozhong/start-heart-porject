@@ -12,11 +12,15 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(page, /OrbitCanvas/);
   assert.match(page, /SolarSystemCanvas/);
   assert.match(page, /SOLAR DYNAMICS/);
+  assert.match(page, /1P \/ HALLEY/);
+  assert.match(page, /halleyComet\.eccentricity/);
   assert.match(page, /REAL-TIME EPHEMERIS/);
   assert.match(page, /bioPrediction/);
   assert.match(page, /OWNER ACCESS/);
   assert.match(css, /\.orbit-canvas/);
   assert.match(css, /\.solar-canvas/);
+  assert.match(css, /\.comet-orb/);
+  assert.match(css, /\.speed-switch/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
 });
 

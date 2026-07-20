@@ -31,6 +31,13 @@ const solarBodies: SolarBody[] = [
   { id: "neptune", name: "海王星", english: "NEPTUNE", type: "冰巨行星", au: 30.07, periodDays: 60190, radiusEarth: 3.88, color: "#3559a8", accent: "#769cff", epochAngle: 218, temperature: "雲頂約 −200°C", moons: 16, summary: "最外側的主要行星，深藍大氣中吹著太陽系最快的風。" },
 ];
 
+const halleyComet = {
+  id: "halley", name: "哈雷彗星", english: "1P / HALLEY", type: "週期彗星", periodDays: 76.1 * 365.25,
+  perihelionAu: .5871, aphelionAu: 35.25, eccentricity: .967, nucleus: "約 15 × 8 公里",
+  nextReturn: "2061 年", color: "#d9f7f3", accent: "#88dff2",
+  summary: "沿逆行高偏心軌道穿越太陽系；接近太陽時，冰質物昇華並形成背向太陽的塵埃尾與離子尾。",
+};
+
 const fallbackSystems: StarSystem[] = [{
   id: "SYS-NX-001", designation: "NOCTUA-X1", displayName: null, classification: "G8V 黃矮星", raHours: 19.8464, decDeg: 8.8683,
   distancePc: 47.2, starMass: 0.91, starRadius: 0.94, temperatureK: 5480, luminosity: 0.72, ageByr: 5.1, metallicity: 0.08,
@@ -120,6 +127,21 @@ function SolarSystemCanvas({ selectedId, onSelect, speed, paused }: { selectedId
         const ox = Math.cos(angle) * radius; const oy = Math.sin(angle) * radius * flatten;
         return { x: cx + ox * Math.cos(tilt) - oy * Math.sin(tilt), y: cy + ox * Math.sin(tilt) + oy * Math.cos(tilt) };
       };
+      const halleySemi = maxOrbit * .96;
+      const halleyPeri = Math.max(27, maxOrbit * .105);
+      const halleyFocus = halleySemi - halleyPeri;
+      const halleyMinor = Math.sqrt(halleySemi ** 2 - halleyFocus ** 2) * .62;
+      const halleyRotation = .72;
+      const halleyPoint = (eccentricAnomaly: number) => {
+        const localX = -halleyFocus + Math.cos(eccentricAnomaly) * halleySemi;
+        const localY = Math.sin(eccentricAnomaly) * halleyMinor;
+        return { x: cx + localX * Math.cos(halleyRotation) - localY * Math.sin(halleyRotation), y: cy + localX * Math.sin(halleyRotation) + localY * Math.cos(halleyRotation) };
+      };
+      const daysSinceHalleyPerihelion = (Date.now() - new Date("1986-02-09T00:00:00.000Z").getTime()) / 86400000 + simulationDaysRef.current;
+      const halleyMeanAnomaly = ((daysSinceHalleyPerihelion / halleyComet.periodDays) * Math.PI * 2) % (Math.PI * 2);
+      let halleyEccentricAnomaly = halleyMeanAnomaly;
+      for (let iteration = 0; iteration < 8; iteration += 1) halleyEccentricAnomaly -= (halleyEccentricAnomaly - halleyComet.eccentricity * Math.sin(halleyEccentricAnomaly) - halleyMeanAnomaly) / (1 - halleyComet.eccentricity * Math.cos(halleyEccentricAnomaly));
+      const halleyPosition = halleyPoint(-halleyEccentricAnomaly);
 
       const beltInner = orbitRadius(2.1); const beltOuter = orbitRadius(3.35);
       for (let index = 0; index < 330; index += 1) {
@@ -136,6 +158,11 @@ function SolarSystemCanvas({ selectedId, onSelect, speed, paused }: { selectedId
         ctx.lineWidth = body.id === selectedId ? 1.45 : .7;
         ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * flatten, tilt, 0, Math.PI * 2); ctx.stroke();
       });
+      ctx.save();
+      ctx.setLineDash([5, 7]); ctx.strokeStyle = selectedId === halleyComet.id ? "rgba(136,223,242,.82)" : "rgba(136,223,242,.25)"; ctx.lineWidth = selectedId === halleyComet.id ? 1.5 : .85;
+      ctx.beginPath();
+      for (let step = 0; step <= 160; step += 1) { const orbitPoint = halleyPoint(step / 160 * Math.PI * 2); if (step === 0) ctx.moveTo(orbitPoint.x, orbitPoint.y); else ctx.lineTo(orbitPoint.x, orbitPoint.y); }
+      ctx.closePath(); ctx.stroke(); ctx.restore();
 
       const sunPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 700) * .035;
       const corona = ctx.createRadialGradient(cx, cy, 3, cx, cy, 54 * sunPulse);
@@ -200,6 +227,31 @@ function SolarSystemCanvas({ selectedId, onSelect, speed, paused }: { selectedId
         }
       });
 
+      const cometDx = halleyPosition.x - cx; const cometDy = halleyPosition.y - cy;
+      const cometDistance = Math.max(1, Math.hypot(cometDx, cometDy));
+      const tailDirectionX = cometDx / cometDistance; const tailDirectionY = cometDy / cometDistance;
+      const nearSunFactor = 1 - Math.min(1, cometDistance / (maxOrbit * 1.08));
+      const ionTailLength = 30 + nearSunFactor * 82; const dustTailLength = 22 + nearSunFactor * 57;
+      ctx.save(); ctx.lineCap = "round";
+      for (let stream = 0; stream < 7; stream += 1) {
+        const spread = (stream - 3) * (1.5 + nearSunFactor * 1.8);
+        ctx.strokeStyle = `rgba(113,217,244,${.08 + nearSunFactor * .07})`; ctx.lineWidth = Math.max(.7, 3.2 - stream * .28);
+        ctx.beginPath(); ctx.moveTo(halleyPosition.x, halleyPosition.y);
+        ctx.quadraticCurveTo(halleyPosition.x + tailDirectionX * ionTailLength * .45 - tailDirectionY * spread, halleyPosition.y + tailDirectionY * ionTailLength * .45 + tailDirectionX * spread, halleyPosition.x + tailDirectionX * ionTailLength - tailDirectionY * spread * 2.2, halleyPosition.y + tailDirectionY * ionTailLength + tailDirectionX * spread * 2.2); ctx.stroke();
+      }
+      ctx.strokeStyle = `rgba(255,202,128,${.14 + nearSunFactor * .2})`; ctx.lineWidth = 5 + nearSunFactor * 7;
+      ctx.beginPath(); ctx.moveTo(halleyPosition.x, halleyPosition.y);
+      ctx.quadraticCurveTo(halleyPosition.x + tailDirectionX * dustTailLength * .42 + tailDirectionY * 8, halleyPosition.y + tailDirectionY * dustTailLength * .42 - tailDirectionX * 8, halleyPosition.x + tailDirectionX * dustTailLength + tailDirectionY * 17, halleyPosition.y + tailDirectionY * dustTailLength - tailDirectionX * 17); ctx.stroke();
+      ctx.restore();
+      const coma = ctx.createRadialGradient(halleyPosition.x - 1, halleyPosition.y - 1, 0, halleyPosition.x, halleyPosition.y, 12 + nearSunFactor * 7);
+      coma.addColorStop(0, "rgba(255,255,236,1)"); coma.addColorStop(.18, "rgba(173,239,237,.92)"); coma.addColorStop(.5, "rgba(92,207,226,.28)"); coma.addColorStop(1, "rgba(62,173,213,0)");
+      ctx.fillStyle = coma; ctx.beginPath(); ctx.arc(halleyPosition.x, halleyPosition.y, 12 + nearSunFactor * 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#27333a"; ctx.shadowColor = "#b8f7f1"; ctx.shadowBlur = 10; ctx.beginPath(); ctx.ellipse(halleyPosition.x, halleyPosition.y, 3.8, 2.4, -.45, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      if (selectedId === halleyComet.id) { const cometPulse = 12 + Math.sin((reduceMotion ? 0 : time) / 250) * 2; ctx.strokeStyle = "rgba(202,249,250,.85)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(halleyPosition.x, halleyPosition.y, cometPulse, 0, Math.PI * 2); ctx.stroke(); }
+      positionsRef.current.push({ id: halleyComet.id, x: halleyPosition.x, y: halleyPosition.y, radius: 16 });
+      ctx.fillStyle = selectedId === halleyComet.id ? "#d9fbfb" : "rgba(165,219,225,.72)"; ctx.font = `${selectedId === halleyComet.id ? "600" : "400"} 9px ui-monospace, monospace`;
+      ctx.fillText("1P / 哈雷", halleyPosition.x + 10, halleyPosition.y - 10);
+
       ctx.fillStyle = "rgba(137,167,184,.5)"; ctx.font = "8px ui-monospace, monospace";
       ctx.fillText(`SOLAR DYNAMICS · T+${simulationDaysRef.current.toFixed(1)} DAYS`, 18, h - 17);
       frame = requestAnimationFrame(draw);
@@ -218,12 +270,14 @@ function SolarSystemCanvas({ selectedId, onSelect, speed, paused }: { selectedId
     return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
   }, [selectedId, speed, paused]);
 
-  return <canvas ref={canvasRef} className="solar-canvas" aria-label="太陽與八大行星公轉動畫；點擊行星可查看資訊" />;
+  return <canvas ref={canvasRef} className="solar-canvas" aria-label="太陽、八大行星與哈雷彗星軌道動畫；點擊星體可查看資訊" />;
 }
 
-function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { system: StarSystem; selectedId: string; onSelect: (id: string) => void; mode: "live" | "animation"; ownerLabel?: string }) {
+function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1, paused = false }: { system: StarSystem; selectedId: string; onSelect: (id: string) => void; mode: "live" | "animation"; ownerLabel?: string; speed?: number; paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const positionsRef = useRef<{ id: string; x: number; y: number; radius: number }[]>([]);
+  const simulationDaysRef = useRef(0);
+  const previousTimeRef = useRef<number | null>(null);
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
 
@@ -235,12 +289,16 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
     let observer: ResizeObserver | null = null;
     const draw = (time: number) => {
       const rect = canvas.getBoundingClientRect();
-      const ratio = window.devicePixelRatio || 1;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
       if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
         canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
       }
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
+      const previous = previousTimeRef.current ?? time;
+      const deltaSeconds = Math.min((time - previous) / 1000, .1);
+      previousTimeRef.current = time;
+      if (mode === "animation" && !paused && !reduceMotion) simulationDaysRef.current += deltaSeconds * speed * 6;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       const w = rect.width; const h = rect.height; const cx = w * .49; const cy = h * .5;
       const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .72);
@@ -278,10 +336,12 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
       const stellarSurface = ctx.createRadialGradient(cx - starRadius * .35, cy - starRadius * .38, 1, cx, cy, starRadius);
       stellarSurface.addColorStop(0, "#fffde3"); stellarSurface.addColorStop(.42, "#ffe18a"); stellarSurface.addColorStop(.78, "#ff9d35"); stellarSurface.addColorStop(1, "#ce4b18");
       ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(cx, cy, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(180,83,34,.26)";
+      for (let spot = 0; spot < 5; spot += 1) { const spotAngle = (reduceMotion ? 0 : time) * .00011 + spot * 1.71; ctx.beginPath(); ctx.arc(cx + Math.cos(spotAngle) * starRadius * .48, cy + Math.sin(spotAngle * .83) * starRadius * .42, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
       const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
       system.planets.forEach((planet, index) => {
         const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
-        const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + (reduceMotion ? 0 : time) * (.006 / Math.sqrt(planet.periodDays));
+        const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + simulationDaysRef.current / planet.periodDays * 360;
         const angle = degrees * Math.PI / 180;
         const x = cx + Math.cos(angle) * orbit * Math.cos(.18) - Math.sin(angle) * orbit * .56 * Math.sin(-.18);
         const y = cy + Math.cos(angle) * orbit * Math.sin(-.18) + Math.sin(angle) * orbit * .56 * Math.cos(.18);
@@ -289,11 +349,13 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
         positionsRef.current.push({ id: planet.id, x, y, radius: radius + 7 });
         ctx.strokeStyle = `${planet.orbitColor}${planet.id === selectedId ? "9c" : "35"}`; ctx.lineWidth = planet.id === selectedId ? 1.8 : .7;
         ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, angle - (planet.id === selectedId ? .82 : .24), angle); ctx.stroke();
+        if (planet.radiusEarth > 6) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.22); ctx.strokeStyle = `${planet.orbitColor}72`; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.8, radius * .48, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
         const sphere = ctx.createRadialGradient(x - radius * .42, y - radius * .42, radius * .06, x, y, radius * 1.18);
         sphere.addColorStop(0, "#f5f0df"); sphere.addColorStop(.28, planet.orbitColor); sphere.addColorStop(1, "#06101a");
         ctx.fillStyle = sphere; ctx.shadowColor = planet.orbitColor; ctx.shadowBlur = planet.id === selectedId ? 22 : 8;
         ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
         if (planet.radiusEarth > 5) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.19)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
+        if (planet.radiusEarth > 4) { const moonAngle = (reduceMotion ? 0 : time) * .0012 + index; ctx.fillStyle = "#c9d4d5"; ctx.beginPath(); ctx.arc(x + Math.cos(moonAngle) * (radius + 5), y + Math.sin(moonAngle) * (radius + 5), 1.1, 0, Math.PI * 2); ctx.fill(); }
         if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
         ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
       });
@@ -306,9 +368,13 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel }: { syste
       const hit = positionsRef.current.find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
       if (hit) selectRef.current(hit.id);
     };
-    canvas.addEventListener("click", click);
-    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); };
-  }, [system, selectedId, mode, ownerLabel]);
+    const move = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+      canvas.style.cursor = positionsRef.current.some((position) => Math.hypot(position.x - x, position.y - y) <= position.radius) ? "pointer" : "crosshair";
+    };
+    canvas.addEventListener("click", click); canvas.addEventListener("mousemove", move);
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
+  }, [system, selectedId, mode, ownerLabel, speed, paused]);
 
   return <canvas ref={canvasRef} className="orbit-canvas" aria-label={`${system.designation} 即時行星軌道圖；點擊行星可查看詳情`} />;
 }
@@ -322,6 +388,8 @@ export default function Home() {
   const [systemId, setSystemId] = useState(fallbackSystems[0].id);
   const [planetId, setPlanetId] = useState(fallbackSystems[0].planets[2].id);
   const [mode, setMode] = useState<"live" | "animation">("live");
+  const [systemSpeed, setSystemSpeed] = useState(1);
+  const [systemPaused, setSystemPaused] = useState(false);
   const [orderPlan, setOrderPlan] = useState<NamingPackage | null>(null);
   const [orderDone, setOrderDone] = useState<string | null>(null);
   const [registryOpen, setRegistryOpen] = useState(false);
@@ -339,6 +407,7 @@ export default function Home() {
   const system = useMemo(() => systems.find((item) => item.id === systemId) ?? systems[0], [systems, systemId]);
   const planet = useMemo(() => system.planets.find((item) => item.id === planetId) ?? system.planets[0], [system, planetId]);
   const solarPlanet = useMemo(() => solarBodies.find((item) => item.id === solarPlanetId) ?? solarBodies[2], [solarPlanetId]);
+  const isHalleySelected = solarPlanetId === halleyComet.id;
 
   function chooseSystem(next: StarSystem) { setSystemId(next.id); setPlanetId(next.planets[0]?.id ?? ""); document.getElementById("observatory")?.scrollIntoView({ behavior: "smooth" }); }
 
@@ -369,8 +438,8 @@ export default function Home() {
 
       <section className="solar-showcase" id="solar-system">
         <div className="solar-intro" id="top">
-          <div><p className="eyebrow">HOME SYSTEM / LIVE SIMULATION</p><h1>從我們的太陽出發，<br /><em>看見八顆世界正在移動。</em></h1></div>
-          <div className="solar-intro-copy"><p>依公轉週期推演的互動式太陽系。點擊任一行星，即時查看它的距離、週期與環境概況。</p><div><span><i />即時渲染</span><span>8 PLANETS</span><span>30.07 AU</span></div></div>
+          <div><p className="eyebrow">HOME SYSTEM / LIVE SIMULATION</p><h1>從我們的太陽出發，<br /><em>看見行星與彗星正在移動。</em></h1></div>
+          <div className="solar-intro-copy"><p>依公轉週期推演的互動式太陽系。點擊行星或哈雷彗星，即時查看軌道、週期與環境概況。</p><div><span><i />即時渲染</span><span>8 PLANETS + 1P/HALLEY</span><span>35.25 AU</span></div></div>
         </div>
         <div className="solar-console">
           <article className="solar-stage">
@@ -381,15 +450,15 @@ export default function Home() {
                 <button className={solarPaused ? "active pause" : "pause"} aria-pressed={solarPaused} onClick={() => setSolarPaused((value) => !value)}>{solarPaused ? "繼續" : "暫停"}</button>
               </div>
             </div>
-            <SolarSystemCanvas selectedId={solarPlanet.id} onSelect={setSolarPlanetId} speed={solarSpeed} paused={solarPaused} />
-            <div className="solar-foot"><span>內行星 · 小行星帶 · 外行星</span><span>點擊星體選取</span></div>
+            <SolarSystemCanvas selectedId={solarPlanetId} onSelect={setSolarPlanetId} speed={solarSpeed} paused={solarPaused} />
+            <div className="solar-foot"><span>內行星 · 小行星帶 · 外行星 · 哈雷彗星</span><span>點擊星體選取</span></div>
           </article>
           <aside className="solar-inspector">
-            <div className="solar-planet-title"><span style={{ "--planet-color": solarPlanet.color, "--planet-accent": solarPlanet.accent } as React.CSSProperties} /><div><small>{solarPlanet.english} / SELECTED</small><h2>{solarPlanet.name}</h2><p>{solarPlanet.type}</p></div></div>
-            <div className="solar-data-grid"><div><span>平均距離</span><b>{solarPlanet.au} AU</b></div><div><span>公轉週期</span><b>{solarPlanet.periodDays.toLocaleString()} 日</b></div><div><span>半徑</span><b>{solarPlanet.radiusEarth} R⊕</b></div><div><span>已知衛星</span><b>{solarPlanet.moons}</b></div></div>
-            <div className="solar-climate"><span>溫度概況</span><b>{solarPlanet.temperature}</b></div>
-            <p className="solar-summary">{solarPlanet.summary}</p>
-            <div className="planet-picker" aria-label="選擇太陽系行星">{solarBodies.map((body) => <button key={body.id} className={body.id === solarPlanet.id ? "active" : ""} onClick={() => setSolarPlanetId(body.id)}><i style={{ background: body.color, boxShadow: `0 0 9px ${body.accent}` }} /><span>{body.name}</span></button>)}</div>
+            <div className="solar-planet-title"><span className={isHalleySelected ? "comet-orb" : ""} style={{ "--planet-color": isHalleySelected ? halleyComet.color : solarPlanet.color, "--planet-accent": isHalleySelected ? halleyComet.accent : solarPlanet.accent } as React.CSSProperties} /><div><small>{isHalleySelected ? halleyComet.english : solarPlanet.english} / SELECTED</small><h2>{isHalleySelected ? halleyComet.name : solarPlanet.name}</h2><p>{isHalleySelected ? halleyComet.type : solarPlanet.type}</p></div></div>
+            {isHalleySelected ? <div className="solar-data-grid"><div><span>近日點</span><b>{halleyComet.perihelionAu} AU</b></div><div><span>遠日點</span><b>{halleyComet.aphelionAu} AU</b></div><div><span>平均週期</span><b>76.1 年</b></div><div><span>軌道離心率</span><b>{halleyComet.eccentricity}</b></div></div> : <div className="solar-data-grid"><div><span>平均距離</span><b>{solarPlanet.au} AU</b></div><div><span>公轉週期</span><b>{solarPlanet.periodDays.toLocaleString()} 日</b></div><div><span>半徑</span><b>{solarPlanet.radiusEarth} R⊕</b></div><div><span>已知衛星</span><b>{solarPlanet.moons}</b></div></div>}
+            <div className="solar-climate"><span>{isHalleySelected ? "彗核／下次回歸" : "溫度概況"}</span><b>{isHalleySelected ? `${halleyComet.nucleus} · ${halleyComet.nextReturn}` : solarPlanet.temperature}</b></div>
+            <p className="solar-summary">{isHalleySelected ? halleyComet.summary : solarPlanet.summary}</p>
+            <div className="planet-picker" aria-label="選擇太陽系星體">{solarBodies.map((body) => <button key={body.id} className={body.id === solarPlanetId ? "active" : ""} onClick={() => setSolarPlanetId(body.id)}><i style={{ background: body.color, boxShadow: `0 0 9px ${body.accent}` }} /><span>{body.name}</span></button>)}<button className={isHalleySelected ? "active" : ""} onClick={() => setSolarPlanetId(halleyComet.id)}><i className="comet-dot" /><span>哈雷彗星</span></button></div>
           </aside>
         </div>
       </section>
@@ -401,9 +470,9 @@ export default function Home() {
         </div>
         <div className="observatory-grid">
           <article className="system-viewport">
-            <div className="viewport-toolbar"><div><i /> LIVE POSITION <span>{system.planets.length} PLANETS</span></div><div className="mode-switch"><button className={mode === "live" ? "active" : ""} onClick={() => setMode("live")}>即時位置</button><button className={mode === "animation" ? "active" : ""} onClick={() => setMode("animation")}>動畫預覽</button></div></div>
-            <OrbitCanvas system={system} selectedId={planet.id} onSelect={setPlanetId} mode={mode} />
-            <div className="viewport-foot"><span>視野：約 {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>點擊軌道上的行星查看資料</span></div>
+            <div className="viewport-toolbar"><div><i /> LIVE POSITION <span>{system.planets.length} PLANETS</span></div><div className="viewport-actions"><div className="mode-switch"><button className={mode === "live" ? "active" : ""} onClick={() => { setMode("live"); setSystemPaused(false); }}>即時位置</button><button className={mode === "animation" ? "active" : ""} onClick={() => setMode("animation")}>動畫預覽</button></div>{mode === "animation" && <div className="speed-switch">{[1, 6, 24].map((value) => <button key={value} className={systemSpeed === value ? "active" : ""} aria-pressed={systemSpeed === value} onClick={() => setSystemSpeed(value)}>{value}×</button>)}<button className={systemPaused ? "active" : ""} aria-pressed={systemPaused} onClick={() => setSystemPaused((value) => !value)}>{systemPaused ? "繼續" : "暫停"}</button></div>}</div></div>
+            <OrbitCanvas system={system} selectedId={planet.id} onSelect={setPlanetId} mode={mode} speed={systemSpeed} paused={systemPaused} />
+            <div className="viewport-foot"><span>視野：約 {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>比照太陽系的光影、軌道殘影與互動控制</span></div>
           </article>
           <aside className="planet-inspector">
             <div className="inspector-title"><span style={{ background: planet.orbitColor }} /><div><p>SELECTED BODY</p><h2>{planet.displayName ?? planet.code}</h2><small>{planet.type}</small></div></div>
