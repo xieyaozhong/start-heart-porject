@@ -230,6 +230,7 @@ test("derives candidate coordinates and adds four exotic stellar models", async 
   assert.match(universe, /SYS-NX-PSR-067/);
   assert.match(universe, /SYS-NX-BH-073/);
   assert.match(universe, /SYS-NX-DP-081/);
+  assert.match(universe, /const classification = blackHole \?/);
   assert.match(page, /blueGiantSystem/);
   assert.match(page, /pulsarSystem/);
   assert.match(page, /blackHoleSystem/);
