@@ -45,6 +45,24 @@ const defaultPackages = [
   { id: "PKG-ARCHIVIST", name: "典藏者", priceTwd: 2680, description: "完整典藏檔案與客製動畫", featuresJson: JSON.stringify(["可列印典藏證書", "客製獻詞", "完整軌道與成分報告"]), active: true, sortOrder: 3 },
 ];
 
+const demoOwnerOrder = {
+  id: "ORD-DEMO-OWNER",
+  createdAt: "2026-07-19T08:00:00.000Z",
+  candidateId: "SYS-NX-001",
+  systemId: "SYS-NX-001",
+  planetId: "PL-NX-001-D",
+  desiredName: "Asteria Noctua",
+  ownerName: "星願示範者",
+  dedication: "願每一次仰望，都能找到屬於自己的光。",
+  email: "demo-owner@noctua.example",
+  packageName: "觀測者",
+  amountTwd: 1280,
+  status: "confirmed",
+  registryCode: "NOR-DEMO2026",
+  animationTheme: "amber",
+  confirmedAt: "2026-07-19T08:05:00.000Z",
+};
+
 export async function ensureUniverseSeeded() {
   const db = getDb();
   const [{ total }] = await db.select({ total: count() }).from(starSystems);
@@ -59,6 +77,7 @@ export async function ensureUniverseSeeded() {
   }
   const [{ packageTotal }] = await db.select({ packageTotal: count() }).from(namingPackages);
   if (packageTotal === 0) await db.insert(namingPackages).values(defaultPackages);
+  await db.insert(namingOrders).values(demoOwnerOrder).onConflictDoNothing();
   const settings = [
     { key: "schedule_frequency", value: "daily" },
     { key: "auto_publish", value: "false" },

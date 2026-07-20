@@ -64,6 +64,21 @@ test("publishes a directory of official global astronomy organizations", async (
   assert.match(css, /\.resource-grid/);
 });
 
+test("seeds and exposes a one-click demo holder account", async () => {
+  const [page, universe, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /DEMO_OWNER_REGISTRY_CODE = "NOR-DEMO2026"/);
+  assert.match(page, /openDemoRegistry/);
+  assert.match(page, /一鍵開啟範例星系/);
+  assert.match(universe, /id: "ORD-DEMO-OWNER"/);
+  assert.match(universe, /registryCode: "NOR-DEMO2026"/);
+  assert.match(universe, /namingOrders\)\.values\(demoOwnerOrder\)\.onConflictDoNothing/);
+  assert.match(css, /\.demo-owner-account/);
+});
+
 test("ships the social preview and no ChatGPT authentication helper", async () => {
   await access(new URL("../public/og-v2.png", import.meta.url));
   const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");
