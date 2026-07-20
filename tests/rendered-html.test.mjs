@@ -33,7 +33,7 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(css, /\.moon-orb/);
   assert.match(experience, /\.observatory-credibility/);
   assert.match(layout, /<html lang="en">/);
-  assert.match(layout, /og-v4\.png/);
+  assert.match(layout, /og-v5\.png/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
 });
 
@@ -131,6 +131,27 @@ test("seeds and exposes a one-click demo holder account", async () => {
   assert.match(css, /\.demo-owner-account/);
 });
 
+test("publishes fifty transparent showcase registries and speculative life morphology", async () => {
+  const [page, universe, explorer, experience] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/CelestialExplorer3D.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/experience.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /PUBLIC REGISTRY SHOWCASE \/ 50 RECORDS/);
+  assert.match(page, /not claims of real customer payments/);
+  assert.match(page, /FULL DESIGNATION/);
+  assert.match(page, /SPECULATIVE LIFE MORPHOLOGY/);
+  assert.match(universe, /"Our Quiet Cosmos"/);
+  const showcaseBlock = universe.match(/const showcaseNames = \[([\s\S]*?)\];/)?.[1] ?? "";
+  assert.equal(showcaseBlock.match(/"[^"]+"/g)?.length, 50);
+  assert.match(universe, /fish-person-like/);
+  assert.match(universe, /xenomorph-like/);
+  assert.match(universe, /registryShowcase/);
+  assert.match(explorer, /explorer-model-code/);
+  assert.match(experience, /\.registry-showcase-grid/);
+});
+
 test("ships the immersive WebGL celestial explorer", async () => {
   const [page, explorer, css, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -148,6 +169,10 @@ test("ships the immersive WebGL celestial explorer", async () => {
   assert.match(explorer, /DRAG TO ROTATE/);
   assert.match(explorer, /webglcontextlost/);
   assert.match(explorer, /INITIALISING VERIFIED 3D MODEL/);
+  assert.match(explorer, /targetFrameMs = lowPower \? 1000 \/ 30 : 1000 \/ 50/);
+  assert.match(explorer, /systemMeshesRef/);
+  assert.match(page, /IntersectionObserver/);
+  assert.match(page, /devicePixelRatio \|\| 1, 1\.35/);
   assert.match(css, /\.celestial-explorer/);
   assert.match(packageJson, /"three"/);
 });
@@ -191,7 +216,7 @@ test("matches ECPay's official SHA-256 CheckMacValue vector", () => {
 });
 
 test("ships the social preview and no ChatGPT authentication helper", async () => {
-  await access(new URL("../public/og-v4.png", import.meta.url));
+  await access(new URL("../public/og-v5.png", import.meta.url));
   const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url)));

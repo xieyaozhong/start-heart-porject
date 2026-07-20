@@ -21,6 +21,7 @@ export type ExplorerPlanet = {
   state: string;
   bioScore: number;
   bioPrediction: string;
+  lifeSpeculation?: string;
 };
 
 export type ExplorerSystem = {
@@ -52,10 +53,10 @@ function colorWithLightness(hex: string, lightness: number) {
   return `#${color.getHexString()}`;
 }
 
-function planetTexture(planet: ExplorerPlanet) {
+function planetTexture(planet: ExplorerPlanet, resolution = 512) {
   const canvas = document.createElement("canvas");
-  canvas.width = 768;
-  canvas.height = 384;
+  canvas.width = resolution;
+  canvas.height = Math.round(resolution / 2);
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   const base = planet.orbitColor;
@@ -73,14 +74,14 @@ function planetTexture(planet: ExplorerPlanet) {
     return seed / 233280;
   };
   if (gaseous) {
-    for (let band = 0; band < 46; band += 1) {
+    for (let band = 0; band < (resolution <= 320 ? 24 : 34); band += 1) {
       const y = random() * canvas.height;
       const height = 2 + random() * 17;
       ctx.fillStyle = `${colorWithLightness(base, random() * 0.32 - 0.16)}${Math.floor(35 + random() * 55).toString(16).padStart(2, "0")}`;
       ctx.fillRect(0, y, canvas.width, height);
     }
   } else {
-    for (let mark = 0; mark < 115; mark += 1) {
+    for (let mark = 0; mark < (resolution <= 320 ? 48 : 76); mark += 1) {
       const x = random() * canvas.width;
       const y = random() * canvas.height;
       const radius = 3 + random() * 34;
@@ -101,8 +102,8 @@ function orbitRadius(au: number) {
   return 1.15 + Math.log1p(Math.max(au, 0.02) * 7.5) * 1.48;
 }
 
-function createStars(scene: THREE.Scene, compact: boolean) {
-  const count = compact ? 950 : 1900;
+function createStars(scene: THREE.Scene, lowPower: boolean) {
+  const count = lowPower ? 520 : 1100;
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
   for (let index = 0; index < count; index += 1) {
@@ -120,7 +121,7 @@ function createStars(scene: THREE.Scene, compact: boolean) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  const material = new THREE.PointsMaterial({ size: compact ? 0.1 : 0.075, vertexColors: true, transparent: true, opacity: 0.82, sizeAttenuation: true });
+  const material = new THREE.PointsMaterial({ size: lowPower ? 0.1 : 0.075, vertexColors: true, transparent: true, opacity: 0.82, sizeAttenuation: true });
   const stars = new THREE.Points(geometry, material);
   scene.add(stars);
   return stars;
@@ -131,13 +132,13 @@ function createStar(scene: THREE.Scene, temperatureK: number, large = false) {
   const color = warm ? 0xffa83d : temperatureK > 6800 ? 0x9fc9ff : 0xffd180;
   const group = new THREE.Group();
   const star = new THREE.Mesh(
-    new THREE.SphereGeometry(large ? 1.55 : 0.42, large ? 72 : 42, large ? 72 : 42),
+    new THREE.SphereGeometry(large ? 1.55 : 0.42, large ? 48 : 32, large ? 48 : 32),
     new THREE.MeshBasicMaterial({ color }),
   );
   group.add(star);
   for (let layer = 1; layer <= 3; layer += 1) {
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry((large ? 1.55 : 0.42) * (1 + layer * 0.12), 40, 40),
+      new THREE.SphereGeometry((large ? 1.55 : 0.42) * (1 + layer * 0.12), 28, 28),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.12 / layer, side: THREE.BackSide, blending: THREE.AdditiveBlending }),
     );
     group.add(glow);
@@ -159,10 +160,22 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
   const [showHabitable, setShowHabitable] = useState(true);
   const [webglError, setWebglError] = useState(false);
   const [modelReady, setModelReady] = useState(false);
+  const systemMeshesRef = useRef(new Map<string, THREE.Mesh>());
 
   const selected = useMemo(() => system.planets.find((planet) => planet.id === selectedId) ?? system.planets[0], [selectedId, system]);
   useEffect(() => { speedRef.current = speed; }, [speed]);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
+  useEffect(() => {
+    systemMeshesRef.current.forEach((mesh, planetId) => {
+      const active = planetId === selectedId;
+      mesh.scale.setScalar(active ? 1.24 : 1);
+      const material = mesh.material;
+      if (material instanceof THREE.MeshStandardMaterial) {
+        material.emissive.set(active ? String(mesh.userData.planetColor) : "#000000");
+        material.emissiveIntensity = active ? 0.18 : 0;
+      }
+    });
+  }, [selectedId]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -177,14 +190,18 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     if (!mount || !selected) return;
     setWebglError(false);
     setModelReady(false);
+    systemMeshesRef.current.clear();
+    const compact = window.matchMedia("(max-width: 720px)").matches;
+    const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+    const lowPower = compact || navigator.hardwareConcurrency <= 4 || memory <= 4;
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({ antialias: !lowPower, alpha: true, powerPreference: "high-performance" });
     } catch {
       queueMicrotask(() => setWebglError(true));
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPower ? 1 : 1.35));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -196,8 +213,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x02070c, view === "system" ? 0.011 : 0.018);
     const camera = new THREE.PerspectiveCamera(42, mount.clientWidth / mount.clientHeight, 0.05, 180);
-    const compact = window.matchMedia("(max-width: 720px)").matches;
-    const stars = createStars(scene, compact);
+    const stars = createStars(scene, lowPower);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.055;
@@ -220,16 +236,16 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       camera.position.set(0, 0.12, compact ? 6.4 : 5.15);
       controls.minDistance = 2.7;
       controls.maxDistance = 10;
-      const texture = planetTexture(selected);
+      const texture = planetTexture(selected, lowPower ? 320 : 512);
       if (texture) textures.push(texture);
       featured = new THREE.Mesh(
-        new THREE.SphereGeometry(1.62, compact ? 52 : 88, compact ? 52 : 88),
+        new THREE.SphereGeometry(1.62, lowPower ? 36 : 56, lowPower ? 36 : 56),
         new THREE.MeshStandardMaterial({ map: texture, color: texture ? 0xffffff : selected.orbitColor, roughness: 0.76, metalness: 0.04 }),
       );
       featured.rotation.z = -0.19;
       scene.add(featured);
       const atmosphere = new THREE.Mesh(
-        new THREE.SphereGeometry(1.69, 64, 64),
+        new THREE.SphereGeometry(1.69, lowPower ? 32 : 48, lowPower ? 32 : 48),
         new THREE.MeshBasicMaterial({ color: colorWithLightness(selected.orbitColor, 0.24), transparent: true, opacity: 0.11, side: THREE.BackSide, blending: THREE.AdditiveBlending }),
       );
       scene.add(atmosphere);
@@ -263,7 +279,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         const inner = orbitRadius(innerAu);
         const outer = orbitRadius(outerAu);
         const zone = new THREE.Mesh(
-          new THREE.RingGeometry(inner, outer, 160),
+          new THREE.RingGeometry(inner, outer, lowPower ? 64 : 96),
           new THREE.MeshBasicMaterial({ color: 0x4fd7af, side: THREE.DoubleSide, transparent: true, opacity: 0.095, depthWrite: false, blending: THREE.AdditiveBlending }),
         );
         zone.rotation.x = -Math.PI / 2;
@@ -272,22 +288,25 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       system.planets.forEach((planet) => {
         const radius = orbitRadius(planet.semiMajorAu);
         const path = new THREE.LineLoop(
-          new THREE.BufferGeometry().setFromPoints(Array.from({ length: 160 }, (_, index) => {
-            const angle = index / 160 * Math.PI * 2;
+          new THREE.BufferGeometry().setFromPoints(Array.from({ length: lowPower ? 64 : 96 }, (_, index) => {
+            const angle = index / (lowPower ? 64 : 96) * Math.PI * 2;
             return new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
           })),
           new THREE.LineBasicMaterial({ color: planet.id === selectedId ? 0xffbf68 : 0x49616d, transparent: true, opacity: planet.id === selectedId ? 0.7 : 0.34 }),
         );
         scene.add(path);
         const bodySize = Math.min(0.22 + Math.sqrt(planet.radiusEarth) * 0.055, 0.62);
-        const texture = planetTexture(planet);
+        const texture = planetTexture(planet, lowPower ? 256 : 384);
         if (texture) textures.push(texture);
         const mesh = new THREE.Mesh(
-          new THREE.SphereGeometry(bodySize * (planet.id === selectedId ? 1.28 : 1), compact ? 22 : 36, compact ? 22 : 36),
+          new THREE.SphereGeometry(bodySize, lowPower ? 16 : 24, lowPower ? 16 : 24),
           new THREE.MeshStandardMaterial({ map: texture, color: texture ? 0xffffff : planet.orbitColor, roughness: 0.8, emissive: planet.id === selectedId ? new THREE.Color(planet.orbitColor) : new THREE.Color(0x000000), emissiveIntensity: 0.14 }),
         );
         mesh.userData.planetId = planet.id;
+        mesh.userData.planetColor = planet.orbitColor;
+        if (planet.id === selectedId) mesh.scale.setScalar(1.24);
         scene.add(mesh);
+        systemMeshesRef.current.set(planet.id, mesh);
         planetObjects.push({ data: planet, mesh, radius });
       });
     }
@@ -298,7 +317,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.maxDistance = 13;
       starGroup = createStar(scene, system.temperatureK, true);
       const corona = new THREE.Mesh(
-        new THREE.TorusGeometry(2.15, 0.018, 8, 180),
+          new THREE.TorusGeometry(2.15, 0.018, 8, lowPower ? 72 : 112),
         new THREE.MeshBasicMaterial({ color: 0xffad43, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }),
       );
       corona.rotation.x = 0.75;
@@ -328,8 +347,12 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const observer = new ResizeObserver(onResize);
     observer.observe(mount);
 
-    const animate = () => {
+    let previousFrameAt = 0;
+    const targetFrameMs = lowPower ? 1000 / 30 : 1000 / 50;
+    const animate = (frameAt = 0) => {
       animationFrame = requestAnimationFrame(animate);
+      if (document.hidden || frameAt - previousFrameAt < targetFrameMs) return;
+      previousFrameAt = frameAt;
       const delta = Math.min(clock.getDelta(), 0.05);
       if (!pausedRef.current) simulationDays += delta * PREVIEW_DAYS_PER_SECOND * speedRef.current;
       stars.rotation.y += delta * 0.002;
@@ -363,10 +386,11 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
           materials.forEach((material) => material?.dispose());
         }
       });
+      systemMeshesRef.current.clear();
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [selected, selectedId, showHabitable, system, view]);
+  }, [showHabitable, system, view]);
 
   if (!selected) return null;
   const ownerName = ownerLabel ?? selected.displayName;
@@ -389,14 +413,16 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         {ownerLabel && <span className="explorer-owner">HOLDER’S PRIVATE NAME · {ownerLabel}</span>}
         <h1>{view === "planet" ? (ownerName ?? selected.code) : (system.displayName ?? system.designation)}</h1>
         <div className="explorer-subtitle"><span>{view === "planet" ? selected.type : system.classification}</span><i /> <span>{system.distancePc.toFixed(1)} pc</span></div>
+        <code className="explorer-model-code">{view === "planet" ? `${system.id} / ${system.designation} / ${selected.id} / ${selected.code}` : `${system.id} / ${system.designation}`}</code>
         {view === "planet" ? <>
           <div className="explorer-metrics"><div><small>MASS</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>RADIUS</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>TEMPERATURE</small><b>{selected.equilibriumTemp} K</b></div><div><small>ASTROBIOLOGY</small><b>{selected.bioScore}%</b></div></div>
           <p className="explorer-description">{selected.atmosphere} · {selected.state}. {selected.bioPrediction}</p>
+          <p className="explorer-life-speculation"><b>SPECULATIVE LIFE MORPHOLOGY</b>{selected.lifeSpeculation ?? "No complex morphology is favoured by the current model. Any creature analogy is imaginative visualisation, not observational evidence."}</p>
         </> : <p className="explorer-description">{view === "system" ? `Live approximate positions for ${system.planets.length} candidate planets, calculated from their reference epoch and orbital periods.` : `Surface temperature approximately ${system.temperatureK.toLocaleString()} K, with ${system.luminosity.toFixed(2)} times the Sun’s luminosity.`}</p>}
         {registryCode && <code className="explorer-registry">PRIVATE SYSTEM REGISTRY {registryCode}</code>}
       </aside>
 
-      {view === "system" && <div className="explorer-planet-list" aria-label="Select a candidate planet">{system.planets.map((planet) => <button key={planet.id} className={selected.id === planet.id ? "active" : ""} onClick={() => setSelectedId(planet.id)}><i style={{ background: planet.orbitColor }} /><span>{planet.displayName ?? planet.code.split(" ").at(-1)}</span></button>)}</div>}
+      {view === "system" && <div className="explorer-planet-list" aria-label="Select a candidate planet">{system.planets.map((planet) => <button key={planet.id} className={selected.id === planet.id ? "active" : ""} onClick={() => setSelectedId(planet.id)}><i style={{ background: planet.orbitColor }} /><span><b>{planet.displayName ?? planet.code}</b><small>{planet.id}</small></span></button>)}</div>}
 
       <div className="explorer-controls">
         <div><span>DRAG TO ROTATE</span><span>SCROLL / PINCH TO ZOOM</span><span>{view === "system" ? "SELECT A PLANET" : "FREE OBSERVATION"}</span></div>

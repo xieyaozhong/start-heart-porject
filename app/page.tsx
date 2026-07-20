@@ -7,7 +7,7 @@ type Composition = { label: string; value: number; color: string };
 type Planet = {
   id: string; code: string; displayName: string | null; type: string; massEarth: number; radiusEarth: number;
   periodDays: number; semiMajorAu: number; eccentricity: number; equilibriumTemp: number; epochAngleDeg: number;
-  orbitColor: string; composition: Composition[]; atmosphere: string; state: string; bioScore: number; bioPrediction: string;
+  orbitColor: string; composition: Composition[]; atmosphere: string; state: string; bioScore: number; bioPrediction: string; lifeSpeculation?: string;
 };
 type StarSystem = {
   id: string; designation: string; displayName: string | null; classification: string; raHours: number; decDeg: number;
@@ -21,6 +21,7 @@ type Registry = {
   updates: { id: string; title: string; summary: string; observingNote: string; symbolicMeaning: string; publishedAt: string }[];
 };
 type ExplorerTarget = { system: StarSystem; planetId: string; ownerLabel?: string; registryCode?: string };
+type RegistryShowcase = { sequence: number; desiredName: string; registryCode: string; systemId: string; systemDesignation: string; planetId: string; planetCode: string; confirmedAt: string; recordType: string };
 type SolarBody = {
   id: string; name: string; english: string; type: string; au: number; periodDays: number; radiusEarth: number;
   color: string; accent: string; epochAngle: number; eccentricity: number; perihelionLongitude: number;
@@ -90,6 +91,13 @@ function formatRa(hours: number) {
 
 function formatDec(value: number) { return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(4)}°`; }
 
+function describeSpeculativeLife(planet: Planet) {
+  if (planet.lifeSpeculation) return planet.lifeSpeculation;
+  if (planet.bioScore >= 55) return "Creative analogue: a water-rich biosphere could favour streamlined, fish-person-like amphibious beings. This is imaginative morphology, not evidence of intelligent life.";
+  if (planet.equilibriumTemp > 500) return "Creative analogue: a heat-shielded, xenomorph-like armoured crawler might shelter below the surface. No actual creature is predicted or observed.";
+  return "The least speculative possibility is microbial life. Any animal-like description is creative visualisation rather than an astronomical discovery.";
+}
+
 function seeded(index: number, salt: number) {
   const value = Math.sin(index * 91.733 + salt * 17.17) * 43758.5453;
   return value - Math.floor(value);
@@ -125,9 +133,15 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     let observer: ResizeObserver | null = null;
+    let intersectionObserver: IntersectionObserver | null = null;
+    let visible = true;
+    let previousDrawAt = 0;
     const draw = (time: number) => {
+      frame = requestAnimationFrame(draw);
+      if (!visible || document.hidden || time - previousDrawAt < 1000 / 30) return;
+      previousDrawAt = time;
       const rect = canvas.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.35);
       if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
         canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
       }
@@ -147,7 +161,7 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       const nebula = ctx.createRadialGradient(w * .16, h * .18, 0, w * .16, h * .18, w * .55);
       nebula.addColorStop(0, "rgba(40,94,139,.17)"); nebula.addColorStop(.5, "rgba(33,49,92,.06)"); nebula.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
-      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(120, Math.floor(w * h / 3300)));
+      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(90, Math.floor(w * h / 5200)));
 
       const tilt = -.11; const flatten = .47; const maxOrbit = Math.min(w * .455, h * .455);
       const orbitRadius = (au: number) => 34 + Math.pow(au / 30.07, .24) * (maxOrbit - 34);
@@ -172,7 +186,7 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       const halleyPosition = halleyPoint(-halleyEccentricAnomaly);
 
       const beltInner = orbitRadius(2.1); const beltOuter = orbitRadius(3.35);
-      for (let index = 0; index < 330; index += 1) {
+      for (let index = 0; index < 180; index += 1) {
         const beltRadius = beltInner + seeded(index, 22) * (beltOuter - beltInner);
         const angle = seeded(index, 19) * Math.PI * 2 + simulationDaysRef.current * .00035;
         const dot = transformPoint(angle, beltRadius);
@@ -307,9 +321,10 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       ctx.fillStyle = "rgba(137,167,184,.5)"; ctx.font = "8px ui-monospace, monospace";
       const ephemerisLabel = mode === "live" ? "LIVE UTC" : `SIM +${simulationDaysRef.current.toFixed(1)} DAYS`;
       ctx.fillText(`REAL-TIME EPHEMERIS · ${new Date(observationTime).toISOString().slice(0, 19)} UTC · ${ephemerisLabel}`, 18, h - 17);
-      frame = requestAnimationFrame(draw);
     };
-    observer = new ResizeObserver(() => undefined); observer.observe(canvas); frame = requestAnimationFrame(draw);
+    observer = new ResizeObserver(() => undefined); observer.observe(canvas);
+    intersectionObserver = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { rootMargin: "120px" }); intersectionObserver.observe(canvas);
+    frame = requestAnimationFrame(draw);
     const click = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
       const hit = [...positionsRef.current].reverse().find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
@@ -320,7 +335,7 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       canvas.style.cursor = positionsRef.current.some((position) => Math.hypot(position.x - x, position.y - y) <= position.radius) ? "pointer" : "crosshair";
     };
     canvas.addEventListener("click", click); canvas.addEventListener("mousemove", move);
-    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); intersectionObserver?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
   }, [selectedId, mode, speed, paused]);
 
   return <canvas ref={canvasRef} className="solar-canvas" aria-label="Live approximate positions of the Sun, eight planets, nine featured moons and Halley’s Comet; select a body to inspect it" />;
@@ -340,9 +355,15 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     let observer: ResizeObserver | null = null;
+    let intersectionObserver: IntersectionObserver | null = null;
+    let visible = true;
+    let previousDrawAt = 0;
     const draw = (time: number) => {
+      frame = requestAnimationFrame(draw);
+      if (!visible || document.hidden || time - previousDrawAt < 1000 / 30) return;
+      previousDrawAt = time;
       const rect = canvas.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.35);
       if (canvas.width !== Math.round(rect.width * ratio) || canvas.height !== Math.round(rect.height * ratio)) {
         canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
       }
@@ -357,7 +378,7 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .72);
       gradient.addColorStop(0, "#102b3c"); gradient.addColorStop(.42, "#071827"); gradient.addColorStop(1, "#02070d");
       ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
-      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(90, Math.floor(w * h / 4200)));
+      paintStarField(ctx, w, h, reduceMotion ? 0 : time, Math.max(70, Math.floor(w * h / 5600)));
       const scan = ctx.createLinearGradient(0, 0, 0, h);
       scan.addColorStop(0, "rgba(80,151,188,.02)"); scan.addColorStop(.5, "rgba(80,151,188,.08)"); scan.addColorStop(.501, "rgba(80,151,188,.015)"); scan.addColorStop(1, "rgba(80,151,188,.02)");
       ctx.fillStyle = scan; ctx.fillRect(0, 0, w, h);
@@ -413,9 +434,10 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
         ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
       });
       ctx.fillStyle = "rgba(148,179,194,.46)"; ctx.font = "9px ui-monospace, monospace"; ctx.fillText(`REAL-TIME EPHEMERIS · ${new Date().toISOString().slice(0, 19)} UTC`, 18, h - 18);
-      frame = requestAnimationFrame(draw);
     };
-    observer = new ResizeObserver(() => undefined); observer.observe(canvas); frame = requestAnimationFrame(draw);
+    observer = new ResizeObserver(() => undefined); observer.observe(canvas);
+    intersectionObserver = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { rootMargin: "120px" }); intersectionObserver.observe(canvas);
+    frame = requestAnimationFrame(draw);
     const click = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect(); const x = event.clientX - rect.left; const y = event.clientY - rect.top;
       const hit = positionsRef.current.find((position) => Math.hypot(position.x - x, position.y - y) <= position.radius);
@@ -426,7 +448,7 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       canvas.style.cursor = positionsRef.current.some((position) => Math.hypot(position.x - x, position.y - y) <= position.radius) ? "pointer" : "crosshair";
     };
     canvas.addEventListener("click", click); canvas.addEventListener("mousemove", move);
-    return () => { cancelAnimationFrame(frame); observer?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); intersectionObserver?.disconnect(); canvas.removeEventListener("click", click); canvas.removeEventListener("mousemove", move); };
   }, [system, selectedId, mode, ownerLabel, speed, paused]);
 
   return <canvas ref={canvasRef} className="orbit-canvas" aria-label={`${system.designation} live orbital map; select a planet for details`} />;
@@ -452,11 +474,13 @@ export default function Home() {
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [registryError, setRegistryError] = useState("");
   const [explorerTarget, setExplorerTarget] = useState<ExplorerTarget | null>(null);
+  const [registryShowcase, setRegistryShowcase] = useState<RegistryShowcase[]>([]);
 
   useEffect(() => {
     fetch("/api/public/systems").then((response) => response.ok ? response.json() : Promise.reject()).then((data) => {
       if (data.systems?.length) { setSystems(data.systems); setSystemId(data.systems[0].id); setPlanetId(data.systems[0].planets[0]?.id ?? ""); }
       if (data.packages?.length) setPackages(data.packages);
+      if (data.registryShowcase?.length >= 50) setRegistryShowcase(data.registryShowcase);
     }).catch(() => undefined);
     const holderCode = new URLSearchParams(window.location.search).get("registry")?.trim().toUpperCase();
     if (holderCode) fetch(`/api/public/registry?code=${encodeURIComponent(holderCode)}`).then(async (response) => ({ response, data: await response.json() })).then(({ response, data }) => {
@@ -505,7 +529,7 @@ export default function Home() {
     <main className="public-site">
       <header className="site-header">
         <a className="brand" href="#top"><span className="brand-sigil">N</span><span><b>NOCTUA</b><small>CELESTIAL RESEARCH LAB</small></span></a>
-        <nav><a href="#solar-system">Solar System</a><a href="#observatory">Candidate Systems</a><a href="#registry">Private Registry</a><a href="/guide">How It Works</a><a href="/resources">Institutions</a><button onClick={() => setRegistryOpen(true)}>Holder Access</button></nav>
+        <nav><a href="#solar-system">Solar System</a><a href="#observatory">Candidate Systems</a><a href="#registry-archive">Registry Archive</a><a href="#registry">Private Registry</a><a href="/guide">How It Works</a><a href="/resources">Institutions</a><button onClick={() => setRegistryOpen(true)}>Holder Access</button></nav>
         <button className="holder-header-action" onClick={() => setRegistryOpen(true)}>OPEN REGISTRY ↗</button>
       </header>
       <div className="science-banner"><b>MODEL CANDIDATE</b> Candidate systems are model-derived, not confirmed discoveries. Positions are computed from reference epochs and orbital periods.</div>
@@ -543,7 +567,7 @@ export default function Home() {
 
       <section className="observatory" id="observatory">
         <div className="observatory-head">
-          <div><p className="eyebrow">LIVE SYSTEM / {system.id}</p><h1>{system.displayName ?? system.designation}</h1><p>{system.summary}</p></div>
+          <div><p className="eyebrow">LIVE SYSTEM / {system.id}</p><h1>{system.displayName ?? system.designation}</h1><code className="complete-designation">FULL DESIGNATION · {system.id} / {system.designation}</code><p>{system.summary}</p></div>
           <div className="system-coordinates"><span>RA <b>{formatRa(system.raHours)}</b></span><span>DEC <b>{formatDec(system.decDeg)}</b></span><span>DIST <b>{system.distancePc.toFixed(1)} pc</b></span></div>
         </div>
         <div className="observatory-grid">
@@ -553,11 +577,12 @@ export default function Home() {
             <div className="viewport-foot"><span>FIELD OF VIEW: APPROX. {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>SLOW PREVIEW · 1× = 0.45 SIMULATED DAYS / SEC</span></div>
           </article>
           <aside className="planet-inspector">
-            <div className="inspector-title"><span style={{ background: planet.orbitColor }} /><div><p>SELECTED BODY</p><h2>{planet.displayName ?? planet.code}</h2><small>{planet.type}</small></div></div>
+            <div className="inspector-title"><span style={{ background: planet.orbitColor }} /><div><p>SELECTED BODY / {planet.id}</p><h2>{planet.displayName ?? planet.code}</h2><code>{system.id} / {system.designation} / {planet.id} / {planet.code}</code><small>{planet.type}</small></div></div>
             <div className="planet-metrics"><div><span>Mass</span><b>{planet.massEarth.toFixed(2)} M⊕</b></div><div><span>Radius</span><b>{planet.radiusEarth.toFixed(2)} R⊕</b></div><div><span>Orbital period</span><b>{planet.periodDays.toFixed(2)} days</b></div><div><span>Equilibrium temp.</span><b>{planet.equilibriumTemp} K</b></div></div>
             <div className="data-block"><p>PRIMARY COMPOSITION</p>{planet.composition.map((item) => <div className="composition" key={item.label}><span>{item.label}</span><i><b style={{ width: `${item.value}%`, background: item.color }} /></i><strong>{item.value}%</strong></div>)}</div>
             <div className="data-block compact"><p>ATMOSPHERE & STATE</p><b>{planet.atmosphere}</b><small>{planet.state}</small></div>
             <div className="bio-card"><div><span>ASTROBIOLOGY FORECAST</span><b>{planet.bioScore}%</b></div><i><b style={{ width: `${planet.bioScore}%` }} /></i><p>{planet.bioPrediction}</p></div>
+            <div className="life-form-card"><span>SPECULATIVE LIFE MORPHOLOGY</span><p>{describeSpeculativeLife(planet)}</p><small>Creative environmental analogy only · not an observed organism or biosignature.</small></div>
             <button className="open-3d-explorer" onClick={() => setExplorerTarget({ system, planetId: planet.id })}><span>IMMERSIVE CELESTIAL EXPLORATION</span><b>OPEN 3D VIEW ↗</b></button>
           </aside>
         </div>
@@ -567,6 +592,21 @@ export default function Home() {
         <div className="section-title"><div><p className="eyebrow">PUBLISHED SYSTEMS</p><h2>Recently released candidates</h2></div><span>REVIEWED BEFORE PUBLICATION · LIVE DATA</span></div>
         <div className="system-list">
           {systems.map((item, index) => <button key={item.id} className={item.id === system.id ? "system-row active" : "system-row"} onClick={() => chooseSystem(item)}><span className="system-index">{String(index + 1).padStart(2, "0")}</span><span><b>{item.designation}</b><small>{item.classification}</small></span><span><b>{item.planets.length}</b><small>PLANET CANDIDATES</small></span><span><b>{item.confidence}%</b><small>MODEL CONFIDENCE</small></span><span><b>{item.distancePc.toFixed(1)} pc</b><small>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-GB") : "PENDING"}</small></span><span>OPEN SYSTEM →</span></button>)}
+        </div>
+      </section>
+
+      <section className="registry-showcase" id="registry-archive">
+        <div className="registry-showcase-head">
+          <div><p className="eyebrow">PUBLIC REGISTRY SHOWCASE / 50 RECORDS</p><h2>Names placed<br /><em>into the NOCTUA archive.</em></h2></div>
+          <div><b>{String(registryShowcase.length || 50).padStart(2, "0")}</b><span>DEMONSTRATION CELESTIAL NAMES</span><p>These fictional showcase records demonstrate the completed registry format. They are not claims of real customer payments or official astronomical ownership.</p></div>
+        </div>
+        <div className="registry-showcase-grid" aria-label="Fifty demonstration celestial registry names">
+          {registryShowcase.map((entry) => <article key={entry.registryCode}>
+            <span>{String(entry.sequence).padStart(2, "0")}</span>
+            <div><h3>{entry.desiredName}</h3><code>{entry.registryCode}</code></div>
+            <div><small>COMPLETE SYSTEM</small><b>{entry.systemId} / {entry.systemDesignation}</b><small>REGISTERED BODY</small><b>{entry.planetId} / {entry.planetCode}</b></div>
+            <time dateTime={entry.confirmedAt}>{new Date(entry.confirmedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</time>
+          </article>)}
         </div>
       </section>
 

@@ -9,13 +9,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
   const title = "NOCTUA — Live Celestial Systems & Private Registry";
-  const description = "Explore live orbital models, candidate exoplanet classifications, atmospheric forecasts and a private celestial registry.";
+  const description = "Explore adaptive 3D orbital models, complete candidate designations, speculative life morphology and fifty celestial registry stories.";
   return {
     title,
     description,
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
-    openGraph: { title, description, type: "website", images: [`${origin}/og-v4.png`] },
-    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og-v4.png`] },
+    openGraph: { title, description, type: "website", images: [`${origin}/og-v5.png`] },
+    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og-v5.png`] },
   };
 }
 

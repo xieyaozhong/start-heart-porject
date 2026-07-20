@@ -71,6 +71,36 @@ const initialResearchUpdates = [
   { id: "UPD-NX-014-01", systemId: "SYS-NX-014", title: "Orbital solution stabilised", summary: "Additional synthetic sampling reduced uncertainty in the three-planet orbital configuration around NOCTUA-K14.", observingNote: "Use the live guide to calculate the next local meridian window from the model right ascension and declination.", symbolicMeaning: "A symbol of constancy and quiet devotion around a long-lived star.", publishedAt: "2026-07-18T10:00:00.000Z" },
 ];
 
+const showcaseNames = [
+  "Aurelia Vow", "Blue Meridian", "Thalassa Promise", "Ember Covenant", "Lumen of June",
+  "Velvet Orbit", "Cinder Halo", "Solace IX", "Evernight Bloom", "Golden Perihelion",
+  "Opaline Tide", "Quiet Zenith", "Aurora Testament", "Silver Aphelion", "Vesper Haven",
+  "Oceanus Echo", "Ivory Transit", "Saffron Eclipse", "Polaris Dream", "Eirenic Light",
+  "Celestine Bond", "Nocturne Harbor", "Amber Continuum", "Starlit Oath", "Seraphic Current",
+  "Moonfall Promise", "Aether Bloom", "Halcyon Signal", "Orion's Keepsake", "Crimson Meridian",
+  "Luminous Shelter", "Astral Concord", "Borealis Memory", "Tidal Lantern", "Solaris Whisper",
+  "Pale Blue Vow", "Eternal Ascension", "Nova Reverie", "Cerulean Kin", "Umbra of Us",
+  "Radiant Archive", "Kepler's Garden", "Infinite Return", "Midsummer Star", "Cassiopeia Promise",
+  "The Lasting Light", "Voyager's Home", "Ardent Horizon", "Perennial Dawn", "Our Quiet Cosmos",
+];
+
+const registryShowcase = showcaseNames.map((desiredName, index) => {
+  const firstSystem = index % 2 === 0;
+  const planetIndex = firstSystem ? index % 4 : index % 3;
+  const planetLetter = String.fromCharCode(98 + planetIndex);
+  return {
+    sequence: index + 1,
+    desiredName,
+    registryCode: `NOR-SHOW-${String(index + 1).padStart(4, "0")}`,
+    systemId: firstSystem ? "SYS-NX-001" : "SYS-NX-014",
+    systemDesignation: firstSystem ? "NOCTUA-X1" : "NOCTUA-K14",
+    planetId: firstSystem ? `PL-NX-001-${planetLetter.toUpperCase()}` : `PL-NX-014-${planetLetter.toUpperCase()}`,
+    planetCode: `${firstSystem ? "NOCTUA-X1" : "NOCTUA-K14"} ${planetLetter}`,
+    confirmedAt: new Date(Date.UTC(2026, 5, 1 + index)).toISOString(),
+    recordType: "Demonstration registry",
+  };
+});
+
 export async function ensureUniverseSeeded() {
   const db = getDb();
   const [{ total }] = await db.select({ total: count() }).from(starSystems);
@@ -123,7 +153,16 @@ function publicPlanet(planet: HydratedPlanet) {
   const atmosphere = giant || subNeptune ? "Candidate hydrogen, helium and trace methane" : temperate ? "Candidate nitrogen, water vapour and trace carbon dioxide" : hot ? "Thin, high-temperature mineral exosphere candidate" : "Thin carbon-dioxide atmosphere candidate";
   const state = giant ? "Active cloud bands · large moons possible" : subNeptune ? "Deep atmosphere · high-pressure interior" : temperate ? "Within the model habitable zone" : hot ? "Irradiated surface · possible tidal locking" : "Cold, dry surface conditions";
   const bioPrediction = planet.bioScore >= 45 ? "The model permits liquid-water conditions and usable energy gradients; spectroscopy is required to test for biosignatures." : planet.bioScore >= 12 ? "Atmospheric chemistry merits follow-up observation, although surface habitability remains uncertain." : giant ? "The planet itself is inhospitable; large moons could preserve subsurface oceans." : "Current conditions are insufficient for known forms of life.";
-  return { ...planet, type, atmosphere, state, bioPrediction, composition: planet.composition.map((item) => ({ ...item, label: compositionLabels[item.label] ?? (/^[\x00-\x7F]*$/.test(item.label) ? item.label : "Estimated material") })) };
+  const lifeSpeculation = planet.bioScore >= 55 && temperate
+    ? "Creative analogue: an ocean biosphere could favour streamlined, fish-person-like amphibious beings with pressure-adapted eyes, lateral-line sensing and communal reef habitats. This is imaginative morphology, not evidence of intelligent life."
+    : planet.bioScore >= 25 && temperate
+      ? "Creative analogue: low, amphibious filter-feeders or translucent shoreline colonies could exploit tides and chemical gradients. Complex or intelligent life remains entirely unverified."
+      : hot && planet.bioScore > 0
+        ? "Creative analogue: a heat-shielded, xenomorph-like armoured crawler might shelter underground and metabolise mineral chemistry. The model does not predict an actual creature or prove life."
+        : giant || subNeptune
+          ? "Creative analogue: buoyant balloon-like floaters, aerial filter-feeders or microbial cloud colonies could occupy a narrow atmospheric layer; there is no observational evidence for them."
+          : "No complex morphology is favoured. If life existed, the least speculative form would be dormant subsurface microbes rather than animal-like organisms."
+  return { ...planet, type, atmosphere, state, bioPrediction, lifeSpeculation, composition: planet.composition.map((item) => ({ ...item, label: compositionLabels[item.label] ?? (/^[\x00-\x7F]*$/.test(item.label) ? item.label : "Estimated material") })) };
 }
 
 function publicSystem(system: HydratedSystem) {
@@ -148,7 +187,7 @@ export async function getPublicUniverse() {
   const db = getDb();
   const systems = await db.select().from(starSystems).where(eq(starSystems.status, "published")).orderBy(desc(starSystems.publishedAt));
   const packages = await db.select().from(namingPackages).where(eq(namingPackages.active, true)).orderBy(asc(namingPackages.sortOrder));
-  return { systems: (await hydrateSystems(systems)).map(publicSystem), packages: packages.map(publicPackage) };
+  return { systems: (await hydrateSystems(systems)).map(publicSystem), packages: packages.map(publicPackage), registryShowcase };
 }
 
 function planetProfile(semiMajorAu: number, massEarth: number, starLuminosity: number) {

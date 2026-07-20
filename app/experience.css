@@ -433,3 +433,40 @@
   .guide-cta { margin-left: 18px; margin-right: 18px; padding: 60px 20px; }
   .gift-order-modal { padding-left: 18px!important; padding-right: 18px!important; }
 }
+
+.complete-designation { display: inline-block; margin: 14px 0 5px; padding: 6px 9px; border-left: 2px solid rgba(243,168,77,.72); background: rgba(243,168,77,.055); color: #b9915f; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .1em; }
+.inspector-title code { display: block; margin: 6px 0; color: #5f7782; font: 6px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace; }
+.life-form-card { margin-top: 13px; padding: 14px 15px; border: 1px solid rgba(116,203,184,.16); border-radius: 10px; background: linear-gradient(135deg,rgba(63,135,122,.1),rgba(9,28,34,.25)); }
+.life-form-card > span { color: #78cdbb; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .11em; }
+.life-form-card p { margin: 8px 0 7px; color: #9bb0ad; font: 9px/1.65 Iowan Old Style,Baskerville,Georgia,serif; }
+.life-form-card small { display: block; color: #526c72; font: 6px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .04em; }
+
+.registry-showcase { max-width: 1580px; margin: 0 auto; padding: 96px max(4.5vw,30px) 120px; border-top: 1px solid rgba(175,200,211,.11); }
+.registry-showcase-head { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(280px,.55fr); gap: 7vw; align-items: end; margin-bottom: 38px; }
+.registry-showcase-head h2 { margin: 0; color: #e8eceb; font: 400 clamp(42px,4.8vw,70px)/1 Iowan Old Style,Baskerville,Georgia,serif; letter-spacing: -.045em; }
+.registry-showcase-head h2 em { color: #a79572; font-weight: 400; }
+.registry-showcase-head > div:last-child { padding: 20px 0 0 22px; border-left: 1px solid rgba(243,168,77,.28); }
+.registry-showcase-head > div:last-child b { display: block; color: #efb660; font: 400 54px/1 Iowan Old Style,Baskerville,Georgia,serif; }
+.registry-showcase-head > div:last-child span { display: block; margin-top: 6px; color: #869ba4; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .12em; }
+.registry-showcase-head > div:last-child p { margin: 13px 0 0; color: #667e87; font-size: 9px; line-height: 1.65; }
+.registry-showcase-grid { max-height: 760px; overflow: auto; border: 1px solid rgba(172,197,208,.14); border-radius: 18px; background: rgba(4,13,19,.42); scrollbar-color: #7d694b #09151c; }
+.registry-showcase-grid article { display: grid; grid-template-columns: 38px minmax(180px,.8fr) minmax(300px,1.4fr) auto; gap: 18px; align-items: center; min-height: 86px; padding: 16px 22px; border-bottom: 1px solid rgba(172,197,208,.09); transition: background .2s ease; }
+.registry-showcase-grid article:last-child { border-bottom: 0; }
+.registry-showcase-grid article:hover { background: linear-gradient(90deg,rgba(243,168,77,.06),rgba(39,89,104,.06)); }
+.registry-showcase-grid article > span { color: #4f6872; font: 8px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.registry-showcase-grid h3 { margin: 0 0 6px; color: #dfe7e7; font: 400 19px Iowan Old Style,Baskerville,Georgia,serif; }
+.registry-showcase-grid code { color: #a77e4e; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .08em; }
+.registry-showcase-grid article > div:nth-child(3) { display: grid; grid-template-columns: 105px 1fr; gap: 5px 12px; }
+.registry-showcase-grid small { color: #526b75; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .08em; }
+.registry-showcase-grid article > div:nth-child(3) b { color: #849aa3; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.registry-showcase-grid time { color: #607983; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; white-space: nowrap; }
+
+@media(max-width:760px){
+  .registry-showcase { padding: 74px 18px 86px; }
+  .registry-showcase-head { grid-template-columns: 1fr; gap: 26px; }
+  .registry-showcase-head h2 { font-size: 43px; }
+  .registry-showcase-grid article { grid-template-columns: 28px 1fr; gap: 10px; padding: 16px; }
+  .registry-showcase-grid article > div:nth-child(3), .registry-showcase-grid time { grid-column: 2; }
+  .registry-showcase-grid article > div:nth-child(3) { grid-template-columns: 86px 1fr; }
+  .explorer-life-speculation { max-width: 90%; font-size: 7px; }
+}
