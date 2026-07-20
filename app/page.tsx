@@ -21,7 +21,7 @@ type Registry = {
   updates: { id: string; title: string; summary: string; observingNote: string; symbolicMeaning: string; publishedAt: string }[];
 };
 type ExplorerTarget = { system: StarSystem; planetId: string; ownerLabel?: string; registryCode?: string };
-type RegistryShowcase = { sequence: number; desiredName: string; registryCode: string; systemId: string; systemDesignation: string; planetId: string; planetCode: string; confirmedAt: string; recordType: string };
+type RegistryShowcase = { sequence: number; desiredName: string; registryCode: string; systemId: string; systemDesignation: string; planetId: string; planetCode: string; previewedAt: string; recordType: string; sharingStatus: string };
 type SolarBody = {
   id: string; name: string; english: string; type: string; au: number; periodDays: number; radiusEarth: number;
   color: string; accent: string; epochAngle: number; eccentricity: number; perihelionLongitude: number;
@@ -525,6 +525,13 @@ export default function Home() {
     await loadRegistry(DEMO_OWNER_REGISTRY_CODE);
   }
 
+  function openShowcasePlanet(entry: RegistryShowcase) {
+    const targetSystem = systems.find((item) => item.id === entry.systemId);
+    const targetPlanet = targetSystem?.planets.find((item) => item.id === entry.planetId);
+    if (!targetSystem || !targetPlanet) return;
+    setExplorerTarget({ system: targetSystem, planetId: targetPlanet.id });
+  }
+
   return (
     <main className="public-site">
       <header className="site-header">
@@ -597,16 +604,26 @@ export default function Home() {
 
       <section className="registry-showcase" id="registry-archive">
         <div className="registry-showcase-head">
-          <div><p className="eyebrow">PUBLIC REGISTRY SHOWCASE / 50 RECORDS</p><h2>Names placed<br /><em>into the NOCTUA archive.</em></h2></div>
-          <div><b>{String(registryShowcase.length || 50).padStart(2, "0")}</b><span>DEMONSTRATION CELESTIAL NAMES</span><p>These fictional showcase records demonstrate the completed registry format. They are not claims of real customer payments or official astronomical ownership.</p></div>
+          <div><p className="eyebrow">HOLDER STORY PREVIEW / 50 ILLUSTRATIONS</p><h2>Promises imagined<br /><em>in their own orbit.</em></h2></div>
+          <div><b>{String(registryShowcase.length || 50).padStart(2, "0")}</b><span>ILLUSTRATIVE HOLDER STORIES</span><p>These profiles preview how a consented holder story can appear. Verified customer stories are published only after explicit permission. We thank every future participant who chooses to share their commitment and joy.</p></div>
         </div>
-        <div className="registry-showcase-grid" aria-label="Fifty demonstration celestial registry names">
-          {registryShowcase.map((entry) => <article key={entry.registryCode}>
+        <div className="registry-showcase-grid" aria-label="Fifty illustrative celestial holder stories with interactive planet previews">
+          {registryShowcase.map((entry) => {
+            const previewAvailable = systems.some((item) => item.id === entry.systemId && item.planets.some((candidate) => candidate.id === entry.planetId));
+            return <article key={entry.registryCode}>
             <span>{String(entry.sequence).padStart(2, "0")}</span>
-            <div><h3>{entry.desiredName}</h3><code>{entry.registryCode}</code></div>
-            <div><small>COMPLETE SYSTEM</small><b>{entry.systemId} / {entry.systemDesignation}</b><small>REGISTERED BODY</small><b>{entry.planetId} / {entry.planetCode}</b></div>
-            <time dateTime={entry.confirmedAt}>{new Date(entry.confirmedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</time>
-          </article>)}
+            <button
+              className="registry-planet-preview"
+              type="button"
+              disabled={!previewAvailable}
+              onClick={() => openShowcasePlanet(entry)}
+              aria-label={`Preview ${entry.desiredName}, ${entry.planetCode}, in the 3D celestial explorer`}
+              style={{ "--preview-hue": `${(entry.sequence * 47 + 176) % 360}`, "--preview-tilt": `${-22 + (entry.sequence % 7) * 7}deg` } as React.CSSProperties}
+            ><i className="registry-preview-planet" data-variant={entry.sequence % 4} /><small>OPEN 3D</small></button>
+            <div className="registry-name"><h3>{entry.desiredName}</h3><code>{entry.registryCode}</code><em>{entry.recordType}</em></div>
+            <div className="registry-designation"><small>COMPLETE SYSTEM</small><b>{entry.systemId} / {entry.systemDesignation}</b><small>PREVIEW BODY</small><b>{entry.planetId} / {entry.planetCode}</b></div>
+            <time dateTime={entry.previewedAt}>{new Date(entry.previewedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</time>
+          </article>})}
         </div>
       </section>
 

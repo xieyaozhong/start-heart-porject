@@ -96,8 +96,9 @@ const registryShowcase = showcaseNames.map((desiredName, index) => {
     systemDesignation: firstSystem ? "NOCTUA-X1" : "NOCTUA-K14",
     planetId: firstSystem ? `PL-NX-001-${planetLetter.toUpperCase()}` : `PL-NX-014-${planetLetter.toUpperCase()}`,
     planetCode: `${firstSystem ? "NOCTUA-X1" : "NOCTUA-K14"} ${planetLetter}`,
-    confirmedAt: new Date(Date.UTC(2026, 5, 1 + index)).toISOString(),
-    recordType: "Demonstration registry",
+    previewedAt: new Date(Date.UTC(2026, 5, 1 + index)).toISOString(),
+    recordType: "Illustrative holder story",
+    sharingStatus: "Preview only — not a verified customer record",
   };
 });
 

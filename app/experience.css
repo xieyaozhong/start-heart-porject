@@ -450,24 +450,38 @@
 .registry-showcase-head > div:last-child span { display: block; margin-top: 6px; color: #869ba4; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .12em; }
 .registry-showcase-head > div:last-child p { margin: 13px 0 0; color: #667e87; font-size: 9px; line-height: 1.65; }
 .registry-showcase-grid { max-height: 760px; overflow: auto; border: 1px solid rgba(172,197,208,.14); border-radius: 18px; background: rgba(4,13,19,.42); scrollbar-color: #7d694b #09151c; }
-.registry-showcase-grid article { display: grid; grid-template-columns: 38px minmax(180px,.8fr) minmax(300px,1.4fr) auto; gap: 18px; align-items: center; min-height: 86px; padding: 16px 22px; border-bottom: 1px solid rgba(172,197,208,.09); transition: background .2s ease; }
+.registry-showcase-grid article { display: grid; grid-template-columns: 38px 72px minmax(180px,.8fr) minmax(300px,1.4fr) auto; gap: 18px; align-items: center; min-height: 104px; padding: 16px 22px; border-bottom: 1px solid rgba(172,197,208,.09); transition: background .2s ease; }
 .registry-showcase-grid article:last-child { border-bottom: 0; }
 .registry-showcase-grid article:hover { background: linear-gradient(90deg,rgba(243,168,77,.06),rgba(39,89,104,.06)); }
 .registry-showcase-grid article > span { color: #4f6872; font: 8px ui-monospace,SFMono-Regular,Consolas,monospace; }
 .registry-showcase-grid h3 { margin: 0 0 6px; color: #dfe7e7; font: 400 19px Iowan Old Style,Baskerville,Georgia,serif; }
 .registry-showcase-grid code { color: #a77e4e; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .08em; }
-.registry-showcase-grid article > div:nth-child(3) { display: grid; grid-template-columns: 105px 1fr; gap: 5px 12px; }
+.registry-showcase-grid .registry-designation { display: grid; grid-template-columns: 105px 1fr; gap: 5px 12px; }
 .registry-showcase-grid small { color: #526b75; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .08em; }
-.registry-showcase-grid article > div:nth-child(3) b { color: #849aa3; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.registry-showcase-grid .registry-designation b { color: #849aa3; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.registry-showcase-grid .registry-name em { display: block; margin-top: 6px; color: #5b777c; font: italic 7px Iowan Old Style,Baskerville,Georgia,serif; }
 .registry-showcase-grid time { color: #607983; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; white-space: nowrap; }
+
+.registry-planet-preview { position: relative; width: 68px; height: 72px; display: grid; place-items: center; padding: 0 0 13px; border: 1px solid rgba(178,211,222,.14); border-radius: 14px; background: radial-gradient(circle at 50% 38%,hsla(var(--preview-hue),70%,55%,.11),transparent 65%),rgba(3,12,17,.66); cursor: pointer; transition: border-color .22s ease,background .22s ease,transform .22s ease; }
+.registry-planet-preview:hover { transform: translateY(-2px); border-color: hsla(var(--preview-hue),70%,66%,.42); background: radial-gradient(circle at 50% 38%,hsla(var(--preview-hue),70%,55%,.18),transparent 67%),rgba(4,15,21,.8); }
+.registry-planet-preview:disabled { cursor: wait; opacity: .56; }
+.registry-planet-preview > small { position: absolute; right: 0; bottom: 6px; left: 0; color: #74909a; text-align: center; font-size: 5px; letter-spacing: .11em; }
+.registry-preview-planet { position: relative; width: 39px; height: 39px; display: block; overflow: visible; border-radius: 50%; background: radial-gradient(circle at 29% 24%,hsla(var(--preview-hue),78%,92%,.94) 0 4%,hsla(var(--preview-hue),67%,66%,.88) 12%,transparent 31%),repeating-linear-gradient(var(--preview-tilt),hsl(var(--preview-hue),46%,43%) 0 5px,hsl(calc(var(--preview-hue) + 24),39%,27%) 6px 10px); box-shadow: inset -9px -7px 13px rgba(0,0,0,.68),inset 4px 3px 8px rgba(255,255,255,.12),0 0 18px hsla(var(--preview-hue),75%,58%,.22); }
+.registry-preview-planet::before { content: ""; position: absolute; inset: -4px; border: 1px solid hsla(var(--preview-hue),64%,72%,.12); border-radius: 50%; }
+.registry-preview-planet[data-variant="1"] { background: radial-gradient(circle at 33% 27%,#f4ead4 0 3%,hsla(var(--preview-hue),68%,63%,.9) 10%,transparent 30%),radial-gradient(ellipse at 62% 66%,hsla(calc(var(--preview-hue) + 70),60%,66%,.65),transparent 22%),hsl(var(--preview-hue),39%,31%); }
+.registry-preview-planet[data-variant="2"] { background: radial-gradient(circle at 30% 25%,#e8fbff 0 4%,hsla(var(--preview-hue),69%,68%,.92) 12%,transparent 31%),repeating-radial-gradient(ellipse at 50% 40%,hsl(var(--preview-hue),47%,42%) 0 5px,hsl(calc(var(--preview-hue) + 38),35%,26%) 7px 10px); }
+.registry-preview-planet[data-variant="3"] { background: radial-gradient(circle at 31% 25%,#fff3d7 0 3%,hsla(var(--preview-hue),74%,67%,.9) 11%,transparent 30%),linear-gradient(var(--preview-tilt),hsl(var(--preview-hue),50%,46%),hsl(calc(var(--preview-hue) + 54),43%,22%)); }
+.registry-preview-planet[data-variant="0"]::after { content: ""; position: absolute; top: 15px; left: -8px; width: 54px; height: 10px; border: 1px solid hsla(var(--preview-hue),63%,77%,.5); border-radius: 50%; transform: rotate(-13deg); box-shadow: 0 0 8px hsla(var(--preview-hue),65%,64%,.16); }
 
 @media(max-width:760px){
   .registry-showcase { padding: 74px 18px 86px; }
   .registry-showcase-head { grid-template-columns: 1fr; gap: 26px; }
   .registry-showcase-head h2 { font-size: 43px; }
-  .registry-showcase-grid article { grid-template-columns: 28px 1fr; gap: 10px; padding: 16px; }
-  .registry-showcase-grid article > div:nth-child(3), .registry-showcase-grid time { grid-column: 2; }
-  .registry-showcase-grid article > div:nth-child(3) { grid-template-columns: 86px 1fr; }
+  .registry-showcase-grid article { grid-template-columns: 28px 58px 1fr; gap: 10px; padding: 16px; }
+  .registry-showcase-grid .registry-designation, .registry-showcase-grid time { grid-column: 3; }
+  .registry-showcase-grid .registry-designation { grid-template-columns: 86px 1fr; }
+  .registry-planet-preview { width: 56px; height: 64px; }
+  .registry-preview-planet { width: 34px; height: 34px; }
   .explorer-life-speculation { max-width: 90%; font-size: 7px; }
 }
 

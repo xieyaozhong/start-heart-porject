@@ -133,15 +133,17 @@ test("seeds and exposes a one-click demo holder account", async () => {
   assert.match(css, /\.demo-owner-account/);
 });
 
-test("publishes fifty transparent showcase registries and speculative life morphology", async () => {
+test("publishes fifty transparent holder-story previews and speculative life morphology", async () => {
   const [page, universe, explorer, experience] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/CelestialExplorer3D.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/experience.css", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /PUBLIC REGISTRY SHOWCASE \/ 50 RECORDS/);
-  assert.match(page, /not claims of real customer payments/);
+  assert.match(page, /HOLDER STORY PREVIEW \/ 50 ILLUSTRATIONS/);
+  assert.match(page, /Verified customer stories are published only after explicit permission/);
+  assert.match(page, /openShowcasePlanet/);
+  assert.match(page, /registry-planet-preview/);
   assert.match(page, /FULL DESIGNATION/);
   assert.match(page, /SPECULATIVE LIFE MORPHOLOGY/);
   assert.match(universe, /"Our Quiet Cosmos"/);
@@ -150,8 +152,10 @@ test("publishes fifty transparent showcase registries and speculative life morph
   assert.match(universe, /fish-person-like/);
   assert.match(universe, /xenomorph-like/);
   assert.match(universe, /registryShowcase/);
+  assert.match(universe, /Preview only — not a verified customer record/);
   assert.match(explorer, /explorer-model-code/);
   assert.match(experience, /\.registry-showcase-grid/);
+  assert.match(experience, /\.registry-preview-planet/);
 });
 
 test("ships the immersive WebGL celestial explorer", async () => {
