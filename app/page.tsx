@@ -26,6 +26,8 @@ type SolarMoon = {
   composition: string; state: string; bioScore: number; bioPrediction: string;
 };
 
+const ORBIT_PREVIEW_DAYS_PER_SECOND = .45;
+
 const solarBodies: SolarBody[] = [
   { id: "mercury", name: "水星", english: "MERCURY", type: "岩質行星", au: .387, periodDays: 87.969, radiusEarth: .383, color: "#8f8b84", accent: "#d6d0c5", epochAngle: 252.2503235, eccentricity: .20563593, perihelionLongitude: 77.45779628, temperature: "−180～430°C", moons: 0, summary: "最接近太陽的行星，表面布滿撞擊坑，晝夜溫差極大。" },
   { id: "venus", name: "金星", english: "VENUS", type: "岩質行星", au: .723, periodDays: 224.701, radiusEarth: .949, color: "#c98643", accent: "#ffe0a1", epochAngle: 181.9790995, eccentricity: .00677672, perihelionLongitude: 131.60246718, temperature: "約 465°C", moons: 0, summary: "被濃厚二氧化碳大氣包覆，是太陽系中表面最炙熱的行星。" },
@@ -127,7 +129,7 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       const previous = previousTimeRef.current ?? time;
       const deltaSeconds = Math.min((time - previous) / 1000, .1);
       previousTimeRef.current = time;
-      if (mode === "animation" && !paused && !reduceMotion) simulationDaysRef.current += deltaSeconds * speed * 6;
+      if (mode === "animation" && !paused && !reduceMotion) simulationDaysRef.current += deltaSeconds * speed * ORBIT_PREVIEW_DAYS_PER_SECOND;
 
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       const w = rect.width; const h = rect.height; const cx = w * .5; const cy = h * .51;
@@ -182,8 +184,7 @@ function SolarSystemCanvas({ selectedId, onSelect, mode, speed, paused }: { sele
       corona.addColorStop(0, "rgba(255,248,201,1)"); corona.addColorStop(.2, "rgba(255,194,78,.9)"); corona.addColorStop(.48, "rgba(255,122,34,.25)"); corona.addColorStop(1, "rgba(255,104,20,0)");
       ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(cx, cy, 54 * sunPulse, 0, Math.PI * 2); ctx.fill();
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * .00003);
-      for (let ray = 0; ray < 18; ray += 1) {
-        ctx.rotate(Math.PI / 9); ctx.strokeStyle…5006 tokens truncated…h.PI * 2); ctx.fill(); }
+      for (let ray = 0…5030 tokens truncated… Math.PI * 2); ctx.fill(); }
         if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
         ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
       });
@@ -283,7 +284,7 @@ export default function Home() {
               </div>
             </div>
             <SolarSystemCanvas selectedId={solarPlanetId} onSelect={setSolarPlanetId} mode={solarMode} speed={solarSpeed} paused={solarPaused} />
-            <div className="solar-foot"><span>J2000 即時近似位置 · 衛星軌道採放大顯示</span><span>點擊星體選取</span></div>
+            <div className="solar-foot"><span>J2000 即時近似位置 · 衛星軌道採放大顯示</span><span>1× = 0.45 模擬日／秒</span></div>
           </article>
           <aside className="solar-inspector">
             <div className="solar-planet-title"><span className={isHalleySelected ? "comet-orb" : isMoonSelected ? "moon-orb" : ""} style={{ "--planet-color": isHalleySelected ? halleyComet.color : selectedMoon?.color ?? solarPlanet.color, "--planet-accent": isHalleySelected ? halleyComet.accent : selectedMoon?.accent ?? solarPlanet.accent } as React.CSSProperties} /><div><small>{isHalleySelected ? halleyComet.english : selectedMoon?.english ?? solarPlanet.english} / SELECTED</small><h2>{isHalleySelected ? halleyComet.name : selectedMoon?.name ?? solarPlanet.name}</h2><p>{isHalleySelected ? halleyComet.type : selectedMoon?.type ?? solarPlanet.type}</p></div></div>
@@ -306,7 +307,7 @@ export default function Home() {
           <article className="system-viewport">
             <div className="viewport-toolbar"><div><i /> LIVE POSITION <span>{system.planets.length} PLANETS</span></div><div className="viewport-actions"><div className="mode-switch"><button className={mode === "live" ? "active" : ""} onClick={() => { setMode("live"); setSystemPaused(false); }}>即時位置</button><button className={mode === "animation" ? "active" : ""} onClick={() => setMode("animation")}>動畫預覽</button></div>{mode === "animation" && <div className="speed-switch">{[1, 6, 24].map((value) => <button key={value} className={systemSpeed === value ? "active" : ""} aria-pressed={systemSpeed === value} onClick={() => setSystemSpeed(value)}>{value}×</button>)}<button className={systemPaused ? "active" : ""} aria-pressed={systemPaused} onClick={() => setSystemPaused((value) => !value)}>{systemPaused ? "繼續" : "暫停"}</button></div>}</div></div>
             <OrbitCanvas system={system} selectedId={planet.id} onSelect={setPlanetId} mode={mode} speed={systemSpeed} paused={systemPaused} />
-            <div className="viewport-foot"><span>視野：約 {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>比照太陽系的光影、軌道殘影與互動控制</span></div>
+            <div className="viewport-foot"><span>視野：約 {Math.max(...system.planets.map((item) => item.semiMajorAu)).toFixed(2)} AU</span><span>慢速預覽 · 1× = 0.45 模擬日／秒</span></div>
           </article>
           <aside className="planet-inspector">
             <div className="inspector-title"><span style={{ background: planet.orbitColor }} /><div><p>SELECTED BODY</p><h2>{planet.displayName ?? planet.code}</h2><small>{planet.type}</small></div></div>

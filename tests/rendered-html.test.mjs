@@ -13,6 +13,7 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(page, /SolarSystemCanvas/);
   assert.match(page, /J2000 即時近似位置/);
   assert.match(page, /daysSinceJ2000/);
+  assert.match(page, /ORBIT_PREVIEW_DAYS_PER_SECOND = \.45/);
   assert.match(page, /1P \/ HALLEY/);
   assert.match(page, /halleyComet\.eccentricity/);
   assert.match(page, /const solarMoons/);
