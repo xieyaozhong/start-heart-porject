@@ -158,6 +158,27 @@ test("publishes fifty transparent holder-story previews and speculative life mor
   assert.match(experience, /\.registry-preview-planet/);
 });
 
+test("adds a binary-star candidate, complete orbital labels, and a Sun-centred distance map", async () => {
+  const [page, universe, explorer, experience] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/CelestialExplorer3D.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/experience.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(universe, /SYS-NX-BIN-021/);
+  assert.match(universe, /NOCTUA-GEMINI-21/);
+  assert.match(universe, /G2V \+ K1V binary star system/);
+  assert.match(universe, /Circumbinary orbit/);
+  assert.match(page, /function UniverseOverview/);
+  assert.match(page, /SUN-CENTRED/);
+  assert.match(page, /LIGHT-TRAVEL DISTANCE/);
+  assert.match(page, /completePlanetLabel/);
+  assert.match(page, /STARS A\+B/);
+  assert.match(explorer, /companionStarGroup/);
+  assert.match(experience, /\.universe-distance-map/);
+  assert.match(experience, /\.binary-star-mark/);
+});
+
 test("ships the immersive WebGL celestial explorer", async () => {
   const [page, explorer, css, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

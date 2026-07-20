@@ -194,6 +194,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const compact = window.matchMedia("(max-width: 720px)").matches;
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
     const lowPower = compact || navigator.hardwareConcurrency <= 4 || memory <= 4;
+    const binarySystem = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: !lowPower, alpha: true, powerPreference: "high-performance" });
@@ -231,6 +232,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const planetObjects: { data: ExplorerPlanet; mesh: THREE.Mesh; radius: number }[] = [];
     let featured: THREE.Mesh | undefined;
     let starGroup: THREE.Group | undefined;
+    let companionStarGroup: THREE.Group | undefined;
 
     if (view === "planet") {
       camera.position.set(0, 0.12, compact ? 6.4 : 5.15);
@@ -273,6 +275,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.maxDistance = 28;
       controls.maxPolarAngle = Math.PI * 0.76;
       starGroup = createStar(scene, system.temperatureK);
+      if (binarySystem) companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250));
       if (showHabitable) {
         const innerAu = Math.sqrt(Math.max(system.luminosity, 0.05) / 1.1);
         const outerAu = Math.sqrt(Math.max(system.luminosity, 0.05) / 0.53);
@@ -316,6 +319,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.minDistance = 3.8;
       controls.maxDistance = 13;
       starGroup = createStar(scene, system.temperatureK, true);
+      if (binarySystem) companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), true);
       const corona = new THREE.Mesh(
           new THREE.TorusGeometry(2.15, 0.018, 8, lowPower ? 72 : 112),
         new THREE.MeshBasicMaterial({ color: 0xffad43, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }),
@@ -358,6 +362,13 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       stars.rotation.y += delta * 0.002;
       if (featured) featured.rotation.y += delta * 0.075 * Math.max(speedRef.current, 0.4);
       if (starGroup) starGroup.rotation.y += delta * 0.035;
+      if (companionStarGroup) companionStarGroup.rotation.y -= delta * 0.028;
+      if (starGroup && companionStarGroup) {
+        const pairAngle = simulationDays / 9.4 * Math.PI * 2;
+        const pairSeparation = view === "star" ? 1.72 : .54;
+        starGroup.position.set(Math.cos(pairAngle) * -pairSeparation, Math.sin(pairAngle) * -.12, Math.sin(pairAngle) * -pairSeparation * .38);
+        companionStarGroup.position.set(Math.cos(pairAngle) * pairSeparation, Math.sin(pairAngle) * .12, Math.sin(pairAngle) * pairSeparation * .38);
+      }
       if (view === "system") {
         const epochDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
         planetObjects.forEach(({ data, mesh, radius }) => {

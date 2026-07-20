@@ -38,6 +38,14 @@ const initialSystems = [
       { id: "PL-NX-014-D", code: "NOCTUA-K14 d", type: "冰質類海王星", massEarth: 18.7, radiusEarth: 3.72, periodDays: 311, semiMajorAu: 0.803, eccentricity: 0.15, equilibriumTemp: 204, epochAngleDeg: 312, orbitColor: "#817db5", composition: [{ label: "水／冰", value: 56, color: "#86a9c4" }, { label: "氫氦", value: 31, color: "#d2cbbd" }, { label: "岩石", value: 13, color: "#8e6f5c" }], atmosphere: "氫、氦、甲烷", state: "寒冷 · 高空甲烷霧", bioScore: 4, bioPrediction: "能量來源有限，生命可能性偏低。" },
     ],
   },
+  {
+    system: { id: "SYS-NX-BIN-021", designation: "NOCTUA-GEMINI-21", displayName: null, classification: "G2V + K1V binary star system", raHours: 14.4182, decDeg: 19.1864, distancePc: 31.6, starMass: 1.56, starRadius: 1.02, temperatureK: 5840, luminosity: 1.18, ageByr: 4.6, metallicity: 0.03, status: "published", confidence: 82, summary: "A circumbinary three-planet candidate system orbiting a close G-type and K-type stellar pair.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-BIN-021-B", code: "NOCTUA-GEMINI-21 b", type: "Hot circumbinary super-Earth", massEarth: 3.4, radiusEarth: 1.52, periodDays: 24.8, semiMajorAu: 0.18, eccentricity: 0.08, equilibriumTemp: 790, epochAngleDeg: 42, orbitColor: "#df7450", composition: [{ label: "Silicates", value: 57, color: "#c77c58" }, { label: "Metallic core", value: 34, color: "#a8a9a7" }, { label: "Other", value: 9, color: "#617682" }], atmosphere: "Thin mineral and sodium exosphere candidate", state: "Circumbinary orbit · strongly irradiated surface", bioScore: 2, bioPrediction: "Intense irradiation makes known surface life highly unlikely." },
+      { id: "PL-NX-BIN-021-C", code: "NOCTUA-GEMINI-21 c", type: "Temperate circumbinary ocean candidate", massEarth: 5.2, radiusEarth: 1.86, periodDays: 189.6, semiMajorAu: 0.78, eccentricity: 0.05, equilibriumTemp: 294, epochAngleDeg: 176, orbitColor: "#55b6c9", composition: [{ label: "Water / ice", value: 41, color: "#65b9d4" }, { label: "Silicates", value: 39, color: "#bd8b63" }, { label: "Iron-nickel core", value: 20, color: "#a8a9a7" }], atmosphere: "Candidate nitrogen, water vapour and trace carbon dioxide", state: "Circumbinary habitable-zone orbit · variable twin-star illumination", bioScore: 57, bioPrediction: "Liquid water may persist, but the changing radiation from two stars requires further climate modelling." },
+      { id: "PL-NX-BIN-021-D", code: "NOCTUA-GEMINI-21 d", type: "Cold circumbinary gas giant", massEarth: 146, radiusEarth: 9.6, periodDays: 788, semiMajorAu: 2.05, eccentricity: 0.14, equilibriumTemp: 160, epochAngleDeg: 298, orbitColor: "#a68ec8", composition: [{ label: "Hydrogen / helium", value: 81, color: "#d3c6a4" }, { label: "Ices", value: 14, color: "#87a9c5" }, { label: "Heavy elements", value: 5, color: "#9a826f" }], atmosphere: "Hydrogen, helium and trace methane", state: "Wide circumbinary orbit · large moons possible", bioScore: 7, bioPrediction: "The giant itself is inhospitable; large moons could retain subsurface oceans." },
+    ],
+  },
 ];
 
 const defaultPackages = [
@@ -84,18 +92,24 @@ const showcaseNames = [
   "The Lasting Light", "Voyager's Home", "Ardent Horizon", "Perennial Dawn", "Our Quiet Cosmos",
 ];
 
+const showcaseSystemTargets = [
+  { systemId: "SYS-NX-001", systemDesignation: "NOCTUA-X1", planetPrefix: "PL-NX-001", planetCount: 4 },
+  { systemId: "SYS-NX-014", systemDesignation: "NOCTUA-K14", planetPrefix: "PL-NX-014", planetCount: 3 },
+  { systemId: "SYS-NX-BIN-021", systemDesignation: "NOCTUA-GEMINI-21", planetPrefix: "PL-NX-BIN-021", planetCount: 3 },
+];
+
 const registryShowcase = showcaseNames.map((desiredName, index) => {
-  const firstSystem = index % 2 === 0;
-  const planetIndex = firstSystem ? index % 4 : index % 3;
+  const target = showcaseSystemTargets[index % showcaseSystemTargets.length];
+  const planetIndex = index % target.planetCount;
   const planetLetter = String.fromCharCode(98 + planetIndex);
   return {
     sequence: index + 1,
     desiredName,
     registryCode: `NOR-SHOW-${String(index + 1).padStart(4, "0")}`,
-    systemId: firstSystem ? "SYS-NX-001" : "SYS-NX-014",
-    systemDesignation: firstSystem ? "NOCTUA-X1" : "NOCTUA-K14",
-    planetId: firstSystem ? `PL-NX-001-${planetLetter.toUpperCase()}` : `PL-NX-014-${planetLetter.toUpperCase()}`,
-    planetCode: `${firstSystem ? "NOCTUA-X1" : "NOCTUA-K14"} ${planetLetter}`,
+    systemId: target.systemId,
+    systemDesignation: target.systemDesignation,
+    planetId: `${target.planetPrefix}-${planetLetter.toUpperCase()}`,
+    planetCode: `${target.systemDesignation} ${planetLetter}`,
     previewedAt: new Date(Date.UTC(2026, 5, 1 + index)).toISOString(),
     recordType: "Illustrative holder story",
     sharingStatus: "Preview only — not a verified customer record",
@@ -104,15 +118,12 @@ const registryShowcase = showcaseNames.map((desiredName, index) => {
 
 export async function ensureUniverseSeeded() {
   const db = getDb();
-  const [{ total }] = await db.select({ total: count() }).from(starSystems);
-  if (total === 0) {
-    for (const item of initialSystems) {
-      await db.insert(starSystems).values(item.system);
-      await db.insert(planets).values(item.planets.map((planet) => {
-        const { composition, ...planetData } = planet;
-        return { ...planetData, systemId: item.system.id, displayName: null, compositionJson: JSON.stringify(composition) };
-      }));
-    }
+  for (const item of initialSystems) {
+    await db.insert(starSystems).values(item.system).onConflictDoNothing();
+    await db.insert(planets).values(item.planets.map((planet) => {
+      const { composition, ...planetData } = planet;
+      return { ...planetData, systemId: item.system.id, displayName: null, compositionJson: JSON.stringify(composition) };
+    })).onConflictDoNothing();
   }
   const [{ packageTotal }] = await db.select({ packageTotal: count() }).from(namingPackages);
   if (packageTotal === 0) await db.insert(namingPackages).values(defaultPackages);
@@ -167,8 +178,10 @@ function publicPlanet(planet: HydratedPlanet) {
 }
 
 function publicSystem(system: HydratedSystem) {
-  const classification = system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
-  return { ...system, classification, summary: `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`, planets: system.planets.map(publicPlanet) };
+  const binary = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
+  const classification = binary ? "G2V + K1V close binary star pair" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
+  const summary = binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
+  return { ...system, classification, summary, planets: system.planets.map(publicPlanet) };
 }
 
 const englishPackages: Record<string, { name: string; description: string; features: string[] }> = {

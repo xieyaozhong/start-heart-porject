@@ -387,6 +387,7 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       for (let x = cx % grid; x < w; x += grid) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
       for (let y = cy % grid; y < h; y += grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
       const maxOrbit = Math.min(w * .42, h * .43); const maxAu = Math.max(...system.planets.map((planet) => planet.semiMajorAu), 1);
+      const binarySystem = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
       const habitableInner = 48 + Math.sqrt(Math.min(.8 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
       const habitableOuter = 48 + Math.sqrt(Math.min(1.5 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
       ctx.save(); ctx.strokeStyle = "rgba(78,183,142,.06)"; ctx.lineWidth = Math.max(4, (habitableOuter - habitableInner) * .55); ctx.beginPath();
@@ -412,6 +413,22 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(cx, cy, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
       ctx.fillStyle = "rgba(180,83,34,.26)";
       for (let spot = 0; spot < 5; spot += 1) { const spotAngle = (reduceMotion ? 0 : time) * .00011 + spot * 1.71; ctx.beginPath(); ctx.arc(cx + Math.cos(spotAngle) * starRadius * .48, cy + Math.sin(spotAngle * .83) * starRadius * .42, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
+      if (binarySystem) {
+        const pairAngle = (reduceMotion ? 0 : time) * .00016;
+        const pairDistance = starRadius * 2.35;
+        const pairX = cx + Math.cos(pairAngle) * pairDistance;
+        const pairY = cy + Math.sin(pairAngle) * pairDistance * .46;
+        const pairRadius = starRadius * .72;
+        const pairCorona = ctx.createRadialGradient(pairX, pairY, 0, pairX, pairY, pairRadius * 4.4);
+        pairCorona.addColorStop(0, "rgba(255,239,196,1)"); pairCorona.addColorStop(.25, "rgba(255,151,55,.7)"); pairCorona.addColorStop(1, "rgba(255,91,25,0)");
+        ctx.fillStyle = pairCorona; ctx.beginPath(); ctx.arc(pairX, pairY, pairRadius * 4.4, 0, Math.PI * 2); ctx.fill();
+        const pairSurface = ctx.createRadialGradient(pairX - pairRadius * .3, pairY - pairRadius * .3, 1, pairX, pairY, pairRadius);
+        pairSurface.addColorStop(0, "#fff8d7"); pairSurface.addColorStop(.46, "#ffbd61"); pairSurface.addColorStop(1, "#b9441d");
+        ctx.shadowColor = "#ff9f48"; ctx.shadowBlur = 19; ctx.fillStyle = pairSurface; ctx.beginPath(); ctx.arc(pairX, pairY, pairRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      }
+      ctx.fillStyle = "rgba(237,229,203,.7)"; ctx.font = "7px ui-monospace, monospace"; ctx.textAlign = "center";
+      ctx.fillText(`${system.id} / ${system.designation}${binarySystem ? " / STARS A+B" : " / STAR A"}`, cx, cy - starRadius - 22);
+      ctx.textAlign = "start";
       const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
       system.planets.forEach((planet, index) => {
         const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
@@ -431,7 +448,8 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
         if (planet.radiusEarth > 5) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.19)"; for (let band = -2; band <= 2; band += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y + band * radius * .28); ctx.lineTo(x + radius, y + band * radius * .28); ctx.stroke(); } ctx.restore(); }
         if (planet.radiusEarth > 4) { const moonAngle = (reduceMotion ? 0 : time) * .0012 + index; ctx.fillStyle = "#c9d4d5"; ctx.beginPath(); ctx.arc(x + Math.cos(moonAngle) * (radius + 5), y + Math.sin(moonAngle) * (radius + 5), 1.1, 0, Math.PI * 2); ctx.fill(); }
         if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
-        ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} 10px ui-monospace, monospace`; ctx.fillText(ownerLabel && index === 0 ? ownerLabel : planet.code.split(" ").at(-1) ?? "", x + radius + 6, y - radius - 3);
+        const completePlanetLabel = ownerLabel && index === 0 ? `${ownerLabel} / ${planet.id} / ${planet.code}` : `${planet.id} / ${planet.code}`;
+        ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} ${planet.id === selectedId ? 8 : 7}px ui-monospace, monospace`; ctx.fillText(completePlanetLabel, x + radius + 6, y - radius - 3);
       });
       ctx.fillStyle = "rgba(148,179,194,.46)"; ctx.font = "9px ui-monospace, monospace"; ctx.fillText(`REAL-TIME EPHEMERIS · ${new Date().toISOString().slice(0, 19)} UTC`, 18, h - 18);
     };
@@ -452,6 +470,45 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
   }, [system, selectedId, mode, ownerLabel, speed, paused]);
 
   return <canvas ref={canvasRef} className="orbit-canvas" aria-label={`${system.designation} live orbital map; select a planet for details`} />;
+}
+
+function UniverseOverview({ systems, onOpen }: { systems: StarSystem[]; onOpen: (system: StarSystem) => void }) {
+  const [selectedMapId, setSelectedMapId] = useState<string | null>(null);
+  const selected = systems.find((item) => item.id === selectedMapId) ?? systems.find((item) => item.id === "SYS-NX-BIN-021") ?? systems[0];
+  const maxDistance = Math.max(25, Math.ceil(Math.max(...systems.map((item) => item.distancePc), 25) / 25) * 25);
+  const rings = [.25, .5, .75, 1];
+
+  return <section className="universe-overview" id="universe-map">
+    <header className="universe-overview-head"><div><p className="eyebrow">LOCAL COSMIC OVERVIEW / SUN-CENTRED</p><h2>Where these systems sit<br /><em>within our local stellar neighbourhood.</em></h2></div><p>Radial distance is scaled from the Solar System in parsecs. Direction follows right ascension; declination is shown in the selected system record.</p></header>
+    <div className="universe-overview-grid">
+      <div className="universe-distance-map" role="img" aria-label={`Schematic Sun-centred distance map showing ${systems.length} model candidate systems out to ${maxDistance} parsecs`}>
+        {rings.map((ring) => <i className="universe-range-ring" key={ring} style={{ "--ring-size": `${ring * 84}%` } as React.CSSProperties}><span>{Math.round(maxDistance * ring)} pc</span></i>)}
+        <div className="solar-origin"><i /><b>SOLAR SYSTEM</b><small>0 pc / reference origin</small></div>
+        {systems.map((item) => {
+          const angle = item.raHours / 24 * Math.PI * 2 - Math.PI / 2;
+          const radial = item.distancePc / maxDistance * 42;
+          const x = 50 + Math.cos(angle) * radial;
+          const y = 50 + Math.sin(angle) * radial * .67;
+          const displayAngle = Math.atan2(Math.sin(angle) * .67, Math.cos(angle)) * 180 / Math.PI;
+          const lineLength = radial * Math.sqrt(Math.cos(angle) ** 2 + Math.sin(angle) ** 2 * .67 ** 2);
+          const binary = item.id === "SYS-NX-BIN-021" || /binary/i.test(item.classification);
+          const style = { "--map-x": `${x}%`, "--map-y": `${y}%`, "--line-angle": `${displayAngle}deg`, "--line-length": `${lineLength}%` } as React.CSSProperties;
+          return <div className={item.id === selected.id ? "universe-system-point active" : "universe-system-point"} style={style} key={item.id}>
+            <span className="universe-vector" />
+            <button type="button" onClick={() => setSelectedMapId(item.id)} aria-pressed={item.id === selected.id} aria-label={`Select ${item.id}, ${item.designation}, ${item.distancePc.toFixed(1)} parsecs from the Solar System`}><i className={binary ? "binary-star-mark" : "single-star-mark"} /><b>{item.id}</b><small>{item.designation} · {item.distancePc.toFixed(1)} pc</small></button>
+          </div>;
+        })}
+      </div>
+      <aside className="universe-distance-record">
+        <p>SELECTED DISTANCE VECTOR</p>
+        {(selected.id === "SYS-NX-BIN-021" || /binary/i.test(selected.classification)) && <span className="binary-system-badge">BINARY STAR PAIR / A+B</span>}
+        <h3>{selected.designation}</h3><code>{selected.id} / {selected.designation}</code>
+        <div><span><small>FROM THE SUN</small><b>{selected.distancePc.toFixed(1)} pc</b></span><span><small>LIGHT-TRAVEL DISTANCE</small><b>{(selected.distancePc * 3.26156).toFixed(1)} ly</b></span><span><small>RIGHT ASCENSION</small><b>{formatRa(selected.raHours)}</b></span><span><small>DECLINATION</small><b>{formatDec(selected.decDeg)}</b></span></div>
+        <p className="universe-record-copy">{selected.classification}. The map is a schematic comparison of model-candidate distances, not a claim of confirmed discovery.</p>
+        <button type="button" onClick={() => onOpen(selected)}>OPEN LIVE ORBITAL SYSTEM →</button>
+      </aside>
+    </div>
+  </section>;
 }
 
 export default function Home() {
@@ -536,7 +593,7 @@ export default function Home() {
     <main className="public-site">
       <header className="site-header">
         <a className="brand" href="#top"><span className="brand-sigil">N</span><span><b>NOCTUA</b><small>CELESTIAL RESEARCH LAB</small></span></a>
-        <nav><a href="#solar-system">Solar System</a><a href="#observatory">Candidate Systems</a><a href="#registry-archive">Registry Archive</a><a href="#registry">Private Registry</a><a href="/guide">How It Works</a><a href="/resources">Institutions</a><button onClick={() => setRegistryOpen(true)}>Holder Access</button></nav>
+        <nav><a href="#solar-system">Solar System</a><a href="#observatory">Candidate Systems</a><a href="#universe-map">Universe Map</a><a href="#registry-archive">Registry Archive</a><a href="#registry">Private Registry</a><a href="/guide">How It Works</a><a href="/resources">Institutions</a><button onClick={() => setRegistryOpen(true)}>Holder Access</button></nav>
         <button className="holder-header-action" onClick={() => setRegistryOpen(true)}>OPEN REGISTRY ↗</button>
       </header>
       <div className="science-banner"><b>MODEL CANDIDATE</b> Candidate systems are model-derived, not confirmed discoveries. Positions are computed from reference epochs and orbital periods.</div>
@@ -601,6 +658,8 @@ export default function Home() {
           {systems.map((item, index) => <button key={item.id} className={item.id === system.id ? "system-row active" : "system-row"} onClick={() => chooseSystem(item)}><span className="system-index">{String(index + 1).padStart(2, "0")}</span><span><b>{item.designation}</b><small>{item.classification}</small></span><span><b>{item.planets.length}</b><small>PLANET CANDIDATES</small></span><span><b>{item.confidence}%</b><small>MODEL CONFIDENCE</small></span><span><b>{item.distancePc.toFixed(1)} pc</b><small>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-GB") : "PENDING"}</small></span><span>OPEN SYSTEM →</span></button>)}
         </div>
       </section>
+
+      <UniverseOverview systems={systems} onOpen={chooseSystem} />
 
       <section className="registry-showcase" id="registry-archive">
         <div className="registry-showcase-head">

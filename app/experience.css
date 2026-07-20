@@ -538,7 +538,7 @@ body { background: #02070b; }
   outline-offset: 4px;
   box-shadow: 0 0 0 5px rgba(243,168,77,.12);
 }
-.public-site :where(#solar-system,#observatory,#discoveries,#registry-archive,#registry) { scroll-margin-top: 100px; }
+.public-site :where(#solar-system,#observatory,#discoveries,#universe-map,#registry-archive,#registry) { scroll-margin-top: 100px; }
 
 .public-site .solar-console,
 .public-site .observatory-grid {
@@ -646,4 +646,69 @@ body { background: #02070b; }
   .public-site *,
   .public-site *::before,
   .public-site *::after { animation-duration: .01ms!important; animation-iteration-count: 1!important; scroll-behavior: auto!important; transition-duration: .01ms!important; }
+}
+
+/* Sun-centred universe overview */
+.universe-overview { max-width: 1580px; margin: 0 auto; padding: 108px max(4.5vw,30px) 124px; border-top: 1px solid rgba(175,200,211,.11); }
+.universe-overview-head { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(280px,.48fr); gap: 7vw; align-items: end; margin-bottom: 38px; }
+.universe-overview-head h2 { margin: 0; color: #e8eceb; font: 400 clamp(43px,4.9vw,72px)/1 Iowan Old Style,Baskerville,Georgia,serif; letter-spacing: -.045em; }
+.universe-overview-head h2 em { color: #a79572; font-weight: 400; }
+.universe-overview-head > p { margin: 0; padding-left: 22px; border-left: 1px solid rgba(243,168,77,.3); color: #718893; font-size: 10px; line-height: 1.8; }
+.universe-overview-grid { display: grid; grid-template-columns: minmax(0,1.46fr) minmax(300px,.54fr); overflow: hidden; border: 1px solid rgba(175,200,211,.17); border-radius: 22px; background: rgba(4,13,19,.52); box-shadow: 0 32px 100px rgba(0,0,0,.28); }
+.universe-distance-map { position: relative; min-height: 620px; overflow: hidden; border-right: 1px solid rgba(175,200,211,.13); background: radial-gradient(circle at 50% 50%,rgba(38,104,126,.16),transparent 15%,rgba(8,24,32,.5) 43%,rgba(2,8,12,.96) 76%),linear-gradient(rgba(166,201,214,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(166,201,214,.035) 1px,transparent 1px); background-size: auto,48px 48px,48px 48px; }
+.universe-distance-map::after { content: "RIGHT ASCENSION / RADIAL DISTANCE"; position: absolute; right: 18px; bottom: 15px; color: #45606b; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .13em; }
+.universe-range-ring { position: absolute; top: 50%; left: 50%; width: var(--ring-size); aspect-ratio: 1.55; transform: translate(-50%,-50%); border: 1px solid rgba(150,187,201,.1); border-radius: 50%; pointer-events: none; }
+.universe-range-ring > span { position: absolute; top: 50%; left: 0; padding: 3px 5px; transform: translate(-50%,-50%); background: #041016; color: #4e6974; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; white-space: nowrap; }
+.solar-origin { position: absolute; z-index: 4; top: 50%; left: 50%; display: grid; justify-items: center; transform: translate(-50%,-50%); pointer-events: none; }
+.solar-origin > i { width: 17px; height: 17px; border-radius: 50%; background: radial-gradient(circle at 35% 30%,#fffde1,#ffc15a 43%,#e55b20 75%); box-shadow: 0 0 12px #ffae43,0 0 34px rgba(255,141,45,.5); }
+.solar-origin > b { margin-top: 10px; color: #e7d8b8; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .08em; white-space: nowrap; }
+.solar-origin > small { margin-top: 3px; color: #58727d; font: 5px ui-monospace,SFMono-Regular,Consolas,monospace; white-space: nowrap; }
+.universe-system-point { position: absolute; inset: 0; pointer-events: none; }
+.universe-vector { position: absolute; z-index: 1; top: 50%; left: 50%; width: var(--line-length); height: 1px; transform: rotate(var(--line-angle)); transform-origin: left center; background: linear-gradient(90deg,rgba(111,162,182,.05),rgba(111,162,182,.32)); }
+.universe-system-point.active .universe-vector { background: linear-gradient(90deg,rgba(243,168,77,.08),rgba(243,168,77,.72)); box-shadow: 0 0 8px rgba(243,168,77,.2); }
+.universe-system-point > button { position: absolute; z-index: 3; top: var(--map-y); left: var(--map-x); min-width: 154px; display: grid; grid-template-columns: 25px 1fr; gap: 2px 8px; align-items: center; padding: 9px 11px; transform: translate(-50%,-50%); border: 1px solid rgba(157,191,204,.19); border-radius: 11px; background: rgba(3,12,18,.88); color: #8ba0aa; text-align: left; pointer-events: auto; backdrop-filter: blur(7px); transition: border-color .2s ease,background .2s ease,transform .2s ease; }
+.universe-system-point > button:hover,.universe-system-point.active > button { transform: translate(-50%,-50%) scale(1.035); border-color: rgba(243,168,77,.55); background: rgba(15,30,36,.94); }
+.universe-system-point > button > i { grid-row: 1 / 3; position: relative; width: 20px; height: 20px; display: block; }
+.single-star-mark::before,.binary-star-mark::before,.binary-star-mark::after { content: ""; position: absolute; border-radius: 50%; background: radial-gradient(circle at 35% 30%,#fff8d3,#f2a844 55%,#b84420); box-shadow: 0 0 10px rgba(243,168,77,.68); }
+.single-star-mark::before { inset: 3px; }
+.binary-star-mark::before { width: 12px; height: 12px; top: 2px; left: 1px; }
+.binary-star-mark::after { width: 9px; height: 9px; right: 0; bottom: 1px; background: radial-gradient(circle at 35% 30%,#fff4d0,#ed8240 60%,#913519); }
+.universe-system-point > button b { color: #d9e3e5; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.universe-system-point > button small { color: #5d7884; font: 5px ui-monospace,SFMono-Regular,Consolas,monospace; white-space: nowrap; }
+.universe-distance-record { padding: 43px 34px; background: linear-gradient(155deg,rgba(12,31,39,.95),rgba(4,14,20,.98)); }
+.universe-distance-record > p:first-child { margin: 0 0 14px; color: #7c929b; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .14em; }
+.binary-system-badge { display: inline-block; margin-bottom: 16px; padding: 6px 9px; border: 1px solid rgba(243,168,77,.34); border-radius: 999px; color: #efb660; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .1em; }
+.universe-distance-record h3 { margin: 0 0 8px; color: #edf0ee; font: 400 34px/1 Iowan Old Style,Baskerville,Georgia,serif; }
+.universe-distance-record > code { color: #a77e4e; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.universe-distance-record > div { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; border-top: 1px solid rgba(175,200,211,.12); border-left: 1px solid rgba(175,200,211,.12); }
+.universe-distance-record > div span { padding: 14px 12px; border-right: 1px solid rgba(175,200,211,.12); border-bottom: 1px solid rgba(175,200,211,.12); }
+.universe-distance-record > div small,.universe-distance-record > div b { display: block; }
+.universe-distance-record > div small { color: #5c7580; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.universe-distance-record > div b { margin-top: 7px; color: #d8e3e5; font: 9px ui-monospace,SFMono-Regular,Consolas,monospace; }
+.universe-distance-record .universe-record-copy { margin: 24px 0; color: #7d929b; font-size: 9px; line-height: 1.75; }
+.universe-distance-record > button { width: 100%; padding: 12px 15px; border: 1px solid rgba(243,168,77,.42); border-radius: 999px; background: rgba(243,168,77,.07); color: #efb660; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .08em; }
+.universe-distance-record > button:hover { background: #f3a84d; color: #11191d; }
+
+@media(max-width:1000px){
+  .universe-overview-grid { grid-template-columns: 1fr; }
+  .universe-distance-map { min-height: 560px; border-right: 0; border-bottom: 1px solid rgba(175,200,211,.13); }
+  .universe-distance-record { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+  .universe-distance-record > div,.universe-distance-record .universe-record-copy,.universe-distance-record > button { grid-column: 2; }
+  .universe-distance-record > p:first-child,.universe-distance-record .binary-system-badge,.universe-distance-record h3,.universe-distance-record > code { grid-column: 1; }
+}
+@media(max-width:700px){
+  .universe-overview { padding: 78px 18px 90px; }
+  .universe-overview-head { grid-template-columns: 1fr; gap: 25px; }
+  .universe-overview-head h2 { font-size: 43px; }
+  .universe-overview-head > p { padding-left: 16px; }
+  .universe-overview-grid { border-radius: 13px; }
+  .universe-distance-map { min-height: 520px; }
+  .universe-system-point > button { min-width: 116px; grid-template-columns: 19px 1fr; padding: 7px 8px; }
+  .universe-system-point > button > i { width: 17px; height: 17px; }
+  .universe-system-point > button b { font-size: 5px; }
+  .universe-system-point > button small { max-width: 84px; overflow: hidden; text-overflow: ellipsis; font-size: 4px; }
+  .universe-distance-record { display: block; padding: 30px 21px; }
+}
+@media(prefers-reduced-motion:reduce){
+  .universe-system-point > button { transition: none; }
 }
