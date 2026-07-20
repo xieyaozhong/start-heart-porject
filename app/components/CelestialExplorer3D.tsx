@@ -158,6 +158,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
   const [paused, setPaused] = useState(false);
   const [showHabitable, setShowHabitable] = useState(true);
   const [webglError, setWebglError] = useState(false);
+  const [modelReady, setModelReady] = useState(false);
 
   const selected = useMemo(() => system.planets.find((planet) => planet.id === selectedId) ?? system.planets[0], [selectedId, system]);
   useEffect(() => { speedRef.current = speed; }, [speed]);
@@ -175,6 +176,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const mount = mountRef.current;
     if (!mount || !selected) return;
     setWebglError(false);
+    setModelReady(false);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
@@ -188,6 +190,8 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
     mount.replaceChildren(renderer.domElement);
+    const onContextLost = (event: Event) => { event.preventDefault(); setModelReady(false); setWebglError(true); };
+    renderer.domElement.addEventListener("webglcontextlost", onContextLost);
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x02070c, view === "system" ? 0.011 : 0.018);
@@ -205,6 +209,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     scene.add(ambient);
     const clock = new THREE.Clock();
     let animationFrame = 0;
+    let firstFrame = true;
     let simulationDays = 0;
     const textures: THREE.Texture[] = [];
     const planetObjects: { data: ExplorerPlanet; mesh: THREE.Mesh; radius: number }[] = [];
@@ -340,6 +345,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       }
       controls.update();
       renderer.render(scene, camera);
+      if (firstFrame) { firstFrame = false; queueMicrotask(() => setModelReady(true)); }
     };
     animate();
 
@@ -347,6 +353,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       cancelAnimationFrame(animationFrame);
       observer.disconnect();
       renderer.domElement.removeEventListener("click", onClick);
+      renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
       controls.dispose();
       textures.forEach((texture) => texture.dispose());
       scene.traverse((object) => {
@@ -367,6 +374,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
   return (
     <section className="celestial-explorer" role="dialog" aria-modal="true" aria-label={`${system.designation} 3D celestial explorer`}>
       <div ref={mountRef} className="explorer-webgl" />
+      {!modelReady && !webglError && <div className="explorer-model-loading"><span>N</span><b>INITIALISING VERIFIED 3D MODEL…</b></div>}
       {webglError && <div className="explorer-error"><b>WebGL 3D is unavailable on this device</b><span>Close this view to continue with the live orbital simulation.</span></div>}
       <header className="explorer-header">
         <a className="explorer-brand" href="#top" onClick={(event) => { event.preventDefault(); onClose(); }}><span>N</span><b>NOCTUA</b></a>
@@ -383,7 +391,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         <div className="explorer-subtitle"><span>{view === "planet" ? selected.type : system.classification}</span><i /> <span>{system.distancePc.toFixed(1)} pc</span></div>
         {view === "planet" ? <>
           <div className="explorer-metrics"><div><small>MASS</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>RADIUS</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>TEMPERATURE</small><b>{selected.equilibriumTemp} K</b></div><div><small>ASTROBIOLOGY</small><b>{selected.bioScore}%</b></div></div>
-          <p className="explorer-description">{selected.atmosphere} · {selected.state}。{selected.bioPrediction}</p>
+          <p className="explorer-description">{selected.atmosphere} · {selected.state}. {selected.bioPrediction}</p>
         </> : <p className="explorer-description">{view === "system" ? `Live approximate positions for ${system.planets.length} candidate planets, calculated from their reference epoch and orbital periods.` : `Surface temperature approximately ${system.temperatureK.toLocaleString()} K, with ${system.luminosity.toFixed(2)} times the Sun’s luminosity.`}</p>}
         {registryCode && <code className="explorer-registry">PRIVATE SYSTEM REGISTRY {registryCode}</code>}
       </aside>

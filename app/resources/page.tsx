@@ -61,8 +61,8 @@ export default function ResourcesPage() {
     <main className="resources-page public-site">
       <header className="site-header resources-header">
         <a className="brand" href="/"><span className="brand-sigil">N</span><span><b>NOCTUA</b><small>CELESTIAL RESEARCH LAB</small></span></a>
-        <nav><a href="/#solar-system">Solar System</a><a href="/#observatory">Candidate Systems</a><a href="/#discoveries">Discoveries</a><a href="/#registry">Private Registry</a><a className="active" href="/resources">Institutions</a></nav>
-        <a className="admin-link" href="/">RETURN TO LAB ↗</a>
+        <nav><a href="/#solar-system">Solar System</a><a href="/#observatory">Candidate Systems</a><a href="/#registry">Private Registry</a><a href="/guide">How It Works</a><a className="active" href="/resources">Institutions</a></nav>
+        <a className="holder-header-action" href="/?registry=NOR-DEMO2026">HOLDER ACCESS ↗</a>
       </header>
 
       <section className="resources-hero">
@@ -93,7 +93,7 @@ export default function ResourcesPage() {
 
       <aside className="authority-note"><b>SOURCE POLICY</b><p>This directory includes government space agencies, national astronomy institutes, intergovernmental observatories and the official IAU destination. Each external organisation maintains its own content and services.</p></aside>
 
-      <footer><div className="brand"><span className="brand-sigil small">N</span><span><b>NOCTUA</b><small>GLOBAL ASTRONOMY DIRECTORY</small></span></div><p>Model-derived outputs and authoritative science sources are presented separately, keeping research hypotheses distinct from confirmed institutional data.</p><div className="footer-links"><a href="/">Return to the lab</a><a href="/admin">Control room</a></div></footer>
+      <footer><div className="brand"><span className="brand-sigil small">N</span><span><b>NOCTUA</b><small>GLOBAL ASTRONOMY DIRECTORY</small></span></div><p>Model-derived outputs and authoritative science sources are presented separately, keeping research hypotheses distinct from confirmed institutional data.</p><div className="footer-links"><a href="/">Return to the lab</a><a href="/guide">How it works</a></div></footer>
     </main>
   );
 }

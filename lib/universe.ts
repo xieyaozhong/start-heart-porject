@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { inferenceRuns, namingOrders, namingPackages, planets, starSystems, systemSettings } from "@/db/schema";
+import { inferenceRuns, namingOrders, namingPackages, planets, researchUpdates, starSystems, systemSettings } from "@/db/schema";
 import { getPaymentPublicInfo } from "@/lib/ecpay";
 
 export type Composition = { label: string; value: number; color: string };
@@ -53,7 +53,9 @@ const demoOwnerOrder = {
   systemId: "SYS-NX-001",
   planetId: "PL-NX-001-D",
   desiredName: "Asteria Noctua",
+  purchaserName: "Orion Vale",
   ownerName: "星願示範者",
+  recipientEmail: "asteria-recipient@noctua.example",
   dedication: "願每一次仰望，都能找到屬於自己的光。",
   email: "demo-owner@noctua.example",
   packageName: "觀測者",
@@ -63,6 +65,11 @@ const demoOwnerOrder = {
   animationTheme: "amber",
   confirmedAt: "2026-07-19T08:05:00.000Z",
 };
+
+const initialResearchUpdates = [
+  { id: "UPD-NX-001-01", systemId: "SYS-NX-001", title: "Atmospheric model refined", summary: "A revised thermal model narrows the likely water-vapour range for NOCTUA-X1 d while preserving its status as the system’s strongest temperate candidate.", observingNote: "Best inspected in the holder sky guide near meridian transit; the coordinates remain model-derived and are not a confirmed telescope target.", symbolicMeaning: "A symbol of patient hope: something distant becoming clearer through sustained attention.", publishedAt: "2026-07-19T10:00:00.000Z" },
+  { id: "UPD-NX-014-01", systemId: "SYS-NX-014", title: "Orbital solution stabilised", summary: "Additional synthetic sampling reduced uncertainty in the three-planet orbital configuration around NOCTUA-K14.", observingNote: "Use the live guide to calculate the next local meridian window from the model right ascension and declination.", symbolicMeaning: "A symbol of constancy and quiet devotion around a long-lived star.", publishedAt: "2026-07-18T10:00:00.000Z" },
+];
 
 export async function ensureUniverseSeeded() {
   const db = getDb();
@@ -79,6 +86,7 @@ export async function ensureUniverseSeeded() {
   const [{ packageTotal }] = await db.select({ packageTotal: count() }).from(namingPackages);
   if (packageTotal === 0) await db.insert(namingPackages).values(defaultPackages);
   await db.insert(namingOrders).values(demoOwnerOrder).onConflictDoNothing();
+  for (const update of initialResearchUpdates) await db.insert(researchUpdates).values(update).onConflictDoNothing();
   const settings = [
     { key: "schedule_frequency", value: "daily" },
     { key: "auto_publish", value: "false" },
@@ -196,14 +204,33 @@ export async function runInference(source: "admin" | "schedule") {
 export async function getAdminDashboard() {
   await ensureUniverseSeeded();
   const db = getDb();
-  const [systems, packages, orders, runs, settings] = await Promise.all([
+  const [systems, packages, orders, runs, settings, updates] = await Promise.all([
     db.select().from(starSystems).orderBy(desc(starSystems.createdAt)),
     db.select().from(namingPackages).orderBy(asc(namingPackages.sortOrder)),
     db.select().from(namingOrders).orderBy(desc(namingOrders.createdAt)).limit(50),
     db.select().from(inferenceRuns).orderBy(desc(inferenceRuns.startedAt)).limit(20),
     db.select().from(systemSettings),
+    db.select().from(researchUpdates).orderBy(desc(researchUpdates.publishedAt)).limit(40),
   ]);
-  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, features: parseJson<string[]>(item.featuresJson, []) })), orders, runs, settings: Object.fromEntries(settings.map((item) => [item.key, item.value])), payment: getPaymentPublicInfo() };
+  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, features: parseJson<string[]>(item.featuresJson, []) })), orders, runs, updates, settings: Object.fromEntries(settings.map((item) => [item.key, item.value])), payment: getPaymentPublicInfo() };
+}
+
+export async function publishResearchUpdate(payload: { systemId: string; title: string; summary: string; observingNote: string; symbolicMeaning: string }) {
+  const db = getDb();
+  const [system] = await db.select({ id: starSystems.id }).from(starSystems).where(eq(starSystems.id, payload.systemId));
+  if (!system) throw new Error("找不到要更新的星系");
+  if (!payload.title.trim() || !payload.summary.trim() || !payload.observingNote.trim() || !payload.symbolicMeaning.trim()) throw new Error("研究進展資料不完整");
+  const update = {
+    id: `UPD-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 5).toUpperCase()}`,
+    systemId: system.id,
+    title: payload.title.trim().slice(0, 100),
+    summary: payload.summary.trim().slice(0, 600),
+    observingNote: payload.observingNote.trim().slice(0, 400),
+    symbolicMeaning: payload.symbolicMeaning.trim().slice(0, 400),
+    publishedAt: new Date().toISOString(),
+  };
+  await db.insert(researchUpdates).values(update);
+  return update;
 }
 
 export async function publishSystem(id: string, published: boolean) {
@@ -240,6 +267,10 @@ export async function findRegistry(code: string) {
   const [system] = await db.select().from(starSystems).where(eq(starSystems.id, order.systemId));
   if (!system) return null;
   const [hydrated] = await hydrateSystems([system]);
-  const publicOrder = order.id === demoOwnerOrder.id ? { ...order, ownerName: "Starlight Demo Holder", dedication: "May every upward glance reveal a light that belongs to you.", packageName: "Observer" } : { ...order, packageName: ({ "探索者": "Explorer", "觀測者": "Observer", "典藏者": "Archivist" } as Record<string, string>)[order.packageName] ?? order.packageName };
-  return { order: publicOrder, system: publicSystem(hydrated) };
+  const updates = await db.select().from(researchUpdates).where(eq(researchUpdates.systemId, system.id)).orderBy(desc(researchUpdates.publishedAt));
+  const packageName = ({ "探索者": "Explorer", "觀測者": "Observer", "典藏者": "Archivist" } as Record<string, string>)[order.packageName] ?? order.packageName;
+  const publicOrder = order.id === demoOwnerOrder.id
+    ? { registryCode: order.registryCode!, desiredName: order.desiredName, ownerName: "Starlight Demo Holder", purchaserName: "Orion Vale", dedication: "May every upward glance reveal a light that belongs to you.", packageName: "Observer" }
+    : { registryCode: order.registryCode!, desiredName: order.desiredName, ownerName: order.ownerName ?? "Registry holder", purchaserName: order.purchaserName ?? "A private giver", dedication: order.dedication ?? "", packageName };
+  return { order: publicOrder, system: publicSystem(hydrated), updates };
 }

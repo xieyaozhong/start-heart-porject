@@ -33,7 +33,7 @@ test("defines the live public observatory and owner experience", async () => {
   assert.match(css, /\.moon-orb/);
   assert.match(experience, /\.observatory-credibility/);
   assert.match(layout, /<html lang="en">/);
-  assert.match(layout, /noctua-social-v3\.png/);
+  assert.match(layout, /og-v4\.png/);
   assert.doesNotMatch(`${page}\n${layout}`, /codex-preview|react-loading-skeleton/);
 });
 
@@ -73,6 +73,7 @@ test("keeps every customer-facing interface in English", async () => {
   const files = await Promise.all([
     "../app/page.tsx",
     "../app/resources/page.tsx",
+    "../app/guide/page.tsx",
     "../app/payment/result/page.tsx",
     "../app/layout.tsx",
     "../app/components/CelestialExplorer3D.tsx",
@@ -84,6 +85,35 @@ test("keeps every customer-facing interface in English", async () => {
     "../lib/ecpay.ts",
   ].map((path) => readFile(new URL(path, import.meta.url), "utf8")));
   assert.doesNotMatch(files.join("\n"), /[\p{Script=Han}]/u);
+});
+
+test("explains discovery, one-life gifting, continued research, and local sky windows", async () => {
+  const [guide, page, resources, orderRoute, schema, migration, universe, admin, adminRoute] = await Promise.all([
+    readFile(new URL("../app/guide/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/resources/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/orders/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0003_public_bruce_banner.sql", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/control/route.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(guide, /Each purchaser email may complete one NOCTUA registry in a lifetime/);
+  assert.match(guide, /calculateSkyWindow/);
+  assert.match(guide, /navigator\.geolocation/);
+  assert.match(guide, /model-derived and may be too faint or unconfirmed/);
+  assert.match(orderRoute, /LIFETIME_LIMIT_REACHED/);
+  assert.match(orderRoute, /notInArray/);
+  assert.match(orderRoute, /recipientEmail/);
+  assert.match(schema, /researchUpdates/);
+  assert.match(migration, /CREATE TABLE `research_updates`/);
+  assert.match(migration, /`purchaser_name`/);
+  assert.match(universe, /publishResearchUpdate/);
+  assert.match(admin, /publish_update/);
+  assert.match(adminRoute, /publishResearchUpdate/);
+  assert.doesNotMatch(page, /href="\/admin"/);
+  assert.doesNotMatch(resources, /href="\/admin"/);
 });
 
 test("seeds and exposes a one-click demo holder account", async () => {
@@ -109,12 +139,15 @@ test("ships the immersive WebGL celestial explorer", async () => {
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
   assert.match(page, /CelestialExplorer3D/);
+  assert.match(page, /import CelestialExplorer3D from/);
   assert.match(page, /OPEN 3D VIEW/);
   assert.match(page, /OPEN PRIVATE SYSTEM IN 3D/);
   assert.match(explorer, /OrbitControls/);
   assert.match(explorer, /WebGLRenderer/);
   assert.match(explorer, /HABITABLE ZONE/);
   assert.match(explorer, /DRAG TO ROTATE/);
+  assert.match(explorer, /webglcontextlost/);
+  assert.match(explorer, /INITIALISING VERIFIED 3D MODEL/);
   assert.match(css, /\.celestial-explorer/);
   assert.match(packageJson, /"three"/);
 });
@@ -136,6 +169,8 @@ test("integrates signed ECPay checkout and verified payment callbacks", async ()
   assert.match(orderRoute, /paymentTradeNo/);
   assert.match(orderRoute, /paymentToken/);
   assert.match(checkout, /method=\"post\"/);
+  assert.match(checkout, /CONTINUE TO ECPAY/);
+  assert.doesNotMatch(checkout, /getElementById\('ecpay'\)\.submit/);
   assert.match(gateway, /payment-stage\.ecpay\.com\.tw/);
   assert.match(notify, /"1\|OK"/);
   assert.match(gateway, /SHA-256/);
@@ -156,7 +191,7 @@ test("matches ECPay's official SHA-256 CheckMacValue vector", () => {
 });
 
 test("ships the social preview and no ChatGPT authentication helper", async () => {
-  await access(new URL("../public/noctua-social-v3.png", import.meta.url));
+  await access(new URL("../public/og-v4.png", import.meta.url));
   const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url)));

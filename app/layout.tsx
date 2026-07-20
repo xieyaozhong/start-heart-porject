@@ -14,8 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
-    openGraph: { title, description, type: "website", images: [`${origin}/noctua-social-v3.png`] },
-    twitter: { card: "summary_large_image", title, description, images: [`${origin}/noctua-social-v3.png`] },
+    openGraph: { title, description, type: "website", images: [`${origin}/og-v4.png`] },
+    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og-v4.png`] },
   };
 }
 

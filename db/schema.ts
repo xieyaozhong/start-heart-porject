@@ -84,7 +84,9 @@ export const namingOrders = sqliteTable("naming_orders", {
   systemId: text("system_id"),
   planetId: text("planet_id"),
   desiredName: text("desired_name").notNull(),
+  purchaserName: text("purchaser_name"),
   ownerName: text("owner_name"),
+  recipientEmail: text("recipient_email"),
   dedication: text("dedication"),
   email: text("email").notNull(),
   packageName: text("package_name").notNull(),
@@ -102,6 +104,17 @@ export const namingOrders = sqliteTable("naming_orders", {
   paymentUpdatedAt: text("payment_updated_at"),
   paidAt: text("paid_at"),
   simulatedPayment: integer("simulated_payment", { mode: "boolean" }).notNull().default(false),
+});
+
+export const researchUpdates = sqliteTable("research_updates", {
+  id: text("id").primaryKey(),
+  systemId: text("system_id").notNull(),
+  title: text("title").notNull(),
+  summary: text("summary").notNull(),
+  observingNote: text("observing_note").notNull(),
+  symbolicMeaning: text("symbolic_meaning").notNull(),
+  publishedAt: text("published_at").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const systemSettings = sqliteTable("system_settings", {
