@@ -213,6 +213,38 @@ test("adds white-dwarf, red-giant, and three-body stellar architectures", async 
   assert.match(experience, /\.triple-star-mark/);
 });
 
+test("derives candidate coordinates and adds four exotic stellar models", async () => {
+  const [page, universe, explorer, experience] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/CelestialExplorer3D.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/experience.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(universe, /function modelledSkyPosition/);
+  assert.match(universe, /goldenAngle/);
+  assert.match(universe, /blueGiantModelPosition/);
+  assert.match(universe, /pulsarModelPosition/);
+  assert.match(universe, /blackHoleModelPosition/);
+  assert.match(universe, /doublePlanetModelPosition/);
+  assert.match(universe, /SYS-NX-BG-061/);
+  assert.match(universe, /SYS-NX-PSR-067/);
+  assert.match(universe, /SYS-NX-BH-073/);
+  assert.match(universe, /SYS-NX-DP-081/);
+  assert.match(page, /blueGiantSystem/);
+  assert.match(page, /pulsarSystem/);
+  assert.match(page, /blackHoleSystem/);
+  assert.match(page, /doublePlanetSystem/);
+  assert.match(page, /SHARED PLANETARY BARYCENTRE/);
+  assert.match(explorer, /createNebulaShell/);
+  assert.match(explorer, /createPulsarFeatures/);
+  assert.match(explorer, /createBlackHoleModel/);
+  assert.match(explorer, /isDoublePlanetSystem/);
+  assert.match(experience, /\.blue-giant-mark/);
+  assert.match(experience, /\.pulsar-mark/);
+  assert.match(experience, /\.black-hole-mark/);
+  assert.match(experience, /\.double-planet-mark/);
+});
+
 test("ships the immersive WebGL celestial explorer", async () => {
   const [page, explorer, css, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

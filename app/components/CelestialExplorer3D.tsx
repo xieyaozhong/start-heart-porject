@@ -204,6 +204,36 @@ function createFigureEightOrbitPath(scene: THREE.Scene, radius: number, lowPower
   scene.add(path);
 }
 
+function createNebulaShell(scene: THREE.Scene, large: boolean) {
+  const group = new THREE.Group();
+  const radius = large ? 3.2 : 1.12;
+  [0x5d8cff,0x8d5fd3,0x4fc8d5].forEach((color,index) => {
+    const shell = new THREE.Mesh(new THREE.TorusGeometry(radius * (1 + index * .22), .035 + index * .012, 8, 96), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .18 - index * .03, blending: THREE.AdditiveBlending }));
+    shell.rotation.set(.55 + index * .35,.25 + index * .5,index * .7); group.add(shell);
+  });
+  scene.add(group); return group;
+}
+
+function createPulsarFeatures(scene: THREE.Scene, large: boolean) {
+  const group = new THREE.Group();
+  const length = large ? 8 : 3.2;
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.015,.2,length,20,1,true), new THREE.MeshBasicMaterial({ color: 0x9edcff, transparent: true, opacity: .34, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  beam.rotation.z = Math.PI / 2; group.add(beam);
+  const field = new THREE.Mesh(new THREE.TorusGeometry(large ? 2.3 : .82,.018,8,96),new THREE.MeshBasicMaterial({ color:0x73bfff,transparent:true,opacity:.38,blending:THREE.AdditiveBlending }));
+  field.rotation.x = 1.12; group.add(field); scene.add(group); return group;
+}
+
+function createBlackHoleModel(scene: THREE.Scene, large: boolean) {
+  const group = new THREE.Group();
+  const radius = large ? 1.28 : .34;
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(radius,40,40),new THREE.MeshBasicMaterial({ color:0x000000 })));
+  const disc = new THREE.Mesh(new THREE.RingGeometry(radius * 1.35,radius * 3.1,128),new THREE.MeshBasicMaterial({ color:0xff8a43,side:THREE.DoubleSide,transparent:true,opacity:.68,blending:THREE.AdditiveBlending }));
+  disc.rotation.x = 1.28; group.add(disc);
+  const lens = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.1,.025,12,96),new THREE.MeshBasicMaterial({ color:0xc57dff,transparent:true,opacity:.64,blending:THREE.AdditiveBlending }));
+  lens.rotation.x = .72; group.add(lens);
+  group.add(new THREE.PointLight(0xb469ff,large ? 38 : 20,large ? 28 : 14,1.4)); scene.add(group); return group;
+}
+
 export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabel, registryCode, onClose }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef(1);
@@ -222,6 +252,10 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
   const isWhiteDwarfSystem = system.id === "SYS-NX-WD-031" || /white dwarf/i.test(system.classification);
   const isRedGiantSystem = system.id === "SYS-NX-RG-044" || /red giant/i.test(system.classification);
   const isTripleSystem = system.id === "SYS-NX-TRI-052" || /three-star|triple-star/i.test(system.classification);
+  const isBlueGiantSystem = system.id === "SYS-NX-BG-061" || /blue supergiant/i.test(system.classification);
+  const isPulsarSystem = system.id === "SYS-NX-PSR-067" || /pulsar|neutron-star/i.test(system.classification);
+  const isBlackHoleSystem = system.id === "SYS-NX-BH-073" || /black hole/i.test(system.classification);
+  const isDoublePlanetSystem = system.id === "SYS-NX-DP-081" || /double-planet/i.test(system.classification);
   useEffect(() => { speedRef.current = speed; }, [speed]);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
   useEffect(() => {
@@ -253,7 +287,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const compact = window.matchMedia("(max-width: 720px)").matches;
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
     const lowPower = compact || navigator.hardwareConcurrency <= 4 || memory <= 4;
-    const binarySystem = isBinarySystem;
+    const binarySystem = isBinarySystem || isBlackHoleSystem;
     const tripleSystem = isTripleSystem;
     let renderer: THREE.WebGLRenderer;
     try {
@@ -294,6 +328,8 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     let starGroup: THREE.Group | undefined;
     let companionStarGroup: THREE.Group | undefined;
     let tertiaryStarGroup: THREE.Group | undefined;
+    let nebulaGroup: THREE.Group | undefined;
+    let pulsarFeatureGroup: THREE.Group | undefined;
 
     if (view === "planet") {
       camera.position.set(0, 0.12, compact ? 6.4 : 5.15);
@@ -335,9 +371,11 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.minDistance = 5;
       controls.maxDistance = 28;
       controls.maxPolarAngle = Math.PI * 0.76;
-      starGroup = createStar(scene, system.temperatureK, false, isWhiteDwarfSystem ? .44 : isRedGiantSystem ? 1.7 : 1);
+      starGroup = isBlackHoleSystem ? createBlackHoleModel(scene,false) : createStar(scene, system.temperatureK, false, isPulsarSystem ? .2 : isWhiteDwarfSystem ? .44 : isBlueGiantSystem ? 1.75 : isRedGiantSystem ? 1.7 : 1);
+      if (isBlueGiantSystem) nebulaGroup = createNebulaShell(scene,false);
+      if (isPulsarSystem) pulsarFeatureGroup = createPulsarFeatures(scene,false);
       if (binarySystem) {
-        companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), false, .76);
+        companionStarGroup = createStar(scene, isBlackHoleSystem ? 4650 : Math.max(3900, system.temperatureK - 1250), false, .76);
         createBinaryOrbitPath(scene, .42, lowPower);
         createBinaryOrbitPath(scene, .62, lowPower);
       }
@@ -388,9 +426,11 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       camera.position.set(0, 0.1, compact ? 7.2 : 6.1);
       controls.minDistance = 3.8;
       controls.maxDistance = 13;
-      starGroup = createStar(scene, system.temperatureK, true, isWhiteDwarfSystem ? .62 : isRedGiantSystem ? 1.28 : 1);
+      starGroup = isBlackHoleSystem ? createBlackHoleModel(scene,true) : createStar(scene, system.temperatureK, true, isPulsarSystem ? .34 : isWhiteDwarfSystem ? .62 : isBlueGiantSystem ? 1.35 : isRedGiantSystem ? 1.28 : 1);
+      if (isBlueGiantSystem) nebulaGroup = createNebulaShell(scene,true);
+      if (isPulsarSystem) pulsarFeatureGroup = createPulsarFeatures(scene,true);
       if (binarySystem) {
-        companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), true, .76);
+        companionStarGroup = createStar(scene, isBlackHoleSystem ? 4650 : Math.max(3900, system.temperatureK - 1250), true, .76);
         createBinaryOrbitPath(scene, 1.32, lowPower);
         createBinaryOrbitPath(scene, 1.92, lowPower);
       }
@@ -442,6 +482,8 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       if (featured) featured.rotation.y += delta * 0.075 * Math.max(speedRef.current, 0.4);
       if (starGroup) starGroup.rotation.y += delta * 0.035;
       if (companionStarGroup) companionStarGroup.rotation.y -= delta * 0.028;
+      if (nebulaGroup) { nebulaGroup.rotation.y += delta * .006; nebulaGroup.rotation.z -= delta * .003; }
+      if (pulsarFeatureGroup) pulsarFeatureGroup.rotation.z += delta * 2.4;
       if (tripleSystem && starGroup && companionStarGroup && tertiaryStarGroup) {
         const choreographyPhase = simulationDays / 18.6 * Math.PI * 2;
         const choreographyRadius = view === "star" ? 3.05 : 1.18;
@@ -459,9 +501,15 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       }
       if (view === "system") {
         const epochDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
-        planetObjects.forEach(({ data, mesh, radius }) => {
+        planetObjects.forEach(({ data, mesh, radius }, index) => {
           const angle = (data.epochAngleDeg * Math.PI / 180) + ((epochDays + simulationDays) / data.periodDays) * Math.PI * 2;
-          mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+          if (isDoublePlanetSystem && index < 2) {
+            const reference = system.planets[0];
+            const baryRadius = orbitRadius(reference.semiMajorAu);
+            const baryAngle = (reference.epochAngleDeg * Math.PI / 180) + ((epochDays + simulationDays) / reference.periodDays) * Math.PI * 2;
+            const mutualAngle = ((epochDays + simulationDays) / 6.4) * Math.PI * 2 + index * Math.PI;
+            mesh.position.set(Math.cos(baryAngle) * baryRadius + Math.cos(mutualAngle) * .34,0,Math.sin(baryAngle) * baryRadius + Math.sin(mutualAngle) * .34);
+          } else mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
           mesh.rotation.y += delta * 0.23;
         });
       }
@@ -517,6 +565,10 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         {isTripleSystem && view !== "planet" && <span className="explorer-binary-note triple">THREE-BODY FIGURE-EIGHT CHOREOGRAPHY · SCHEMATIC MODEL</span>}
         {isWhiteDwarfSystem && view !== "planet" && <span className="explorer-stellar-note white-dwarf">WHITE DWARF · HOT COMPACT STELLAR REMNANT</span>}
         {isRedGiantSystem && view !== "planet" && <span className="explorer-stellar-note red-giant">RED GIANT · EXPANDED EVOLVED STAR</span>}
+        {isBlueGiantSystem && view !== "planet" && <span className="explorer-stellar-note blue-giant">BLUE SUPERGIANT · IONISED WIND NEBULA</span>}
+        {isPulsarSystem && view !== "planet" && <span className="explorer-stellar-note pulsar">PULSAR · ROTATING LIGHTHOUSE BEAMS</span>}
+        {isBlackHoleSystem && view !== "planet" && <span className="explorer-stellar-note black-hole">BLACK HOLE BINARY · ACCRETION DISC MODEL</span>}
+        {isDoublePlanetSystem && view === "system" && <span className="explorer-stellar-note double-planet">DOUBLE PLANET · 6.4-DAY MUTUAL ORBIT</span>}
         {view === "planet" ? <>
           <div className="explorer-metrics"><div><small>MASS</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>RADIUS</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>TEMPERATURE</small><b>{selected.equilibriumTemp} K</b></div><div><small>ASTROBIOLOGY</small><b>{selected.bioScore}%</b></div></div>
           <p className="explorer-description">{selected.atmosphere} · {selected.state}. {selected.bioPrediction}</p>

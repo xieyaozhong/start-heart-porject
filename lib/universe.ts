@@ -20,6 +20,23 @@ function seededRandom(seed: number) {
   };
 }
 
+function modelledSkyPosition(sampleIndex: number, distancePc: number, latitudeCompression = 0.62) {
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const longitude = (sampleIndex * goldenAngle) % (Math.PI * 2);
+  const fibonacciZ = 1 - 2 * ((sampleIndex * 0.61803398875) % 1);
+  const declination = Math.asin(Math.max(-1, Math.min(1, fibonacciZ))) * latitudeCompression;
+  return {
+    raHours: Number(((longitude / (Math.PI * 2) * 24 + 24) % 24).toFixed(4)),
+    decDeg: Number((declination * 180 / Math.PI).toFixed(4)),
+    distancePc,
+  };
+}
+
+const blueGiantModelPosition = modelledSkyPosition(61, 286.4, .38);
+const pulsarModelPosition = modelledSkyPosition(67, 412.8, .56);
+const blackHoleModelPosition = modelledSkyPosition(73, 726.5, .42);
+const doublePlanetModelPosition = modelledSkyPosition(81, 96.3, .78);
+
 const initialSystems = [
   {
     system: { id: "SYS-NX-001", designation: "NOCTUA-X1", displayName: null, classification: "G8V 黃矮星", raHours: 19.8464, decDeg: 8.8683, distancePc: 47.2, starMass: 0.91, starRadius: 0.94, temperatureK: 5480, luminosity: 0.72, ageByr: 5.1, metallicity: 0.08, status: "published", confidence: 86, summary: "徑向速度與凌日訊號交叉吻合的四行星候選系統。", epochAt: "2026-07-19T00:00:00.000Z", publishedAt: "2026-07-19T00:00:00.000Z" },
@@ -67,6 +84,37 @@ const initialSystems = [
       { id: "PL-NX-TRI-052-B", code: "NOCTUA-TRINITY-52 b", type: "Hot circummultiple mini-Neptune", massEarth: 12, radiusEarth: 3.05, periodDays: 58, semiMajorAu: 0.42, eccentricity: 0.07, equilibriumTemp: 630, epochAngleDeg: 91, orbitColor: "#c27b74", composition: [{ label: "Hydrogen / helium", value: 48, color: "#d4c6ae" }, { label: "Water / ice", value: 34, color: "#75a8c6" }, { label: "Rock", value: 18, color: "#9d745e" }], atmosphere: "Hydrogen, helium and water-vapour candidate", state: "Circummultiple orbit · variable three-star irradiation", bioScore: 4, bioPrediction: "The deep hot atmosphere is hostile to known life." },
       { id: "PL-NX-TRI-052-C", code: "NOCTUA-TRINITY-52 c", type: "Temperate circummultiple terrestrial", massEarth: 1.9, radiusEarth: 1.22, periodDays: 318, semiMajorAu: 1.15, eccentricity: 0.05, equilibriumTemp: 286, epochAngleDeg: 203, orbitColor: "#63b2a8", composition: [{ label: "Silicates", value: 49, color: "#b98766" }, { label: "Water / ice", value: 31, color: "#67abc8" }, { label: "Iron-nickel core", value: 20, color: "#a6a8a8" }], atmosphere: "Candidate nitrogen, water vapour and carbon dioxide", state: "Temperate circummultiple orbit · complex seasonal illumination", bioScore: 44, bioPrediction: "Liquid-water intervals may be possible, although three-star forcing could destabilise the climate." },
       { id: "PL-NX-TRI-052-D", code: "NOCTUA-TRINITY-52 d", type: "Outer ringed gas giant", massEarth: 95, radiusEarth: 8.2, periodDays: 1420, semiMajorAu: 3.8, eccentricity: 0.18, equilibriumTemp: 160, epochAngleDeg: 324, orbitColor: "#aa91c5", composition: [{ label: "Hydrogen / helium", value: 78, color: "#d3c6a4" }, { label: "Ices", value: 17, color: "#87a9c5" }, { label: "Heavy elements", value: 5, color: "#9a826f" }], atmosphere: "Hydrogen, helium and methane", state: "Wide circummultiple orbit · prominent ring system candidate", bioScore: 6, bioPrediction: "The giant is inhospitable; large moons could retain subsurface oceans." },
+    ],
+  },
+  {
+    system: { id: "SYS-NX-BG-061", designation: "NOCTUA-AZURE-CROWN-61", displayName: null, classification: "B0 Ia blue supergiant with ionised nebula", ...blueGiantModelPosition, starMass: 18.2, starRadius: 10.4, temperatureK: 26500, luminosity: 60000, ageByr: 0.009, metallicity: 0.02, status: "published", confidence: 67, summary: "A luminous blue-supergiant model embedded in a wind-shaped ionised nebula.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-BG-061-B", code: "NOCTUA-AZURE-CROWN-61 b", type: "Wind-eroded hot gas giant", massEarth: 280, radiusEarth: 12.1, periodDays: 6600, semiMajorAu: 18, eccentricity: 0.12, equilibriumTemp: 1020, epochAngleDeg: 38, orbitColor: "#7fa7d8", composition: [{ label: "Hydrogen / helium", value: 84, color: "#c8d6e8" }, { label: "Heavy elements", value: 11, color: "#8b8295" }, { label: "Other", value: 5, color: "#667685" }], atmosphere: "Ionised hydrogen-helium envelope under strong stellar wind", state: "Atmospheric escape · intense ultraviolet irradiation", bioScore: 0, bioPrediction: "Extreme radiation and atmospheric loss exclude known life." },
+      { id: "PL-NX-BG-061-C", code: "NOCTUA-AZURE-CROWN-61 c", type: "Super-Jovian storm world", massEarth: 620, radiusEarth: 13.2, periodDays: 15400, semiMajorAu: 32, eccentricity: 0.18, equilibriumTemp: 760, epochAngleDeg: 164, orbitColor: "#7b83c5", composition: [{ label: "Hydrogen / helium", value: 88, color: "#c9c6dd" }, { label: "Heavy elements", value: 8, color: "#8a7893" }, { label: "Ices", value: 4, color: "#7fa9c5" }], atmosphere: "Hydrogen, helium and ionised metals", state: "Powerful storms · auroral magnetosphere", bioScore: 1, bioPrediction: "The deep irradiated atmosphere is hostile to known life." },
+      { id: "PL-NX-BG-061-D", code: "NOCTUA-AZURE-CROWN-61 d", type: "Distant warm ice giant", massEarth: 31, radiusEarth: 4.6, periodDays: 57000, semiMajorAu: 75, eccentricity: 0.22, equilibriumTemp: 495, epochAngleDeg: 291, orbitColor: "#5eb7ca", composition: [{ label: "Water / ice", value: 49, color: "#73b5cd" }, { label: "Hydrogen / helium", value: 38, color: "#d1d7d7" }, { label: "Rock", value: 13, color: "#8b7467" }], atmosphere: "Ionised hydrogen, helium and water vapour", state: "Distant orbit · still heated by an exceptionally luminous star", bioScore: 2, bioPrediction: "Radiation and deep atmospheric pressure make habitability unlikely." },
+    ],
+  },
+  {
+    system: { id: "SYS-NX-PSR-067", designation: "NOCTUA-BEACON-67", displayName: null, classification: "Millisecond pulsar neutron-star system", ...pulsarModelPosition, starMass: 1.4, starRadius: 0.00002, temperatureK: 600000, luminosity: 0.002, ageByr: 0.4, metallicity: -0.3, status: "published", confidence: 71, summary: "A rapidly rotating neutron-star model with lighthouse beams and three compact-orbit candidates.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-PSR-067-B", code: "NOCTUA-BEACON-67 b", type: "Tidally heated iron planet", massEarth: 0.7, radiusEarth: 0.78, periodDays: 25.2, semiMajorAu: 0.19, eccentricity: 0.09, equilibriumTemp: 410, epochAngleDeg: 74, orbitColor: "#a99594", composition: [{ label: "Iron-nickel core", value: 59, color: "#a0a4a6" }, { label: "Silicates", value: 36, color: "#a87b62" }, { label: "Other", value: 5, color: "#65717a" }], atmosphere: "Negligible atmosphere", state: "Intense particle radiation · tidal heating", bioScore: 0, bioPrediction: "Pulsar radiation makes known surface life implausible." },
+      { id: "PL-NX-PSR-067-C", code: "NOCTUA-BEACON-67 c", type: "Carbon-rich super-Earth", massEarth: 4.1, radiusEarth: 1.55, periodDays: 67.4, semiMajorAu: 0.46, eccentricity: 0.04, equilibriumTemp: 260, epochAngleDeg: 188, orbitColor: "#7d8da7", composition: [{ label: "Carbon-rich rock", value: 44, color: "#555b65" }, { label: "Silicates", value: 31, color: "#967763" }, { label: "Iron-nickel core", value: 25, color: "#a0a4a6" }], atmosphere: "Thin heavy-element atmosphere candidate", state: "Cold surface · high-energy particle bombardment", bioScore: 3, bioPrediction: "Subsurface shielding is conceivable, but no biosignature is predicted." },
+      { id: "PL-NX-PSR-067-D", code: "NOCTUA-BEACON-67 d", type: "Frozen remnant world", massEarth: 2.6, radiusEarth: 1.38, periodDays: 340, semiMajorAu: 1.2, eccentricity: 0.13, equilibriumTemp: 145, epochAngleDeg: 309, orbitColor: "#7298b8", composition: [{ label: "Water / ice", value: 47, color: "#75aaca" }, { label: "Rock", value: 35, color: "#8d7666" }, { label: "Iron-nickel core", value: 18, color: "#a0a4a6" }], atmosphere: "Frozen nitrogen and carbon monoxide candidate", state: "Cryogenic surface · intermittent pulsar heating", bioScore: 2, bioPrediction: "Stable surface liquid water is not expected." },
+    ],
+  },
+  {
+    system: { id: "SYS-NX-BH-073", designation: "NOCTUA-UMBRA-73", displayName: null, classification: "Stellar-mass black hole + K-dwarf binary", ...blackHoleModelPosition, starMass: 9.8, starRadius: 0.78, temperatureK: 4650, luminosity: 0.32, ageByr: 5.6, metallicity: -0.08, status: "published", confidence: 63, summary: "A black-hole binary model with a luminous accretion disc, mass-transfer stream and two circumbinary candidates.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-BH-073-B", code: "NOCTUA-UMBRA-73 b", type: "Hot circumbinary gas giant", massEarth: 180, radiusEarth: 10.4, periodDays: 427, semiMajorAu: 2.4, eccentricity: 0.17, equilibriumTemp: 520, epochAngleDeg: 118, orbitColor: "#a6769e", composition: [{ label: "Hydrogen / helium", value: 80, color: "#c8bac4" }, { label: "Heavy elements", value: 14, color: "#856f82" }, { label: "Other", value: 6, color: "#65717a" }], atmosphere: "Hydrogen, helium and ionised trace metals", state: "Circumbinary orbit · variable X-ray irradiation", bioScore: 0, bioPrediction: "High-energy radiation excludes known atmospheric life." },
+      { id: "PL-NX-BH-073-C", code: "NOCTUA-UMBRA-73 c", type: "Distant frozen super-Earth", massEarth: 6.4, radiusEarth: 1.9, periodDays: 2520, semiMajorAu: 7.8, eccentricity: 0.25, equilibriumTemp: 170, epochAngleDeg: 277, orbitColor: "#6d839f", composition: [{ label: "Water / ice", value: 45, color: "#729fbe" }, { label: "Silicates", value: 37, color: "#967763" }, { label: "Iron-nickel core", value: 18, color: "#a0a4a6" }], atmosphere: "Thin nitrogen and methane candidate", state: "Frozen surface · intermittent accretion-disc illumination", bioScore: 4, bioPrediction: "A buried ocean is speculative and would require internal heating." },
+    ],
+  },
+  {
+    system: { id: "SYS-NX-DP-081", designation: "NOCTUA-TWIN-WORLDS-81", displayName: null, classification: "Mutual-orbit double-planet system", ...doublePlanetModelPosition, starMass: 1.01, starRadius: 1.02, temperatureK: 5750, luminosity: 1.05, ageByr: 4.2, metallicity: 0.05, status: "published", confidence: 79, summary: "Two similarly sized planets orbit a shared barycentre while travelling together around a Sun-like star.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-DP-081-B", code: "NOCTUA-TWIN-WORLDS-81 b", type: "Oceanic double planet", massEarth: 1.3, radiusEarth: 1.08, periodDays: 393, semiMajorAu: 1.05, eccentricity: 0.03, equilibriumTemp: 284, epochAngleDeg: 42, orbitColor: "#55aebf", composition: [{ label: "Water / ice", value: 42, color: "#63b4d0" }, { label: "Silicates", value: 40, color: "#a98266" }, { label: "Iron-nickel core", value: 18, color: "#a0a4a6" }], atmosphere: "Nitrogen, water vapour and carbon dioxide candidate", state: "Mutual barycentric orbit · global ocean candidate", bioScore: 58, bioPrediction: "Stable oceans and tidal energy may support microbial or marine ecosystems." },
+      { id: "PL-NX-DP-081-C", code: "NOCTUA-TWIN-WORLDS-81 c", type: "Desert double planet", massEarth: 1.1, radiusEarth: 0.99, periodDays: 393, semiMajorAu: 1.05, eccentricity: 0.03, equilibriumTemp: 301, epochAngleDeg: 44, orbitColor: "#c48b5e", composition: [{ label: "Silicates", value: 63, color: "#c18a61" }, { label: "Iron-nickel core", value: 30, color: "#a0a4a6" }, { label: "Water / ice", value: 7, color: "#6f9fbb" }], atmosphere: "Thin nitrogen and carbon-dioxide candidate", state: "Mutual barycentric orbit · arid tidally influenced surface", bioScore: 24, bioPrediction: "Microbial life could persist in sheltered subsurface aquifers if water remains." },
+      { id: "PL-NX-DP-081-D", code: "NOCTUA-TWIN-WORLDS-81 d", type: "Outer ringed gas giant", massEarth: 112, radiusEarth: 8.9, periodDays: 1850, semiMajorAu: 3.3, eccentricity: 0.14, equilibriumTemp: 155, epochAngleDeg: 286, orbitColor: "#9b8fc1", composition: [{ label: "Hydrogen / helium", value: 80, color: "#d3c6a4" }, { label: "Ices", value: 15, color: "#87a9c5" }, { label: "Heavy elements", value: 5, color: "#9a826f" }], atmosphere: "Hydrogen, helium and methane", state: "Outer orbit · prominent rings and moons possible", bioScore: 7, bioPrediction: "The giant is inhospitable; large moons may contain subsurface oceans." },
     ],
   },
 ];
@@ -122,6 +170,10 @@ const showcaseSystemTargets = [
   { systemId: "SYS-NX-WD-031", systemDesignation: "NOCTUA-CINDER-31", planetPrefix: "PL-NX-WD-031", planetCount: 2 },
   { systemId: "SYS-NX-RG-044", systemDesignation: "NOCTUA-EMBER-CROWN-44", planetPrefix: "PL-NX-RG-044", planetCount: 3 },
   { systemId: "SYS-NX-TRI-052", systemDesignation: "NOCTUA-TRINITY-52", planetPrefix: "PL-NX-TRI-052", planetCount: 3 },
+  { systemId: "SYS-NX-BG-061", systemDesignation: "NOCTUA-AZURE-CROWN-61", planetPrefix: "PL-NX-BG-061", planetCount: 3 },
+  { systemId: "SYS-NX-PSR-067", systemDesignation: "NOCTUA-BEACON-67", planetPrefix: "PL-NX-PSR-067", planetCount: 3 },
+  { systemId: "SYS-NX-BH-073", systemDesignation: "NOCTUA-UMBRA-73", planetPrefix: "PL-NX-BH-073", planetCount: 2 },
+  { systemId: "SYS-NX-DP-081", systemDesignation: "NOCTUA-TWIN-WORLDS-81", planetPrefix: "PL-NX-DP-081", planetCount: 3 },
 ];
 
 const registryShowcase = showcaseNames.map((desiredName, index) => {
@@ -208,8 +260,12 @@ function publicSystem(system: HydratedSystem) {
   const whiteDwarf = system.id === "SYS-NX-WD-031";
   const redGiant = system.id === "SYS-NX-RG-044";
   const triple = system.id === "SYS-NX-TRI-052";
-  const classification = binary ? "G2V + K1V close binary star pair" : whiteDwarf ? "DA white dwarf stellar remnant" : redGiant ? "K2 III red giant" : triple ? "Three-star figure-eight choreography" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
-  const summary = binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : whiteDwarf ? `A ${system.planets.length}-planet survivor system around a hot, compact white-dwarf remnant.` : redGiant ? `A ${system.planets.length}-planet evolved system shaped by the expansion of a red-giant star.` : triple ? `A ${system.planets.length}-planet circummultiple model around three stars displayed in a schematic figure-eight choreography.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
+  const blueGiant = system.id === "SYS-NX-BG-061";
+  const pulsar = system.id === "SYS-NX-PSR-067";
+  const blackHole = system.id === "SYS-NX-BH-073";
+  const doublePlanet = system.id === "SYS-NX-DP-081";
+  const classification = binary ? "G2V + K1V close binary star pair" : whiteDwarf ? "DA white dwarf stellar remnant" : redGiant ? "K2 III red giant" : triple ? "Three-star figure-eight choreography" : blueGiant ? "B0 Ia blue supergiant with ionised nebula" : pulsar ? "Millisecond pulsar neutron-star system" : blackHole ? "Stellar-mass black hole + K-dwarf binary" : doublePlanet ? "Mutual-orbit double-planet system" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
+  const summary = binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : whiteDwarf ? `A ${system.planets.length}-planet survivor system around a hot, compact white-dwarf remnant.` : redGiant ? `A ${system.planets.length}-planet evolved system shaped by the expansion of a red-giant star.` : triple ? `A ${system.planets.length}-planet circummultiple model around three stars displayed in a schematic figure-eight choreography.` : blueGiant ? `A ${system.planets.length}-planet model around a luminous blue supergiant inside a wind-shaped ionised nebula.` : pulsar ? `A ${system.planets.length}-planet compact system modelled around a rapidly rotating neutron star.` : blackHole ? `A ${system.planets.length}-planet circumbinary model around a stellar-mass black hole and donor star.` : doublePlanet ? `A ${system.planets.length}-planet model featuring two terrestrial worlds in a mutual barycentric orbit.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
   return { ...system, classification, summary, planets: system.planets.map(publicPlanet) };
 }
 

@@ -632,6 +632,9 @@ body { background: #02070b; }
 .explorer-stellar-note { display: inline-block; margin: 9px 0 0 6px; padding: 6px 9px; border: 1px solid rgba(175,200,211,.24); border-radius: 999px; color: #9cb4be; font: 6px ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing: .1em; }
 .explorer-stellar-note.white-dwarf { border-color: rgba(140,199,255,.4); background: rgba(91,157,237,.08); color: #a9d5ff; }
 .explorer-stellar-note.red-giant { border-color: rgba(224,103,55,.4); background: rgba(181,61,31,.09); color: #e79a70; }
+.explorer-stellar-note.blue-giant,.explorer-stellar-note.pulsar { border-color: rgba(104,174,255,.42); background: rgba(69,126,213,.09); color: #a8d6ff; }
+.explorer-stellar-note.black-hole { border-color: rgba(190,112,237,.42); background: rgba(105,47,139,.11); color: #d3a2ef; }
+.explorer-stellar-note.double-planet { border-color: rgba(117,216,192,.4); background: rgba(55,137,117,.09); color: #8bd9c5; }
 
 @media(max-width:900px){
   .public-site .solar-console,
@@ -683,6 +686,12 @@ body { background: #02070b; }
 .triple-star-mark { width: 7px!important; height: 7px!important; margin: 6px; border-radius: 50%; background: #ffd27a; box-shadow: 0 0 7px rgba(255,190,95,.7); }
 .triple-star-mark::before { width: 8px; height: 8px; top: -6px; left: -6px; background: radial-gradient(circle at 35% 30%,#fff,#b9dfff 50%,#547ec6); box-shadow: 0 0 8px rgba(117,193,210,.72); }
 .triple-star-mark::after { width: 6px; height: 6px; right: -7px; bottom: -6px; background: radial-gradient(circle at 35% 30%,#fff2cb,#e4773c 58%,#8f2e1e); }
+.blue-giant-mark::before,.pulsar-mark::before,.black-hole-mark::before,.double-planet-mark::before,.double-planet-mark::after { content:""; position:absolute; border-radius:50%; }
+.blue-giant-mark::before { inset:0; background:radial-gradient(circle,#fff 0 18%,#8bc9ff 42%,#426cc8 68%,transparent 72%); box-shadow:0 0 15px #6aa8ff; }
+.pulsar-mark::before { inset:6px; background:#effcff; box-shadow:0 0 11px #85cfff,-12px 0 5px rgba(117,205,255,.55),12px 0 5px rgba(117,205,255,.55); }
+.black-hole-mark::before { inset:3px; background:#000; border:2px solid #d78755; box-shadow:0 0 9px #a45fd0; }
+.double-planet-mark::before { width:11px;height:11px;left:0;top:2px;background:#58adc2;box-shadow:0 0 8px rgba(88,173,194,.7); }
+.double-planet-mark::after { width:10px;height:10px;right:0;bottom:1px;background:#c38b5d;box-shadow:0 0 7px rgba(195,139,93,.6); }
 .universe-system-point > button b { color: #d9e3e5; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
 .universe-system-point > button small { color: #5d7884; font: 5px ui-monospace,SFMono-Regular,Consolas,monospace; white-space: nowrap; }
 .universe-distance-record { padding: 43px 34px; background: linear-gradient(155deg,rgba(12,31,39,.95),rgba(4,14,20,.98)); }
@@ -691,6 +700,9 @@ body { background: #02070b; }
 .binary-system-badge.triple { border-color: rgba(117,193,210,.4); color: #8fcddd; }
 .binary-system-badge.white-dwarf { border-color: rgba(140,199,255,.45); color: #acd7ff; }
 .binary-system-badge.red-giant { border-color: rgba(224,103,55,.42); color: #e79a70; }
+.binary-system-badge.blue-giant,.binary-system-badge.pulsar { border-color: rgba(104,174,255,.45); color: #a8d6ff; }
+.binary-system-badge.black-hole { border-color: rgba(190,112,237,.45); color: #d3a2ef; }
+.binary-system-badge.double-planet { border-color: rgba(117,216,192,.42); color: #8bd9c5; }
 .universe-distance-record h3 { margin: 0 0 8px; color: #edf0ee; font: 400 34px/1 Iowan Old Style,Baskerville,Georgia,serif; }
 .universe-distance-record > code { color: #a77e4e; font: 7px ui-monospace,SFMono-Regular,Consolas,monospace; }
 .universe-distance-record > div { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; border-top: 1px solid rgba(175,200,211,.12); border-left: 1px solid rgba(175,200,211,.12); }
