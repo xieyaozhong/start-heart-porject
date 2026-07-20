@@ -388,6 +388,9 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       for (let y = cy % grid; y < h; y += grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
       const maxOrbit = Math.min(w * .42, h * .43); const maxAu = Math.max(...system.planets.map((planet) => planet.semiMajorAu), 1);
       const binarySystem = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
+      const whiteDwarfSystem = system.id === "SYS-NX-WD-031" || /white dwarf/i.test(system.classification);
+      const redGiantSystem = system.id === "SYS-NX-RG-044" || /red giant/i.test(system.classification);
+      const tripleSystem = system.id === "SYS-NX-TRI-052" || /three-star|triple-star/i.test(system.classification);
       const habitableInner = 48 + Math.sqrt(Math.min(.8 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
       const habitableOuter = 48 + Math.sqrt(Math.min(1.5 * Math.sqrt(system.luminosity), maxAu) / maxAu) * (maxOrbit - 48);
       ctx.save(); ctx.strokeStyle = "rgba(78,183,142,.06)"; ctx.lineWidth = Math.max(4, (habitableOuter - habitableInner) * .55); ctx.beginPath();
@@ -400,43 +403,56 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
         ctx.lineWidth = planet.id === selectedId ? 1.6 : .8; ctx.beginPath(); ctx.ellipse(cx, cy, orbit, orbit * .56, -.18, 0, Math.PI * 2); ctx.stroke();
       });
       ctx.setLineDash([]);
-      const starRadius = 9 + system.starRadius * 5;
+      const starRadius = whiteDwarfSystem ? 7 : redGiantSystem ? 24 : 9 + Math.min(system.starRadius, 1.8) * 5;
       const starPulse = 1 + Math.sin((reduceMotion ? 0 : time) / 680) * .045;
       const pairAngle = (reduceMotion ? 0 : time) * .00016;
       const primaryOrbitRadius = binarySystem ? starRadius * .84 : 0;
       const companionOrbitRadius = binarySystem ? starRadius * 1.16 : 0;
-      const primaryX = cx - Math.cos(pairAngle) * primaryOrbitRadius;
-      const primaryY = cy - Math.sin(pairAngle) * primaryOrbitRadius * .46;
-      const pairX = cx + Math.cos(pairAngle) * companionOrbitRadius;
-      const pairY = cy + Math.sin(pairAngle) * companionOrbitRadius * .46;
+      const triplePoint = (phaseOffset: number) => { const phase = pairAngle + phaseOffset; return { x: cx + Math.sin(phase) * starRadius * 2.45, y: cy + Math.sin(phase) * Math.cos(phase) * starRadius * 1.45 }; };
+      const triplePrimary = triplePoint(0); const tripleSecondary = triplePoint(Math.PI * 2 / 3); const tripleTertiary = triplePoint(Math.PI * 4 / 3);
+      const primaryX = tripleSystem ? triplePrimary.x : cx - Math.cos(pairAngle) * primaryOrbitRadius;
+      const primaryY = tripleSystem ? triplePrimary.y : cy - Math.sin(pairAngle) * primaryOrbitRadius * .46;
+      const pairX = tripleSystem ? tripleSecondary.x : cx + Math.cos(pairAngle) * companionOrbitRadius;
+      const pairY = tripleSystem ? tripleSecondary.y : cy + Math.sin(pairAngle) * companionOrbitRadius * .46;
       if (binarySystem) {
         ctx.save(); ctx.setLineDash([2,4]); ctx.strokeStyle = "rgba(243,168,77,.22)"; ctx.lineWidth = .7;
         ctx.beginPath(); ctx.ellipse(cx, cy, primaryOrbitRadius, primaryOrbitRadius * .46, 0, 0, Math.PI * 2); ctx.stroke();
         ctx.beginPath(); ctx.ellipse(cx, cy, companionOrbitRadius, companionOrbitRadius * .46, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       }
+      if (tripleSystem) {
+        ctx.save(); ctx.setLineDash([2,4]); ctx.strokeStyle = "rgba(117,193,210,.25)"; ctx.lineWidth = .8; ctx.beginPath();
+        for (let step = 0; step <= 96; step += 1) { const phase = step / 96 * Math.PI * 2; const x = cx + Math.sin(phase) * starRadius * 2.45; const y = cy + Math.sin(phase) * Math.cos(phase) * starRadius * 1.45; if (step === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+        ctx.stroke(); ctx.restore();
+      }
       const corona = ctx.createRadialGradient(primaryX, primaryY, starRadius * .2, primaryX, primaryY, starRadius * 4.2 * starPulse);
-      corona.addColorStop(0, "rgba(255,246,194,1)"); corona.addColorStop(.24, "rgba(255,190,75,.78)"); corona.addColorStop(.6, "rgba(255,117,34,.16)"); corona.addColorStop(1, "rgba(255,102,24,0)");
+      if (whiteDwarfSystem) { corona.addColorStop(0, "rgba(245,252,255,1)"); corona.addColorStop(.2, "rgba(155,210,255,.9)"); corona.addColorStop(.58, "rgba(81,145,255,.22)"); corona.addColorStop(1, "rgba(65,119,255,0)"); }
+      else if (redGiantSystem) { corona.addColorStop(0, "rgba(255,217,166,1)"); corona.addColorStop(.26, "rgba(231,105,44,.82)"); corona.addColorStop(.65, "rgba(180,46,22,.2)"); corona.addColorStop(1, "rgba(130,28,17,0)"); }
+      else { corona.addColorStop(0, "rgba(255,246,194,1)"); corona.addColorStop(.24, "rgba(255,190,75,.78)"); corona.addColorStop(.6, "rgba(255,117,34,.16)"); corona.addColorStop(1, "rgba(255,102,24,0)"); }
       ctx.fillStyle = corona; ctx.beginPath(); ctx.arc(primaryX, primaryY, starRadius * 4.2 * starPulse, 0, Math.PI * 2); ctx.fill();
       ctx.save(); ctx.translate(primaryX, primaryY); ctx.rotate(time * .00005);
       for (let ray = 0; ray < 14; ray += 1) { ctx.rotate(Math.PI / 7); ctx.strokeStyle = "rgba(255,181,74,.11)"; ctx.beginPath(); ctx.moveTo(starRadius * 1.25, 0); ctx.lineTo(starRadius * (1.8 + ray % 3 * .25), 0); ctx.stroke(); }
       ctx.restore();
       const stellarSurface = ctx.createRadialGradient(primaryX - starRadius * .35, primaryY - starRadius * .38, 1, primaryX, primaryY, starRadius);
-      stellarSurface.addColorStop(0, "#fffde3"); stellarSurface.addColorStop(.42, "#ffe18a"); stellarSurface.addColorStop(.78, "#ff9d35"); stellarSurface.addColorStop(1, "#ce4b18");
-      ctx.shadowColor = "#ffd37a"; ctx.shadowBlur = 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(primaryX, primaryY, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      if (whiteDwarfSystem) { stellarSurface.addColorStop(0, "#ffffff"); stellarSurface.addColorStop(.45, "#dff4ff"); stellarSurface.addColorStop(.8, "#8bc5ff"); stellarSurface.addColorStop(1, "#3d6fd8"); }
+      else if (redGiantSystem) { stellarSurface.addColorStop(0, "#ffe2af"); stellarSurface.addColorStop(.38, "#e87a3b"); stellarSurface.addColorStop(.77, "#ad3a22"); stellarSurface.addColorStop(1, "#641d18"); }
+      else { stellarSurface.addColorStop(0, "#fffde3"); stellarSurface.addColorStop(.42, "#ffe18a"); stellarSurface.addColorStop(.78, "#ff9d35"); stellarSurface.addColorStop(1, "#ce4b18"); }
+      ctx.shadowColor = whiteDwarfSystem ? "#9ed4ff" : redGiantSystem ? "#e76536" : "#ffd37a"; ctx.shadowBlur = whiteDwarfSystem ? 34 : redGiantSystem ? 30 : 26; ctx.fillStyle = stellarSurface; ctx.beginPath(); ctx.arc(primaryX, primaryY, starRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
       ctx.fillStyle = "rgba(180,83,34,.26)";
       for (let spot = 0; spot < 5; spot += 1) { const spotAngle = (reduceMotion ? 0 : time) * .00011 + spot * 1.71; ctx.beginPath(); ctx.arc(primaryX + Math.cos(spotAngle) * starRadius * .48, primaryY + Math.sin(spotAngle * .83) * starRadius * .42, .7 + spot % 2, 0, Math.PI * 2); ctx.fill(); }
-      if (binarySystem) {
-        const pairRadius = starRadius * .72;
-        const pairCorona = ctx.createRadialGradient(pairX, pairY, 0, pairX, pairY, pairRadius * 4.4);
-        pairCorona.addColorStop(0, "rgba(255,239,196,1)"); pairCorona.addColorStop(.25, "rgba(255,151,55,.7)"); pairCorona.addColorStop(1, "rgba(255,91,25,0)");
-        ctx.fillStyle = pairCorona; ctx.beginPath(); ctx.arc(pairX, pairY, pairRadius * 4.4, 0, Math.PI * 2); ctx.fill();
-        const pairSurface = ctx.createRadialGradient(pairX - pairRadius * .3, pairY - pairRadius * .3, 1, pairX, pairY, pairRadius);
-        pairSurface.addColorStop(0, "#fff8d7"); pairSurface.addColorStop(.46, "#ffbd61"); pairSurface.addColorStop(1, "#b9441d");
-        ctx.shadowColor = "#ff9f48"; ctx.shadowBlur = 19; ctx.fillStyle = pairSurface; ctx.beginPath(); ctx.arc(pairX, pairY, pairRadius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-      }
+      const drawAdditionalStar = (x: number, y: number, radius: number, cool = false) => {
+        const pairCorona = ctx.createRadialGradient(x, y, 0, x, y, radius * 4.4);
+        pairCorona.addColorStop(0, cool ? "rgba(231,247,255,1)" : "rgba(255,239,196,1)"); pairCorona.addColorStop(.25, cool ? "rgba(111,181,255,.72)" : "rgba(255,151,55,.7)"); pairCorona.addColorStop(1, cool ? "rgba(64,112,255,0)" : "rgba(255,91,25,0)");
+        ctx.fillStyle = pairCorona; ctx.beginPath(); ctx.arc(x, y, radius * 4.4, 0, Math.PI * 2); ctx.fill();
+        const pairSurface = ctx.createRadialGradient(x - radius * .3, y - radius * .3, 1, x, y, radius);
+        pairSurface.addColorStop(0, cool ? "#ffffff" : "#fff8d7"); pairSurface.addColorStop(.46, cool ? "#b7ddff" : "#ffbd61"); pairSurface.addColorStop(1, cool ? "#4879d0" : "#b9441d");
+        ctx.shadowColor = cool ? "#79b8ff" : "#ff9f48"; ctx.shadowBlur = 19; ctx.fillStyle = pairSurface; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      };
+      if (binarySystem || tripleSystem) drawAdditionalStar(pairX, pairY, starRadius * .72, false);
+      if (tripleSystem) drawAdditionalStar(tripleTertiary.x, tripleTertiary.y, starRadius * .62, true);
       ctx.fillStyle = "rgba(237,229,203,.7)"; ctx.font = "7px ui-monospace, monospace"; ctx.textAlign = "center";
-      ctx.fillText(`${system.id} / ${system.designation}${binarySystem ? " / STARS A+B" : " / STAR A"}`, cx, cy - starRadius - 22);
+      ctx.fillText(`${system.id} / ${system.designation}${tripleSystem ? " / STARS A+B+C" : binarySystem ? " / STARS A+B" : whiteDwarfSystem ? " / WHITE DWARF" : redGiantSystem ? " / RED GIANT" : " / STAR A"}`, cx, cy - starRadius - 22);
       if (binarySystem) { ctx.fillStyle = "rgba(243,168,77,.58)"; ctx.font = "6px ui-monospace, monospace"; ctx.fillText("MUTUAL BARYCENTRIC ORBIT / 9.4 DAYS", cx, cy + starRadius + 27); }
+      if (tripleSystem) { ctx.fillStyle = "rgba(117,193,210,.62)"; ctx.font = "6px ui-monospace, monospace"; ctx.fillText("THREE-BODY FIGURE-EIGHT CHOREOGRAPHY / SCHEMATIC", cx, cy + starRadius + 27); }
       ctx.textAlign = "start";
       const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
       system.planets.forEach((planet, index) => {
@@ -506,16 +522,23 @@ function UniverseOverview({ systems, onOpen }: { systems: StarSystem[]; onOpen: 
           const displayAngle = Math.atan2(Math.sin(angle) * .67, Math.cos(angle)) * 180 / Math.PI;
           const lineLength = radial * Math.sqrt(Math.cos(angle) ** 2 + Math.sin(angle) ** 2 * .67 ** 2);
           const binary = item.id === "SYS-NX-BIN-021" || /binary/i.test(item.classification);
+          const triple = item.id === "SYS-NX-TRI-052" || /three-star|triple-star/i.test(item.classification);
+          const whiteDwarf = item.id === "SYS-NX-WD-031" || /white dwarf/i.test(item.classification);
+          const redGiant = item.id === "SYS-NX-RG-044" || /red giant/i.test(item.classification);
+          const stellarMark = triple ? "triple-star-mark" : binary ? "binary-star-mark" : whiteDwarf ? "white-dwarf-mark" : redGiant ? "red-giant-mark" : "single-star-mark";
           const style = { "--map-x": `${x}%`, "--map-y": `${y}%`, "--line-angle": `${displayAngle}deg`, "--line-length": `${lineLength}%` } as React.CSSProperties;
           return <div className={item.id === selected.id ? "universe-system-point active" : "universe-system-point"} style={style} key={item.id}>
             <span className="universe-vector" />
-            <button type="button" onClick={() => setSelectedMapId(item.id)} aria-pressed={item.id === selected.id} aria-label={`Select ${item.id}, ${item.designation}, ${item.distancePc.toFixed(1)} parsecs from the Solar System`}><i className={binary ? "binary-star-mark" : "single-star-mark"} /><b>{item.id}</b><small>{item.designation} · {item.distancePc.toFixed(1)} pc</small></button>
+            <button type="button" onClick={() => setSelectedMapId(item.id)} aria-pressed={item.id === selected.id} aria-label={`Select ${item.id}, ${item.designation}, ${item.distancePc.toFixed(1)} parsecs from the Solar System`}><i className={stellarMark} /><b>{item.id}</b><small>{item.designation} · {item.distancePc.toFixed(1)} pc</small></button>
           </div>;
         })}
       </div>
       <aside className="universe-distance-record">
         <p>SELECTED DISTANCE VECTOR</p>
         {(selected.id === "SYS-NX-BIN-021" || /binary/i.test(selected.classification)) && <span className="binary-system-badge">BINARY STAR PAIR / A+B</span>}
+        {(selected.id === "SYS-NX-TRI-052" || /three-star|triple-star/i.test(selected.classification)) && <span className="binary-system-badge triple">THREE-STAR CHOREOGRAPHY / A+B+C</span>}
+        {(selected.id === "SYS-NX-WD-031" || /white dwarf/i.test(selected.classification)) && <span className="binary-system-badge white-dwarf">WHITE DWARF REMNANT</span>}
+        {(selected.id === "SYS-NX-RG-044" || /red giant/i.test(selected.classification)) && <span className="binary-system-badge red-giant">RED GIANT STAR</span>}
         <h3>{selected.designation}</h3><code>{selected.id} / {selected.designation}</code>
         <div><span><small>FROM THE SUN</small><b>{selected.distancePc.toFixed(1)} pc</b></span><span><small>LIGHT-TRAVEL DISTANCE</small><b>{(selected.distancePc * 3.26156).toFixed(1)} ly</b></span><span><small>RIGHT ASCENSION</small><b>{formatRa(selected.raHours)}</b></span><span><small>DECLINATION</small><b>{formatDec(selected.decDeg)}</b></span></div>
         <p className="universe-record-copy">{selected.classification}. The map is a schematic comparison of model-candidate distances, not a claim of confirmed discovery.</p>

@@ -46,6 +46,29 @@ const initialSystems = [
       { id: "PL-NX-BIN-021-D", code: "NOCTUA-GEMINI-21 d", type: "Cold circumbinary gas giant", massEarth: 146, radiusEarth: 9.6, periodDays: 788, semiMajorAu: 2.05, eccentricity: 0.14, equilibriumTemp: 160, epochAngleDeg: 298, orbitColor: "#a68ec8", composition: [{ label: "Hydrogen / helium", value: 81, color: "#d3c6a4" }, { label: "Ices", value: 14, color: "#87a9c5" }, { label: "Heavy elements", value: 5, color: "#9a826f" }], atmosphere: "Hydrogen, helium and trace methane", state: "Wide circumbinary orbit · large moons possible", bioScore: 7, bioPrediction: "The giant itself is inhospitable; large moons could retain subsurface oceans." },
     ],
   },
+  {
+    system: { id: "SYS-NX-WD-031", designation: "NOCTUA-CINDER-31", displayName: null, classification: "DA white dwarf remnant", raHours: 9.7524, decDeg: -27.3841, distancePc: 22.4, starMass: 0.62, starRadius: 0.013, temperatureK: 11800, luminosity: 0.012, ageByr: 1.3, metallicity: -0.18, status: "published", confidence: 74, summary: "A compact white-dwarf remnant with two surviving close-orbit planetary candidates.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-WD-031-B", code: "NOCTUA-CINDER-31 b", type: "Scorched carbon-rich terrestrial", massEarth: 1.1, radiusEarth: 0.96, periodDays: 2.8, semiMajorAu: 0.025, eccentricity: 0.03, equilibriumTemp: 1250, epochAngleDeg: 68, orbitColor: "#e98258", composition: [{ label: "Carbon-rich rock", value: 46, color: "#5b5554" }, { label: "Iron-nickel core", value: 38, color: "#a8a9a7" }, { label: "Silicates", value: 16, color: "#bd7f5c" }], atmosphere: "Vaporised mineral exosphere candidate", state: "Tidally locked · irradiated by a compact stellar remnant", bioScore: 0, bioPrediction: "Extreme heat and radiation rule out known surface life." },
+      { id: "PL-NX-WD-031-C", code: "NOCTUA-CINDER-31 c", type: "Dense iron-rich remnant planet", massEarth: 2.0, radiusEarth: 1.08, periodDays: 63.4, semiMajorAu: 0.19, eccentricity: 0.11, equilibriumTemp: 330, epochAngleDeg: 214, orbitColor: "#8aa6b8", composition: [{ label: "Iron-nickel core", value: 54, color: "#9da4a7" }, { label: "Silicates", value: 34, color: "#a97d63" }, { label: "Water / ice", value: 12, color: "#70a9c7" }], atmosphere: "Thin carbon-dioxide atmosphere candidate", state: "Evolved post-main-sequence survivor · high bulk density", bioScore: 9, bioPrediction: "Residual heat may persist below ground, but stable liquid water is not expected." },
+    ],
+  },
+  {
+    system: { id: "SYS-NX-RG-044", designation: "NOCTUA-EMBER-CROWN-44", displayName: null, classification: "K2 III red giant", raHours: 17.2861, decDeg: -11.9042, distancePc: 118.5, starMass: 1.45, starRadius: 11.8, temperatureK: 4320, luminosity: 65, ageByr: 3.9, metallicity: 0.11, status: "published", confidence: 76, summary: "An expanded red-giant star with three planetary candidates tracing different stages of stellar evolution.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-RG-044-B", code: "NOCTUA-EMBER-CROWN-44 b", type: "Inflated hot gas giant", massEarth: 220, radiusEarth: 11.6, periodDays: 116, semiMajorAu: 0.68, eccentricity: 0.09, equilibriumTemp: 980, epochAngleDeg: 22, orbitColor: "#d99a64", composition: [{ label: "Hydrogen / helium", value: 86, color: "#d8c29c" }, { label: "Heavy elements", value: 9, color: "#9a826f" }, { label: "Other", value: 5, color: "#6f7880" }], atmosphere: "Expanded hydrogen-helium envelope", state: "Strong stellar heating · atmospheric escape candidate", bioScore: 1, bioPrediction: "The atmosphere is too hot and turbulent for known life." },
+      { id: "PL-NX-RG-044-C", code: "NOCTUA-EMBER-CROWN-44 c", type: "Evaporating rocky core", massEarth: 8.8, radiusEarth: 2.1, periodDays: 520, semiMajorAu: 1.7, eccentricity: 0.16, equilibriumTemp: 510, epochAngleDeg: 154, orbitColor: "#bc654b", composition: [{ label: "Silicates", value: 51, color: "#bd7c58" }, { label: "Iron-nickel core", value: 39, color: "#a6a8a8" }, { label: "Other", value: 10, color: "#687984" }], atmosphere: "Escaping mineral-rich atmosphere candidate", state: "Former envelope stripped during red-giant expansion", bioScore: 1, bioPrediction: "Surface conditions are incompatible with known life." },
+      { id: "PL-NX-RG-044-D", code: "NOCTUA-EMBER-CROWN-44 d", type: "Distant ice giant", massEarth: 23, radiusEarth: 4.1, periodDays: 3470, semiMajorAu: 6.4, eccentricity: 0.21, equilibriumTemp: 180, epochAngleDeg: 287, orbitColor: "#718fbe", composition: [{ label: "Water / ice", value: 52, color: "#7fa9c5" }, { label: "Hydrogen / helium", value: 34, color: "#d1c7b4" }, { label: "Rock", value: 14, color: "#8f715f" }], atmosphere: "Hydrogen, helium and methane candidate", state: "Wide orbit · illuminated by an evolved giant star", bioScore: 5, bioPrediction: "A deep atmosphere is inhospitable, while any large moons remain unconstrained." },
+    ],
+  },
+  {
+    system: { id: "SYS-NX-TRI-052", designation: "NOCTUA-TRINITY-52", displayName: null, classification: "Three-star figure-eight choreography", raHours: 2.6387, decDeg: 31.572, distancePc: 64.9, starMass: 2.1, starRadius: 1.08, temperatureK: 6120, luminosity: 2.5, ageByr: 2.8, metallicity: -0.02, status: "published", confidence: 69, summary: "A speculative hierarchical triple-star model displayed as a shared figure-eight stellar choreography.", epochAt: "2026-07-20T00:00:00.000Z", publishedAt: "2026-07-20T00:00:00.000Z" },
+    planets: [
+      { id: "PL-NX-TRI-052-B", code: "NOCTUA-TRINITY-52 b", type: "Hot circummultiple mini-Neptune", massEarth: 12, radiusEarth: 3.05, periodDays: 58, semiMajorAu: 0.42, eccentricity: 0.07, equilibriumTemp: 630, epochAngleDeg: 91, orbitColor: "#c27b74", composition: [{ label: "Hydrogen / helium", value: 48, color: "#d4c6ae" }, { label: "Water / ice", value: 34, color: "#75a8c6" }, { label: "Rock", value: 18, color: "#9d745e" }], atmosphere: "Hydrogen, helium and water-vapour candidate", state: "Circummultiple orbit · variable three-star irradiation", bioScore: 4, bioPrediction: "The deep hot atmosphere is hostile to known life." },
+      { id: "PL-NX-TRI-052-C", code: "NOCTUA-TRINITY-52 c", type: "Temperate circummultiple terrestrial", massEarth: 1.9, radiusEarth: 1.22, periodDays: 318, semiMajorAu: 1.15, eccentricity: 0.05, equilibriumTemp: 286, epochAngleDeg: 203, orbitColor: "#63b2a8", composition: [{ label: "Silicates", value: 49, color: "#b98766" }, { label: "Water / ice", value: 31, color: "#67abc8" }, { label: "Iron-nickel core", value: 20, color: "#a6a8a8" }], atmosphere: "Candidate nitrogen, water vapour and carbon dioxide", state: "Temperate circummultiple orbit · complex seasonal illumination", bioScore: 44, bioPrediction: "Liquid-water intervals may be possible, although three-star forcing could destabilise the climate." },
+      { id: "PL-NX-TRI-052-D", code: "NOCTUA-TRINITY-52 d", type: "Outer ringed gas giant", massEarth: 95, radiusEarth: 8.2, periodDays: 1420, semiMajorAu: 3.8, eccentricity: 0.18, equilibriumTemp: 160, epochAngleDeg: 324, orbitColor: "#aa91c5", composition: [{ label: "Hydrogen / helium", value: 78, color: "#d3c6a4" }, { label: "Ices", value: 17, color: "#87a9c5" }, { label: "Heavy elements", value: 5, color: "#9a826f" }], atmosphere: "Hydrogen, helium and methane", state: "Wide circummultiple orbit · prominent ring system candidate", bioScore: 6, bioPrediction: "The giant is inhospitable; large moons could retain subsurface oceans." },
+    ],
+  },
 ];
 
 const defaultPackages = [
@@ -96,6 +119,9 @@ const showcaseSystemTargets = [
   { systemId: "SYS-NX-001", systemDesignation: "NOCTUA-X1", planetPrefix: "PL-NX-001", planetCount: 4 },
   { systemId: "SYS-NX-014", systemDesignation: "NOCTUA-K14", planetPrefix: "PL-NX-014", planetCount: 3 },
   { systemId: "SYS-NX-BIN-021", systemDesignation: "NOCTUA-GEMINI-21", planetPrefix: "PL-NX-BIN-021", planetCount: 3 },
+  { systemId: "SYS-NX-WD-031", systemDesignation: "NOCTUA-CINDER-31", planetPrefix: "PL-NX-WD-031", planetCount: 2 },
+  { systemId: "SYS-NX-RG-044", systemDesignation: "NOCTUA-EMBER-CROWN-44", planetPrefix: "PL-NX-RG-044", planetCount: 3 },
+  { systemId: "SYS-NX-TRI-052", systemDesignation: "NOCTUA-TRINITY-52", planetPrefix: "PL-NX-TRI-052", planetCount: 3 },
 ];
 
 const registryShowcase = showcaseNames.map((desiredName, index) => {
@@ -179,8 +205,11 @@ function publicPlanet(planet: HydratedPlanet) {
 
 function publicSystem(system: HydratedSystem) {
   const binary = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
-  const classification = binary ? "G2V + K1V close binary star pair" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
-  const summary = binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
+  const whiteDwarf = system.id === "SYS-NX-WD-031";
+  const redGiant = system.id === "SYS-NX-RG-044";
+  const triple = system.id === "SYS-NX-TRI-052";
+  const classification = binary ? "G2V + K1V close binary star pair" : whiteDwarf ? "DA white dwarf stellar remnant" : redGiant ? "K2 III red giant" : triple ? "Three-star figure-eight choreography" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
+  const summary = binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : whiteDwarf ? `A ${system.planets.length}-planet survivor system around a hot, compact white-dwarf remnant.` : redGiant ? `A ${system.planets.length}-planet evolved system shaped by the expansion of a red-giant star.` : triple ? `A ${system.planets.length}-planet circummultiple model around three stars displayed in a schematic figure-eight choreography.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
   return { ...system, classification, summary, planets: system.planets.map(publicPlanet) };
 }
 

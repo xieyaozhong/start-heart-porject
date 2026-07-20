@@ -188,6 +188,31 @@ test("adds a binary-star candidate, complete orbital labels, and a Sun-centred d
   assert.match(experience, /\.binary-star-mark/);
 });
 
+test("adds white-dwarf, red-giant, and three-body stellar architectures", async () => {
+  const [page, universe, explorer, experience] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/CelestialExplorer3D.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/experience.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(universe, /SYS-NX-WD-031/);
+  assert.match(universe, /DA white dwarf remnant/);
+  assert.match(universe, /SYS-NX-RG-044/);
+  assert.match(universe, /K2 III red giant/);
+  assert.match(universe, /SYS-NX-TRI-052/);
+  assert.match(universe, /Three-star figure-eight choreography/);
+  assert.match(page, /whiteDwarfSystem/);
+  assert.match(page, /redGiantSystem/);
+  assert.match(page, /triplePoint/);
+  assert.match(page, /THREE-BODY FIGURE-EIGHT CHOREOGRAPHY/);
+  assert.match(explorer, /createFigureEightOrbitPath/);
+  assert.match(explorer, /tertiaryStarGroup/);
+  assert.match(explorer, /placeOnFigureEight/);
+  assert.match(experience, /\.white-dwarf-mark/);
+  assert.match(experience, /\.red-giant-mark/);
+  assert.match(experience, /\.triple-star-mark/);
+});
+
 test("ships the immersive WebGL celestial explorer", async () => {
   const [page, explorer, css, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

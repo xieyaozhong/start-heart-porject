@@ -192,6 +192,18 @@ function createBinaryOrbitPath(scene: THREE.Scene, radius: number, lowPower: boo
   scene.add(path);
 }
 
+function createFigureEightOrbitPath(scene: THREE.Scene, radius: number, lowPower: boolean) {
+  const segments = lowPower ? 72 : 120;
+  const path = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(Array.from({ length: segments }, (_, index) => {
+      const phase = index / segments * Math.PI * 2;
+      return new THREE.Vector3(Math.sin(phase) * radius, 0, Math.sin(phase) * Math.cos(phase) * radius * .58);
+    })),
+    new THREE.LineBasicMaterial({ color: 0x78bfd2, transparent: true, opacity: .34 }),
+  );
+  scene.add(path);
+}
+
 export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabel, registryCode, onClose }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef(1);
@@ -207,6 +219,9 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
 
   const selected = useMemo(() => system.planets.find((planet) => planet.id === selectedId) ?? system.planets[0], [selectedId, system]);
   const isBinarySystem = system.id === "SYS-NX-BIN-021" || /binary/i.test(system.classification);
+  const isWhiteDwarfSystem = system.id === "SYS-NX-WD-031" || /white dwarf/i.test(system.classification);
+  const isRedGiantSystem = system.id === "SYS-NX-RG-044" || /red giant/i.test(system.classification);
+  const isTripleSystem = system.id === "SYS-NX-TRI-052" || /three-star|triple-star/i.test(system.classification);
   useEffect(() => { speedRef.current = speed; }, [speed]);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
   useEffect(() => {
@@ -239,6 +254,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
     const lowPower = compact || navigator.hardwareConcurrency <= 4 || memory <= 4;
     const binarySystem = isBinarySystem;
+    const tripleSystem = isTripleSystem;
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: !lowPower, alpha: true, powerPreference: "high-performance" });
@@ -277,6 +293,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     let featured: THREE.Mesh | undefined;
     let starGroup: THREE.Group | undefined;
     let companionStarGroup: THREE.Group | undefined;
+    let tertiaryStarGroup: THREE.Group | undefined;
 
     if (view === "planet") {
       camera.position.set(0, 0.12, compact ? 6.4 : 5.15);
@@ -318,11 +335,16 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.minDistance = 5;
       controls.maxDistance = 28;
       controls.maxPolarAngle = Math.PI * 0.76;
-      starGroup = createStar(scene, system.temperatureK);
+      starGroup = createStar(scene, system.temperatureK, false, isWhiteDwarfSystem ? .44 : isRedGiantSystem ? 1.7 : 1);
       if (binarySystem) {
         companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), false, .76);
         createBinaryOrbitPath(scene, .42, lowPower);
         createBinaryOrbitPath(scene, .62, lowPower);
+      }
+      if (tripleSystem) {
+        companionStarGroup = createStar(scene, Math.max(4100, system.temperatureK - 900), false, .82);
+        tertiaryStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1550), false, .64);
+        createFigureEightOrbitPath(scene, 1.18, lowPower);
       }
       if (showHabitable) {
         const innerAu = Math.sqrt(Math.max(system.luminosity, 0.05) / 1.1);
@@ -366,11 +388,16 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       camera.position.set(0, 0.1, compact ? 7.2 : 6.1);
       controls.minDistance = 3.8;
       controls.maxDistance = 13;
-      starGroup = createStar(scene, system.temperatureK, true);
+      starGroup = createStar(scene, system.temperatureK, true, isWhiteDwarfSystem ? .62 : isRedGiantSystem ? 1.28 : 1);
       if (binarySystem) {
         companionStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1250), true, .76);
         createBinaryOrbitPath(scene, 1.32, lowPower);
         createBinaryOrbitPath(scene, 1.92, lowPower);
+      }
+      if (tripleSystem) {
+        companionStarGroup = createStar(scene, Math.max(4100, system.temperatureK - 900), true, .78);
+        tertiaryStarGroup = createStar(scene, Math.max(3900, system.temperatureK - 1550), true, .58);
+        createFigureEightOrbitPath(scene, 3.05, lowPower);
       }
       const corona = new THREE.Mesh(
           new THREE.TorusGeometry(2.15, 0.018, 8, lowPower ? 72 : 112),
@@ -415,7 +442,15 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       if (featured) featured.rotation.y += delta * 0.075 * Math.max(speedRef.current, 0.4);
       if (starGroup) starGroup.rotation.y += delta * 0.035;
       if (companionStarGroup) companionStarGroup.rotation.y -= delta * 0.028;
-      if (starGroup && companionStarGroup) {
+      if (tripleSystem && starGroup && companionStarGroup && tertiaryStarGroup) {
+        const choreographyPhase = simulationDays / 18.6 * Math.PI * 2;
+        const choreographyRadius = view === "star" ? 3.05 : 1.18;
+        const placeOnFigureEight = (group: THREE.Group, phaseOffset: number) => { const phase = choreographyPhase + phaseOffset; group.position.set(Math.sin(phase) * choreographyRadius, 0, Math.sin(phase) * Math.cos(phase) * choreographyRadius * .58); };
+        placeOnFigureEight(starGroup, 0);
+        placeOnFigureEight(companionStarGroup, Math.PI * 2 / 3);
+        placeOnFigureEight(tertiaryStarGroup, Math.PI * 4 / 3);
+        tertiaryStarGroup.rotation.y += delta * .023;
+      } else if (starGroup && companionStarGroup) {
         const pairAngle = simulationDays / 9.4 * Math.PI * 2;
         const primarySeparation = view === "star" ? 1.32 : .42;
         const companionSeparation = view === "star" ? 1.92 : .62;
@@ -479,6 +514,9 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         <div className="explorer-subtitle"><span>{view === "planet" ? selected.type : system.classification}</span><i /> <span>{system.distancePc.toFixed(1)} pc</span></div>
         <code className="explorer-model-code">{view === "planet" ? `${system.id} / ${system.designation} / ${selected.id} / ${selected.code}` : `${system.id} / ${system.designation}`}</code>
         {isBinarySystem && view !== "planet" && <span className="explorer-binary-note">MUTUAL BARYCENTRIC ORBIT · 9.4-DAY STELLAR PERIOD</span>}
+        {isTripleSystem && view !== "planet" && <span className="explorer-binary-note triple">THREE-BODY FIGURE-EIGHT CHOREOGRAPHY · SCHEMATIC MODEL</span>}
+        {isWhiteDwarfSystem && view !== "planet" && <span className="explorer-stellar-note white-dwarf">WHITE DWARF · HOT COMPACT STELLAR REMNANT</span>}
+        {isRedGiantSystem && view !== "planet" && <span className="explorer-stellar-note red-giant">RED GIANT · EXPANDED EVOLVED STAR</span>}
         {view === "planet" ? <>
           <div className="explorer-metrics"><div><small>MASS</small><b>{selected.massEarth.toFixed(2)} M⊕</b></div><div><small>RADIUS</small><b>{selected.radiusEarth.toFixed(2)} R⊕</b></div><div><small>TEMPERATURE</small><b>{selected.equilibriumTemp} K</b></div><div><small>ASTROBIOLOGY</small><b>{selected.bioScore}%</b></div></div>
           <p className="explorer-description">{selected.atmosphere} · {selected.state}. {selected.bioPrediction}</p>
