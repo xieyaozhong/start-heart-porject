@@ -239,7 +239,13 @@ test("derives candidate coordinates and adds four exotic stellar models", async 
   assert.match(explorer, /createNebulaShell/);
   assert.match(explorer, /createPulsarFeatures/);
   assert.match(explorer, /createBlackHoleModel/);
+  assert.match(explorer, /createOrbitalDust/);
+  assert.match(explorer, /accretionDisc/);
+  assert.match(explorer, /mutualOrbitGroup/);
+  assert.match(explorer, /doublePlanetBridge/);
   assert.match(explorer, /isDoublePlanetSystem/);
+  assert.match(page, /doublePlanetPairPositions/);
+  assert.match(page, /globalCompositeOperation = "screen"/);
   assert.match(experience, /\.blue-giant-mark/);
   assert.match(experience, /\.pulsar-mark/);
   assert.match(experience, /\.black-hole-mark/);
@@ -268,6 +274,7 @@ test("ships the immersive WebGL celestial explorer", async () => {
   assert.match(page, /IntersectionObserver/);
   assert.match(page, /devicePixelRatio \|\| 1, 1\.35/);
   assert.match(css, /\.celestial-explorer/);
+  assert.match(css, /explorerNebulaDrift/);
   assert.match(packageJson, /"three"/);
 });
 

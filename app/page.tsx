@@ -456,9 +456,56 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       };
       if (binaryMotionSystem || tripleSystem) drawAdditionalStar(pairX, pairY, starRadius * .72, false);
       if (tripleSystem) drawAdditionalStar(tripleTertiary.x, tripleTertiary.y, starRadius * .62, true);
-      if (blueGiantSystem) { ctx.save(); ctx.strokeStyle = "rgba(104,167,255,.18)"; ctx.lineWidth = 5; for (let shell = 0; shell < 3; shell += 1) { ctx.beginPath(); ctx.ellipse(cx, cy, starRadius * (2.2 + shell * .65), starRadius * (1.05 + shell * .3), -.28 + shell * .3, 0, Math.PI * 2); ctx.stroke(); } ctx.restore(); }
-      if (pulsarSystem) { const beamAngle = (reduceMotion ? 0 : time) * .0024; ctx.save(); ctx.translate(primaryX, primaryY); ctx.rotate(beamAngle); const beam = ctx.createLinearGradient(-starRadius * 9,0,starRadius * 9,0); beam.addColorStop(0,"transparent"); beam.addColorStop(.45,"rgba(126,205,255,.62)"); beam.addColorStop(.5,"#ecfbff"); beam.addColorStop(.55,"rgba(126,205,255,.62)"); beam.addColorStop(1,"transparent"); ctx.strokeStyle = beam; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-starRadius * 9,0); ctx.lineTo(starRadius * 9,0); ctx.stroke(); ctx.strokeStyle = "rgba(137,205,255,.35)"; ctx.beginPath(); ctx.ellipse(0,0,starRadius * 3.4,starRadius * 1.1,0,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
-      if (blackHoleSystem) { ctx.save(); ctx.translate(primaryX,primaryY); ctx.rotate(-.24); ctx.strokeStyle = "rgba(255,155,78,.72)"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(0,0,starRadius * 2.5,starRadius * .62,0,0,Math.PI*2); ctx.stroke(); ctx.strokeStyle = "rgba(185,104,233,.42)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0,0,starRadius * 1.85,starRadius * .4,0,0,Math.PI*2); ctx.stroke(); ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(0,0,starRadius*.84,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+      if (blueGiantSystem) {
+        ctx.save(); ctx.globalCompositeOperation = "screen"; ctx.translate(cx, cy);
+        for (let shell = 0; shell < 4; shell += 1) {
+          ctx.save(); ctx.rotate(-.28 + shell * .28 + (reduceMotion ? 0 : time) * (.000012 + shell * .000003));
+          ctx.setLineDash([3 + shell, 8 + shell * 2]); ctx.lineDashOffset = reduceMotion ? 0 : -time * .008 * (shell % 2 ? -1 : 1);
+          ctx.strokeStyle = ["rgba(104,167,255,.34)", "rgba(152,99,226,.24)", "rgba(79,205,214,.22)", "rgba(183,221,255,.15)"][shell];
+          ctx.lineWidth = 7 - shell; ctx.beginPath(); ctx.ellipse(0, 0, starRadius * (2.25 + shell * .62), starRadius * (1.02 + shell * .31), 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+        }
+        for (let knot = 0; knot < 26; knot += 1) {
+          const phase = knot * 2.39996 + (reduceMotion ? 0 : time) * .000035;
+          const radial = starRadius * (2.1 + (knot % 7) * .34);
+          const x = Math.cos(phase) * radial; const y = Math.sin(phase) * radial * .44;
+          ctx.fillStyle = knot % 3 === 0 ? "rgba(154,111,238,.48)" : "rgba(103,195,255,.44)";
+          ctx.shadowColor = knot % 3 === 0 ? "#925fe3" : "#69c8ff"; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(x, y, .7 + knot % 3 * .4, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore(); ctx.shadowBlur = 0;
+      }
+      if (pulsarSystem) {
+        const beamAngle = (reduceMotion ? 0 : time) * .0024;
+        ctx.save(); ctx.translate(primaryX, primaryY); ctx.rotate(beamAngle); ctx.globalCompositeOperation = "screen";
+        const beam = ctx.createLinearGradient(-starRadius * 12, 0, starRadius * 12, 0);
+        beam.addColorStop(0, "transparent"); beam.addColorStop(.34, "rgba(76,151,255,.08)"); beam.addColorStop(.48, "rgba(126,205,255,.76)"); beam.addColorStop(.5, "#ffffff"); beam.addColorStop(.52, "rgba(126,205,255,.76)"); beam.addColorStop(.66, "rgba(76,151,255,.08)"); beam.addColorStop(1, "transparent");
+        [10, 4, 1.3].forEach((width, index) => { ctx.strokeStyle = beam; ctx.globalAlpha = .18 + index * .28; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(-starRadius * 12, 0); ctx.lineTo(starRadius * 12, 0); ctx.stroke(); });
+        ctx.globalAlpha = 1;
+        for (let particle = 0; particle < 16; particle += 1) {
+          const distance = (((reduceMotion ? 0 : time) * .045 + particle * starRadius * 1.7) % (starRadius * 20)) - starRadius * 10;
+          ctx.fillStyle = "rgba(219,247,255,.75)"; ctx.beginPath(); ctx.arc(distance, Math.sin(particle * 2.1) * 2.4, .45 + particle % 3 * .2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.strokeStyle = "rgba(137,205,255,.4)"; ctx.lineWidth = 1;
+        [1, 1.7, 2.45].forEach((scale, index) => { ctx.beginPath(); ctx.ellipse(0, 0, starRadius * 3.4 * scale, starRadius * 1.1 * scale, index * .36, 0, Math.PI * 2); ctx.stroke(); });
+        ctx.restore();
+      }
+      if (blackHoleSystem) {
+        ctx.save(); ctx.translate(primaryX, primaryY); ctx.rotate(-.24); ctx.globalCompositeOperation = "screen";
+        const discColors = ["rgba(255,223,153,.86)", "rgba(255,155,78,.76)", "rgba(226,76,91,.58)", "rgba(185,104,233,.42)"];
+        discColors.forEach((color, index) => {
+          ctx.setLineDash([4 + index * 2, 3 + index]); ctx.lineDashOffset = reduceMotion ? 0 : -time * (.012 + index * .006);
+          ctx.strokeStyle = color; ctx.lineWidth = 4.8 - index * .85; ctx.beginPath(); ctx.ellipse(0, 0, starRadius * (1.6 + index * .34), starRadius * (.31 + index * .1), 0, 0, Math.PI * 2); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+        for (let particle = 0; particle < 30; particle += 1) {
+          const phase = particle * 2.39996 + (reduceMotion ? 0 : time) * (.00042 + (particle % 4) * .00008);
+          const radial = starRadius * (1.55 + (particle % 9) * .15);
+          ctx.fillStyle = particle % 4 === 0 ? "#f3b0ff" : particle % 3 === 0 ? "#fff0b6" : "#ff8f52";
+          ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 7; ctx.beginPath(); ctx.arc(Math.cos(phase) * radial, Math.sin(phase) * radial * .24, .45 + particle % 3 * .22, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(211,151,255,.68)"; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.arc(0, 0, starRadius * 1.13, -.95, .95); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, starRadius * 1.13, Math.PI - .95, Math.PI + .95); ctx.stroke();
+        ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(0, 0, starRadius * .86, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
       ctx.fillStyle = "rgba(237,229,203,.7)"; ctx.font = "7px ui-monospace, monospace"; ctx.textAlign = "center";
       ctx.fillText(`${system.id} / ${system.designation}${tripleSystem ? " / STARS A+B+C" : blackHoleSystem ? " / BLACK HOLE + DONOR STAR" : binarySystem ? " / STARS A+B" : pulsarSystem ? " / PULSAR" : blueGiantSystem ? " / BLUE SUPERGIANT" : whiteDwarfSystem ? " / WHITE DWARF" : redGiantSystem ? " / RED GIANT" : doublePlanetSystem ? " / DOUBLE-PLANET HOST" : " / STAR A"}`, cx, cy - starRadius - 22);
       if (binarySystem) { ctx.fillStyle = "rgba(243,168,77,.58)"; ctx.font = "6px ui-monospace, monospace"; ctx.fillText("MUTUAL BARYCENTRIC ORBIT / 9.4 DAYS", cx, cy + starRadius + 27); }
@@ -466,6 +513,7 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
       if (doublePlanetSystem) { ctx.fillStyle = "rgba(117,216,192,.62)"; ctx.font = "6px ui-monospace, monospace"; ctx.fillText("TWIN WORLDS / SHARED PLANETARY BARYCENTRE", cx, cy + starRadius + 27); }
       ctx.textAlign = "start";
       const elapsedDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
+      const doublePlanetPairPositions: { x: number; y: number }[] = [];
       system.planets.forEach((planet, index) => {
         const orbit = 48 + Math.sqrt(planet.semiMajorAu / maxAu) * (maxOrbit - 48);
         const degrees = mode === "live" ? planet.epochAngleDeg + elapsedDays / planet.periodDays * 360 : planet.epochAngleDeg + simulationDaysRef.current / planet.periodDays * 360;
@@ -483,6 +531,13 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
           x = baryX + Math.cos(mutualAngle) * 13;
           y = baryY + Math.sin(mutualAngle) * 6;
           if (index === 0) { ctx.save(); ctx.setLineDash([2,3]); ctx.strokeStyle = "rgba(117,216,192,.48)"; ctx.lineWidth = .8; ctx.beginPath(); ctx.ellipse(baryX,baryY,13,6,0,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
+          doublePlanetPairPositions.push({ x, y });
+          if (doublePlanetPairPositions.length === 2) {
+            const [first, second] = doublePlanetPairPositions;
+            const bridge = ctx.createLinearGradient(first.x, first.y, second.x, second.y);
+            bridge.addColorStop(0, "rgba(77,189,207,.12)"); bridge.addColorStop(.5, "rgba(207,255,242,.78)"); bridge.addColorStop(1, "rgba(218,151,87,.12)");
+            ctx.save(); ctx.globalCompositeOperation = "screen"; ctx.strokeStyle = bridge; ctx.lineWidth = 1.4; ctx.shadowColor = "#9af5df"; ctx.shadowBlur = 9; ctx.beginPath(); ctx.moveTo(first.x, first.y); ctx.lineTo(second.x, second.y); ctx.stroke(); ctx.restore();
+          }
         }
         const radius = Math.max(4, Math.min(10, 3 + Math.log2(planet.radiusEarth + 1) * 2));
         const gaseousPlanet = /gas|giant|neptune|jovian/i.test(planet.type);
@@ -501,6 +556,11 @@ function OrbitCanvas({ system, selectedId, onSelect, mode, ownerLabel, speed = 1
         if (moltenPlanet && !gaseousPlanet) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip(); ctx.strokeStyle = "rgba(255,140,52,.88)"; ctx.lineWidth = .7; for (let crack = 0; crack < 3; crack += 1) { ctx.beginPath(); ctx.moveTo(x - radius, y - radius * .45 + crack * radius * .42); ctx.lineTo(x - radius * .2, y + radius * (.1 + crack * .11)); ctx.lineTo(x + radius, y - radius * (.28 - crack * .18)); ctx.stroke(); } ctx.restore(); }
         if (planet.radiusEarth > 4) { const moonAngle = (reduceMotion ? 0 : time) * .0012 + index; ctx.fillStyle = "#c9d4d5"; ctx.beginPath(); ctx.arc(x + Math.cos(moonAngle) * (radius + 5), y + Math.sin(moonAngle) * (radius + 5), 1.1, 0, Math.PI * 2); ctx.fill(); }
         if (planet.id === selectedId) { ctx.strokeStyle = "rgba(255,255,255,.76)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, radius + 7 + Math.sin((reduceMotion ? 0 : time) / 250) * 2, 0, Math.PI * 2); ctx.stroke(); }
+        if (doublePlanetSystem && index < 2) {
+          ctx.save(); ctx.globalCompositeOperation = "screen"; ctx.strokeStyle = index === 0 ? "rgba(86,211,230,.36)" : "rgba(235,174,106,.32)"; ctx.lineWidth = 2;
+          for (let wake = 1; wake <= 3; wake += 1) { ctx.globalAlpha = .38 / wake; ctx.beginPath(); ctx.arc(x, y, radius + 4 + wake * 3 + Math.sin((reduceMotion ? 0 : time) * .002 + wake) * 1.5, 0, Math.PI * 2); ctx.stroke(); }
+          ctx.restore();
+        }
         const completePlanetLabel = ownerLabel && index === 0 ? `${ownerLabel} / ${planet.id} / ${planet.code}` : `${planet.id} / ${planet.code}`;
         ctx.fillStyle = planet.id === selectedId ? "#eef6f7" : "rgba(181,204,216,.58)"; ctx.font = `${planet.id === selectedId ? "600" : "400"} ${planet.id === selectedId ? 8 : 7}px ui-monospace, monospace`; ctx.fillText(completePlanetLabel, x + radius + 6, y - radius - 3);
       });

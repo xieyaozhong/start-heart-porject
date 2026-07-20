@@ -204,33 +204,112 @@ function createFigureEightOrbitPath(scene: THREE.Scene, radius: number, lowPower
   scene.add(path);
 }
 
-function createNebulaShell(scene: THREE.Scene, large: boolean) {
+function createOrbitalDust(scene: THREE.Scene, radius: number, color: number, lowPower: boolean) {
+  const count = lowPower ? 90 : 220;
+  const positions = new Float32Array(count * 3);
+  for (let index = 0; index < count; index += 1) {
+    const phase = index / count * Math.PI * 2;
+    const spread = ((index * 37) % 19) / 19 - .5;
+    const particleRadius = radius * (1 + spread * .42);
+    positions[index * 3] = Math.cos(phase) * particleRadius;
+    positions[index * 3 + 1] = Math.sin(index * 2.17) * radius * .045;
+    positions[index * 3 + 2] = Math.sin(phase) * particleRadius * .48;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  const dust = new THREE.Points(geometry, new THREE.PointsMaterial({ color, size: lowPower ? .028 : .038, transparent: true, opacity: .48, depthWrite: false, blending: THREE.AdditiveBlending }));
+  scene.add(dust);
+  return dust;
+}
+
+function createNebulaShell(scene: THREE.Scene, large: boolean, lowPower: boolean) {
   const group = new THREE.Group();
   const radius = large ? 3.2 : 1.12;
-  [0x5d8cff,0x8d5fd3,0x4fc8d5].forEach((color,index) => {
-    const shell = new THREE.Mesh(new THREE.TorusGeometry(radius * (1 + index * .22), .035 + index * .012, 8, 96), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .18 - index * .03, blending: THREE.AdditiveBlending }));
+  [0x5d8cff, 0x8d5fd3, 0x4fc8d5, 0x9bd7ff].forEach((color,index) => {
+    const shell = new THREE.Mesh(new THREE.TorusGeometry(radius * (1 + index * .2), .035 + index * .01, 8, lowPower ? 64 : 112), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .19 - index * .028, depthWrite: false, blending: THREE.AdditiveBlending }));
     shell.rotation.set(.55 + index * .35,.25 + index * .5,index * .7); group.add(shell);
   });
+  const particleCount = lowPower ? 140 : 360;
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  const palette = [new THREE.Color(0x6f9dff), new THREE.Color(0xa270e5), new THREE.Color(0x5dd4dc)];
+  for (let index = 0; index < particleCount; index += 1) {
+    const longitude = index * 2.3999632297;
+    const vertical = 1 - 2 * ((index + .5) / particleCount);
+    const radial = radius * (1.25 + ((index * 29) % 31) / 34);
+    const horizontal = Math.sqrt(Math.max(0, 1 - vertical * vertical));
+    positions[index * 3] = Math.cos(longitude) * horizontal * radial;
+    positions[index * 3 + 1] = vertical * radial * .42;
+    positions[index * 3 + 2] = Math.sin(longitude) * horizontal * radial;
+    const tint = palette[index % palette.length];
+    colors[index * 3] = tint.r; colors[index * 3 + 1] = tint.g; colors[index * 3 + 2] = tint.b;
+  }
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  group.add(new THREE.Points(particleGeometry, new THREE.PointsMaterial({ size: large ? .055 : .026, vertexColors: true, transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending })));
   scene.add(group); return group;
 }
 
-function createPulsarFeatures(scene: THREE.Scene, large: boolean) {
+function createPulsarFeatures(scene: THREE.Scene, large: boolean, lowPower: boolean) {
   const group = new THREE.Group();
   const length = large ? 8 : 3.2;
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.015,.2,length,20,1,true), new THREE.MeshBasicMaterial({ color: 0x9edcff, transparent: true, opacity: .34, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-  beam.rotation.z = Math.PI / 2; group.add(beam);
-  const field = new THREE.Mesh(new THREE.TorusGeometry(large ? 2.3 : .82,.018,8,96),new THREE.MeshBasicMaterial({ color:0x73bfff,transparent:true,opacity:.38,blending:THREE.AdditiveBlending }));
-  field.rotation.x = 1.12; group.add(field); scene.add(group); return group;
+  const beamMaterial = new THREE.MeshBasicMaterial({ color: 0xaee5ff, transparent: true, opacity: .3, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const forwardBeam = new THREE.Mesh(new THREE.CylinderGeometry(.012, .22, length, lowPower ? 12 : 20, 1, true), beamMaterial);
+  forwardBeam.position.y = length / 2; group.add(forwardBeam);
+  const reverseBeam = forwardBeam.clone(); reverseBeam.position.y = -length / 2; reverseBeam.rotation.z = Math.PI; group.add(reverseBeam);
+  [0, 1].forEach((index) => {
+    const field = new THREE.Mesh(new THREE.TorusGeometry((large ? 2.3 : .82) * (1 + index * .38), .018, 8, lowPower ? 64 : 96), new THREE.MeshBasicMaterial({ color: index ? 0x967cff : 0x73bfff, transparent: true, opacity: .38 - index * .12, depthWrite: false, blending: THREE.AdditiveBlending }));
+    field.rotation.set(1.12 + index * .34, index * .55, index * .28); group.add(field);
+  });
+  const sparkCount = lowPower ? 42 : 92;
+  const sparkPositions = new Float32Array(sparkCount * 3);
+  for (let index = 0; index < sparkCount; index += 1) {
+    const phase = index / sparkCount * Math.PI * 8;
+    const y = (index / (sparkCount - 1) - .5) * length * 1.8;
+    const radius = (large ? .2 : .07) * (1 + Math.abs(y) / length);
+    sparkPositions[index * 3] = Math.cos(phase) * radius;
+    sparkPositions[index * 3 + 1] = y;
+    sparkPositions[index * 3 + 2] = Math.sin(phase) * radius;
+  }
+  const sparkGeometry = new THREE.BufferGeometry(); sparkGeometry.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
+  group.add(new THREE.Points(sparkGeometry, new THREE.PointsMaterial({ color: 0xd9f5ff, size: large ? .055 : .025, transparent: true, opacity: .78, depthWrite: false, blending: THREE.AdditiveBlending })));
+  group.rotation.z = .72;
+  scene.add(group); return group;
 }
 
-function createBlackHoleModel(scene: THREE.Scene, large: boolean) {
+function createBlackHoleModel(scene: THREE.Scene, large: boolean, lowPower: boolean) {
   const group = new THREE.Group();
   const radius = large ? 1.28 : .34;
   group.add(new THREE.Mesh(new THREE.SphereGeometry(radius,40,40),new THREE.MeshBasicMaterial({ color:0x000000 })));
-  const disc = new THREE.Mesh(new THREE.RingGeometry(radius * 1.35,radius * 3.1,128),new THREE.MeshBasicMaterial({ color:0xff8a43,side:THREE.DoubleSide,transparent:true,opacity:.68,blending:THREE.AdditiveBlending }));
-  disc.rotation.x = 1.28; group.add(disc);
-  const lens = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.1,.025,12,96),new THREE.MeshBasicMaterial({ color:0xc57dff,transparent:true,opacity:.64,blending:THREE.AdditiveBlending }));
+  const discGroup = new THREE.Group();
+  const discColors = [0xffd080, 0xff8a43, 0xe4525a, 0x8740b6];
+  discColors.forEach((color, index) => {
+    const inner = radius * (1.32 + index * .48);
+    const disc = new THREE.Mesh(new THREE.RingGeometry(inner, inner + radius * (.58 - index * .07), lowPower ? 64 : 128), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: .62 - index * .1, depthWrite: false, blending: THREE.AdditiveBlending }));
+    disc.userData.baseOpacity = .62 - index * .1; discGroup.add(disc);
+  });
+  const particleCount = lowPower ? 80 : 190;
+  const particlePositions = new Float32Array(particleCount * 3);
+  for (let index = 0; index < particleCount; index += 1) {
+    const phase = index / particleCount * Math.PI * 2;
+    const particleRadius = radius * (1.42 + ((index * 17) % 53) / 25);
+    particlePositions[index * 3] = Math.cos(phase) * particleRadius;
+    particlePositions[index * 3 + 1] = Math.sin(index * 1.73) * radius * .035;
+    particlePositions[index * 3 + 2] = Math.sin(phase) * particleRadius;
+  }
+  const particleGeometry = new THREE.BufferGeometry(); particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
+  discGroup.add(new THREE.Points(particleGeometry, new THREE.PointsMaterial({ color: 0xffc36c, size: large ? .055 : .022, transparent: true, opacity: .82, depthWrite: false, blending: THREE.AdditiveBlending })));
+  discGroup.rotation.x = 1.28; group.add(discGroup);
+  const lens = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.12,.032,12,lowPower ? 64 : 112),new THREE.MeshBasicMaterial({ color:0xd293ff,transparent:true,opacity:.72,depthWrite:false,blending:THREE.AdditiveBlending }));
   lens.rotation.x = .72; group.add(lens);
+  const jets = new THREE.Group();
+  [-1, 1].forEach((direction) => {
+    const jet = new THREE.Mesh(new THREE.ConeGeometry(radius * .18, radius * 4.8, lowPower ? 12 : 20, 1, true), new THREE.MeshBasicMaterial({ color: 0x9d76ff, transparent: true, opacity: .12, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+    jet.position.y = direction * radius * 2.55; if (direction < 0) jet.rotation.z = Math.PI; jets.add(jet);
+  });
+  jets.rotation.z = -.22; group.add(jets);
+  group.userData.accretionDisc = discGroup; group.userData.lens = lens; group.userData.jets = jets;
   group.add(new THREE.PointLight(0xb469ff,large ? 38 : 20,large ? 28 : 14,1.4)); scene.add(group); return group;
 }
 
@@ -330,6 +409,10 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
     let tertiaryStarGroup: THREE.Group | undefined;
     let nebulaGroup: THREE.Group | undefined;
     let pulsarFeatureGroup: THREE.Group | undefined;
+    let orbitalDust: THREE.Points | undefined;
+    let mutualOrbitGroup: THREE.Group | undefined;
+    let doublePlanetBridge: THREE.Line | undefined;
+    let featuredAtmosphere: THREE.Mesh | undefined;
 
     if (view === "planet") {
       camera.position.set(0, 0.12, compact ? 6.4 : 5.15);
@@ -343,11 +426,16 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       );
       featured.rotation.z = -0.19;
       scene.add(featured);
-      const atmosphere = new THREE.Mesh(
+      featuredAtmosphere = new THREE.Mesh(
         new THREE.SphereGeometry(1.69, lowPower ? 32 : 48, lowPower ? 32 : 48),
         new THREE.MeshBasicMaterial({ color: colorWithLightness(selected.orbitColor, 0.24), transparent: true, opacity: 0.11, side: THREE.BackSide, blending: THREE.AdditiveBlending }),
       );
-      scene.add(atmosphere);
+      scene.add(featuredAtmosphere);
+      const horizon = new THREE.Mesh(
+        new THREE.TorusGeometry(1.7, .018, 8, lowPower ? 72 : 128),
+        new THREE.MeshBasicMaterial({ color: colorWithLightness(selected.orbitColor, .3), transparent: true, opacity: .44, depthWrite: false, blending: THREE.AdditiveBlending }),
+      );
+      horizon.rotation.set(1.08, .25, -.12); featuredAtmosphere.add(horizon);
       if (/gas|giant|neptune|jovian/i.test(selected.type)) {
         const ring = new THREE.Mesh(
           new THREE.RingGeometry(2.03, 2.82, 128),
@@ -371,9 +459,12 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.minDistance = 5;
       controls.maxDistance = 28;
       controls.maxPolarAngle = Math.PI * 0.76;
-      starGroup = isBlackHoleSystem ? createBlackHoleModel(scene,false) : createStar(scene, system.temperatureK, false, isPulsarSystem ? .2 : isWhiteDwarfSystem ? .44 : isBlueGiantSystem ? 1.75 : isRedGiantSystem ? 1.7 : 1);
-      if (isBlueGiantSystem) nebulaGroup = createNebulaShell(scene,false);
-      if (isPulsarSystem) pulsarFeatureGroup = createPulsarFeatures(scene,false);
+      starGroup = isBlackHoleSystem ? createBlackHoleModel(scene, false, lowPower) : createStar(scene, system.temperatureK, false, isPulsarSystem ? .2 : isWhiteDwarfSystem ? .44 : isBlueGiantSystem ? 1.75 : isRedGiantSystem ? 1.7 : 1);
+      if (isBlueGiantSystem) nebulaGroup = createNebulaShell(scene, false, lowPower);
+      if (isPulsarSystem) pulsarFeatureGroup = createPulsarFeatures(scene, false, lowPower);
+      if (isBlueGiantSystem || isPulsarSystem || isBlackHoleSystem || isDoublePlanetSystem) {
+        orbitalDust = createOrbitalDust(scene, isBlueGiantSystem ? 4.2 : isBlackHoleSystem ? 2.35 : 3.1, isBlackHoleSystem ? 0xff9857 : isDoublePlanetSystem ? 0x76e1ca : 0x78bfff, lowPower);
+      }
       if (binarySystem) {
         companionStarGroup = createStar(scene, isBlackHoleSystem ? 4650 : Math.max(3900, system.temperatureK - 1250), false, .76);
         createBinaryOrbitPath(scene, .42, lowPower);
@@ -415,20 +506,40 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
         );
         mesh.userData.planetId = planet.id;
         mesh.userData.planetColor = planet.orbitColor;
+        const halo = new THREE.Mesh(
+          new THREE.SphereGeometry(bodySize * 1.3, lowPower ? 12 : 18, lowPower ? 12 : 18),
+          new THREE.MeshBasicMaterial({ color: planet.orbitColor, transparent: true, opacity: planet.id === selectedId ? .12 : .045, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending }),
+        );
+        halo.userData.baseScale = 1; mesh.userData.visualHalo = halo; mesh.add(halo);
         if (planet.id === selectedId) mesh.scale.setScalar(1.24);
         scene.add(mesh);
         systemMeshesRef.current.set(planet.id, mesh);
         planetObjects.push({ data: planet, mesh, radius });
       });
+      if (isDoublePlanetSystem && system.planets.length >= 2) {
+        mutualOrbitGroup = new THREE.Group();
+        const loop = new THREE.LineLoop(
+          new THREE.BufferGeometry().setFromPoints(Array.from({ length: lowPower ? 48 : 80 }, (_, index) => {
+            const phase = index / (lowPower ? 48 : 80) * Math.PI * 2;
+            return new THREE.Vector3(Math.cos(phase) * .34, 0, Math.sin(phase) * .34);
+          })),
+          new THREE.LineBasicMaterial({ color: 0x79e4c9, transparent: true, opacity: .52, blending: THREE.AdditiveBlending }),
+        );
+        mutualOrbitGroup.add(loop); scene.add(mutualOrbitGroup);
+        const bridgeGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+        doublePlanetBridge = new THREE.Line(bridgeGeometry, new THREE.LineBasicMaterial({ color: 0xb7fff0, transparent: true, opacity: .38, blending: THREE.AdditiveBlending }));
+        scene.add(doublePlanetBridge);
+      }
     }
 
     if (view === "star") {
       camera.position.set(0, 0.1, compact ? 7.2 : 6.1);
       controls.minDistance = 3.8;
       controls.maxDistance = 13;
-      starGroup = isBlackHoleSystem ? createBlackHoleModel(scene,true) : createStar(scene, system.temperatureK, true, isPulsarSystem ? .34 : isWhiteDwarfSystem ? .62 : isBlueGiantSystem ? 1.35 : isRedGiantSystem ? 1.28 : 1);
-      if (isBlueGiantSystem) nebulaGroup = createNebulaShell(scene,true);
-      if (isPulsarSystem) pulsarFeatureGroup = createPulsarFeatures(scene,true);
+      starGroup = isBlackHoleSystem ? createBlackHoleModel(scene, true, lowPower) : createStar(scene, system.temperatureK, true, isPulsarSystem ? .34 : isWhiteDwarfSystem ? .62 : isBlueGiantSystem ? 1.35 : isRedGiantSystem ? 1.28 : 1);
+      if (isBlueGiantSystem) nebulaGroup = createNebulaShell(scene, true, lowPower);
+      if (isPulsarSystem) pulsarFeatureGroup = createPulsarFeatures(scene, true, lowPower);
+      if (isBlueGiantSystem || isPulsarSystem || isBlackHoleSystem) orbitalDust = createOrbitalDust(scene, isBlueGiantSystem ? 5.1 : isBlackHoleSystem ? 3.85 : 3.2, isBlackHoleSystem ? 0xff9c5b : 0x83caff, lowPower);
       if (binarySystem) {
         companionStarGroup = createStar(scene, isBlackHoleSystem ? 4650 : Math.max(3900, system.temperatureK - 1250), true, .76);
         createBinaryOrbitPath(scene, 1.32, lowPower);
@@ -480,10 +591,25 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       if (!pausedRef.current) simulationDays += delta * PREVIEW_DAYS_PER_SECOND * speedRef.current;
       stars.rotation.y += delta * 0.002;
       if (featured) featured.rotation.y += delta * 0.075 * Math.max(speedRef.current, 0.4);
+      if (featuredAtmosphere) { featuredAtmosphere.rotation.y -= delta * .035; featuredAtmosphere.rotation.z += delta * .006; }
       if (starGroup) starGroup.rotation.y += delta * 0.035;
       if (companionStarGroup) companionStarGroup.rotation.y -= delta * 0.028;
-      if (nebulaGroup) { nebulaGroup.rotation.y += delta * .006; nebulaGroup.rotation.z -= delta * .003; }
-      if (pulsarFeatureGroup) pulsarFeatureGroup.rotation.z += delta * 2.4;
+      if (nebulaGroup) { nebulaGroup.rotation.y += delta * .011; nebulaGroup.rotation.z -= delta * .004; nebulaGroup.scale.setScalar(1 + Math.sin(frameAt * .00035) * .025); }
+      if (pulsarFeatureGroup) { pulsarFeatureGroup.rotation.z += delta * 2.4; pulsarFeatureGroup.rotation.y = Math.sin(frameAt * .0012) * .12; }
+      if (orbitalDust) { orbitalDust.rotation.y += delta * (isBlackHoleSystem ? .22 : .028); orbitalDust.rotation.z += delta * .004; }
+      if (isBlackHoleSystem && starGroup) {
+        const accretionDisc = starGroup.userData.accretionDisc as THREE.Group | undefined;
+        const lens = starGroup.userData.lens as THREE.Mesh | undefined;
+        const jets = starGroup.userData.jets as THREE.Group | undefined;
+        if (accretionDisc) {
+          accretionDisc.rotation.z += delta * .32;
+          accretionDisc.children.forEach((child, index) => {
+            if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) child.material.opacity = Number(child.userData.baseOpacity ?? .4) * (.88 + Math.sin(frameAt * .0014 + index) * .12);
+          });
+        }
+        if (lens) lens.rotation.y += delta * .13;
+        if (jets) jets.scale.y = 1 + Math.sin(frameAt * .002) * .07;
+      }
       if (tripleSystem && starGroup && companionStarGroup && tertiaryStarGroup) {
         const choreographyPhase = simulationDays / 18.6 * Math.PI * 2;
         const choreographyRadius = view === "star" ? 3.05 : 1.18;
@@ -501,6 +627,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       }
       if (view === "system") {
         const epochDays = (Date.now() - new Date(system.epochAt).getTime()) / 86400000;
+        let doubleBarycentre: THREE.Vector3 | undefined;
         planetObjects.forEach(({ data, mesh, radius }, index) => {
           const angle = (data.epochAngleDeg * Math.PI / 180) + ((epochDays + simulationDays) / data.periodDays) * Math.PI * 2;
           if (isDoublePlanetSystem && index < 2) {
@@ -508,10 +635,20 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
             const baryRadius = orbitRadius(reference.semiMajorAu);
             const baryAngle = (reference.epochAngleDeg * Math.PI / 180) + ((epochDays + simulationDays) / reference.periodDays) * Math.PI * 2;
             const mutualAngle = ((epochDays + simulationDays) / 6.4) * Math.PI * 2 + index * Math.PI;
-            mesh.position.set(Math.cos(baryAngle) * baryRadius + Math.cos(mutualAngle) * .34,0,Math.sin(baryAngle) * baryRadius + Math.sin(mutualAngle) * .34);
+            doubleBarycentre = new THREE.Vector3(Math.cos(baryAngle) * baryRadius, 0, Math.sin(baryAngle) * baryRadius);
+            mesh.position.set(doubleBarycentre.x + Math.cos(mutualAngle) * .34, 0, doubleBarycentre.z + Math.sin(mutualAngle) * .34);
           } else mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
           mesh.rotation.y += delta * 0.23;
+          const visualHalo = mesh.userData.visualHalo as THREE.Mesh | undefined;
+          if (visualHalo) visualHalo.scale.setScalar(1 + Math.sin(frameAt * .002 + index) * .08);
         });
+        if (mutualOrbitGroup && doubleBarycentre) { mutualOrbitGroup.position.copy(doubleBarycentre); mutualOrbitGroup.rotation.y += delta * .12; }
+        if (doublePlanetBridge && planetObjects.length >= 2) {
+          const positionAttribute = doublePlanetBridge.geometry.getAttribute("position") as THREE.BufferAttribute;
+          positionAttribute.setXYZ(0, planetObjects[0].mesh.position.x, planetObjects[0].mesh.position.y, planetObjects[0].mesh.position.z);
+          positionAttribute.setXYZ(1, planetObjects[1].mesh.position.x, planetObjects[1].mesh.position.y, planetObjects[1].mesh.position.z);
+          positionAttribute.needsUpdate = true;
+        }
       }
       controls.update();
       renderer.render(scene, camera);
@@ -527,7 +664,7 @@ export default function CelestialExplorer3D({ system, initialPlanetId, ownerLabe
       controls.dispose();
       textures.forEach((texture) => texture.dispose());
       scene.traverse((object) => {
-        if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) {
+        if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points || object instanceof THREE.Sprite) {
           object.geometry?.dispose();
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach((material) => material?.dispose());
