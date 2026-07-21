@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { namingOrders } from "@/db/schema";
+import { usdFromTwd } from "@/lib/pricing";
 
 type PaymentRuntimeEnv = {
   ECPAY_MODE?: string;
@@ -164,6 +165,7 @@ export async function getPaymentOrderStatus(orderId: string, token: string) {
     id: order.id,
     desiredName: order.desiredName,
     packageName: ({ "\u63a2\u7d22\u8005": "Explorer", "\u89c0\u6e2c\u8005": "Observer", "\u5178\u85cf\u8005": "Archivist" } as Record<string, string>)[order.packageName] ?? order.packageName,
+    amountUsd: usdFromTwd(order.amountTwd),
     amountTwd: order.amountTwd,
     status: order.status,
     registryCode: order.registryCode,

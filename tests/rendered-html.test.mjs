@@ -77,6 +77,7 @@ test("keeps every customer-facing interface in English", async () => {
     "../app/resources/page.tsx",
     "../app/guide/page.tsx",
     "../app/payment/result/page.tsx",
+    "../app/gift/lily-chen/page.tsx",
     "../app/layout.tsx",
     "../app/components/CelestialExplorer3D.tsx",
     "../app/api/orders/route.ts",
@@ -131,6 +132,49 @@ test("seeds and exposes a one-click demo holder account", async () => {
   assert.match(universe, /registryCode: "NOR-DEMO2026"/);
   assert.match(universe, /namingOrders\)\.values\(demoOwnerOrder\)\.onConflictDoNothing/);
   assert.match(css, /\.demo-owner-account/);
+});
+
+test("creates Lily Chen's USD Archivist dedication and downloadable English portfolio", async () => {
+  const [page, gift, giftCss, universe, pricing, admin, checkout, resultPage, portfolioScript] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/gift/lily-chen/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/gift/lily-chen/lily.module.css", import.meta.url), "utf8"),
+    readFile(new URL("../lib/universe.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/pricing.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/payments/ecpay/checkout/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/payment/result/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/generate_lily_portfolio.py", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /priceUsd: 200/);
+  assert.match(page, /priceUsd: 300/);
+  assert.match(page, /priceUsd: 500/);
+  assert.match(page, /US\$/);
+  assert.match(pricing, /USD_PRICING_RATE_TWD = 30/);
+  assert.match(admin, /售價（USD）/);
+  assert.match(checkout, /fixed 30:1 catalog basis/);
+  assert.match(resultPage, /amountUsd/);
+  assert.match(universe, /SYS-LC-2026/);
+  assert.match(universe, /NOCTUA-LILIUM-0721/);
+  assert.match(universe, /registryCode: "NOR-LILY2026"/);
+  assert.match(universe, /ownerName: "Lily Chen"/);
+  assert.match(universe, /purchaserName: "Xie Yao Zhong"/);
+  assert.match(universe, /packageName: "Archivist"/);
+  assert.match(universe, /amountTwd: 500 \* USD_PRICING_RATE_TWD/);
+  assert.match(gift, /For Lily Chen/);
+  assert.match(gift, /PRIVATE ARCHIVIST EDITION · US\$500/);
+  assert.match(gift, /Download the complete portfolio/);
+  assert.match(gift, /SCIENTIFIC INTEGRITY/);
+  assert.match(giftCss, /\.hero/);
+  assert.match(portfolioScript, /PRIVATE COMMEMORATIVE/);
+  await Promise.all([
+    "../public/gifts/lily-chen/lilium-aeternum-artist-impression.jpg",
+    "../public/gifts/lily-chen/Lily_Chen_Archivist_Portfolio.pdf",
+    "../public/gifts/lily-chen/Lily_Chen_Celestial_Dedication_Certificate.pdf",
+    "../public/gifts/lily-chen/Lily_Chen_Thank_You_Letter.pdf",
+    "../public/gifts/lily-chen/Lily_Chen_Lilium_Aeternum_Research_Dossier.pdf",
+    "../public/gifts/lily-chen/Lily_Chen_Birthday_Blessing_from_Xie_Yao_Zhong.pdf",
+  ].map((path) => access(new URL(path, import.meta.url))));
 });
 
 test("publishes fifty transparent holder-story previews and speculative life morphology", async () => {
@@ -230,7 +274,7 @@ test("derives candidate coordinates and adds four exotic stellar models", async 
   assert.match(universe, /SYS-NX-PSR-067/);
   assert.match(universe, /SYS-NX-BH-073/);
   assert.match(universe, /SYS-NX-DP-081/);
-  assert.match(universe, /const classification = blackHole \?/);
+  assert.match(universe, /blackHole \? "Stellar-mass black hole/);
   assert.match(page, /blueGiantSystem/);
   assert.match(page, /pulsarSystem/);
   assert.match(page, /blackHoleSystem/);

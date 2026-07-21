@@ -7,6 +7,7 @@ type PaymentOrder = {
   id: string;
   desiredName: string;
   packageName: string;
+  amountUsd: number;
   amountTwd: number;
   status: string;
   registryCode: string | null;
@@ -64,7 +65,7 @@ export default function PaymentResultPage() {
         <h1>{state.title}</h1>
         <p className="payment-result-copy">{state.body}</p>
         {order.gateway.mode === "test" && <div className="payment-test-notice"><b>TEST ENVIRONMENT</b><span>The checkout and callback flow are fully integrated, but no credit card or bank account will be charged.</span></div>}
-        <div className="payment-order-summary"><div><span>ORDER NUMBER</span><b>{order.id}</b></div><div><span>MEMORIAL NAME</span><b>{order.desiredName}</b></div><div><span>PLAN / AMOUNT</span><b>{order.packageName} · NT$ {order.amountTwd.toLocaleString()}</b></div>{order.paymentType && <div><span>PAYMENT METHOD</span><b>{order.paymentType}</b></div>}</div>
+        <div className="payment-order-summary"><div><span>ORDER NUMBER</span><b>{order.id}</b></div><div><span>MEMORIAL NAME</span><b>{order.desiredName}</b></div><div><span>PLAN / AMOUNT</span><b>{order.packageName} · US$ {order.amountUsd.toLocaleString()}</b></div><div><span>ECPAY SETTLEMENT</span><b>NT$ {order.amountTwd.toLocaleString()}</b></div>{order.paymentType && <div><span>PAYMENT METHOD</span><b>{order.paymentType}</b></div>}</div>
         {order.registryCode && <div className="payment-registry"><span>UNIQUE STELLAR-SYSTEM REGISTRY</span><strong>{order.registryCode}</strong><small>Keep this number. Use Holder Access on NOCTUA to open your private system at any time.</small></div>}
         {order.paymentMessage && order.status !== "confirmed" && <p className="payment-gateway-message">GATEWAY MESSAGE: {order.paymentMessage}</p>}
         <div className="payment-result-actions"><Link className="payment-main-action" href={order.registryCode ? `/?registry=${encodeURIComponent(order.registryCode)}` : "/#registry"}>{order.registryCode ? "OPEN HOLDER ACCESS" : "RETURN TO NOCTUA"}</Link><Link href="/resources">VIEW ASTRONOMY INSTITUTIONS</Link></div>

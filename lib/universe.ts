@@ -1,7 +1,8 @@
-import { and, asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { inferenceRuns, namingOrders, namingPackages, planets, researchUpdates, starSystems, systemSettings } from "@/db/schema";
 import { getPaymentPublicInfo } from "@/lib/ecpay";
+import { USD_PRICING_RATE_TWD, usdFromTwd } from "@/lib/pricing";
 
 export type Composition = { label: string; value: number; color: string };
 
@@ -36,6 +37,7 @@ const blueGiantModelPosition = modelledSkyPosition(61, 286.4, .38);
 const pulsarModelPosition = modelledSkyPosition(67, 412.8, .56);
 const blackHoleModelPosition = modelledSkyPosition(73, 726.5, .42);
 const doublePlanetModelPosition = modelledSkyPosition(81, 96.3, .78);
+const lilyModelPosition = modelledSkyPosition(89, 72.6, .68);
 
 const initialSystems = [
   {
@@ -117,12 +119,21 @@ const initialSystems = [
       { id: "PL-NX-DP-081-D", code: "NOCTUA-TWIN-WORLDS-81 d", type: "Outer ringed gas giant", massEarth: 112, radiusEarth: 8.9, periodDays: 1850, semiMajorAu: 3.3, eccentricity: 0.14, equilibriumTemp: 155, epochAngleDeg: 286, orbitColor: "#9b8fc1", composition: [{ label: "Hydrogen / helium", value: 80, color: "#d3c6a4" }, { label: "Ices", value: 15, color: "#87a9c5" }, { label: "Heavy elements", value: 5, color: "#9a826f" }], atmosphere: "Hydrogen, helium and methane", state: "Outer orbit · prominent rings and moons possible", bioScore: 7, bioPrediction: "The giant is inhospitable; large moons may contain subsurface oceans." },
     ],
   },
+  {
+    system: { id: "SYS-LC-2026", designation: "NOCTUA-LILIUM-0721", displayName: null, classification: "F8V pearl-white main-sequence star", ...lilyModelPosition, starMass: 1.11, starRadius: 1.18, temperatureK: 6260, luminosity: 1.72, ageByr: 3.2, metallicity: 0.07, status: "published", confidence: 83, summary: "A four-planet candidate architecture prepared as the Lilium Aeternum private celestial dedication.", epochAt: "2026-07-21T00:00:00.000Z", publishedAt: "2026-07-21T00:00:00.000Z" },
+    planets: [
+      { id: "PL-LC-2026-B", code: "NOCTUA-LILIUM-0721 b", type: "Rose-lit mineral terrestrial", massEarth: 1.5, radiusEarth: 1.12, periodDays: 22.8, semiMajorAu: 0.163, eccentricity: 0.04, equilibriumTemp: 720, epochAngleDeg: 31, orbitColor: "#d87a78", composition: [{ label: "Silicates", value: 57, color: "#c98b72" }, { label: "Iron-nickel core", value: 36, color: "#a7aaad" }, { label: "Other", value: 7, color: "#7b6b78" }], atmosphere: "Thin sodium and mineral-vapour exosphere candidate", state: "Tidally influenced · rose-lit volcanic plains", bioScore: 1, bioPrediction: "Surface temperatures are too high for known life." },
+      { id: "PL-LC-2026-C", code: "NOCTUA-LILIUM-0721 c", type: "Pearlescent ocean super-Earth", massEarth: 2.6, radiusEarth: 1.38, periodDays: 537.4, semiMajorAu: 1.34, eccentricity: 0.05, equilibriumTemp: 280, epochAngleDeg: 142, orbitColor: "#63b9cf", composition: [{ label: "Water / ice", value: 43, color: "#6ec2d8" }, { label: "Silicates", value: 39, color: "#b88e72" }, { label: "Iron-nickel core", value: 18, color: "#a7aaad" }], atmosphere: "Nitrogen, water vapour and trace carbon dioxide candidate", state: "Temperate ocean candidate · faint ring system", bioScore: 64, bioPrediction: "Persistent oceans, moderate irradiation and chemical gradients could support microbial or marine ecosystems; no biosignature has been observed." },
+      { id: "PL-LC-2026-D", code: "NOCTUA-LILIUM-0721 d", type: "Lavender ringed gas giant", massEarth: 156, radiusEarth: 9.7, periodDays: 4335, semiMajorAu: 5.39, eccentricity: 0.12, equilibriumTemp: 139, epochAngleDeg: 238, orbitColor: "#9d8bc9", composition: [{ label: "Hydrogen / helium", value: 81, color: "#d6cce0" }, { label: "Water / ice", value: 13, color: "#86afc9" }, { label: "Heavy elements", value: 6, color: "#8e788a" }], atmosphere: "Hydrogen, helium and methane with high-altitude lavender haze", state: "Prominent rings · multiple moon candidates", bioScore: 8, bioPrediction: "The giant itself is inhospitable, while large icy moons could retain subsurface oceans." },
+      { id: "PL-LC-2026-E", code: "NOCTUA-LILIUM-0721 e", type: "Distant crystalline ice world", massEarth: 5.8, radiusEarth: 1.82, periodDays: 16620, semiMajorAu: 13.2, eccentricity: 0.18, equilibriumTemp: 89, epochAngleDeg: 319, orbitColor: "#8ba9c6", composition: [{ label: "Water / ice", value: 58, color: "#91bdd3" }, { label: "Silicates", value: 29, color: "#9d8575" }, { label: "Iron-nickel core", value: 13, color: "#a7aaad" }], atmosphere: "Seasonal nitrogen and methane frost candidate", state: "Cryogenic surface · long orbital seasons", bioScore: 3, bioPrediction: "Known surface life is unlikely; internal radiogenic heating remains unconstrained." },
+    ],
+  },
 ];
 
 const defaultPackages = [
-  { id: "PKG-EXPLORER", name: "探索者", priceTwd: 680, description: "一顆行星的私人紀念登錄", featuresJson: JSON.stringify(["數位命名證書", "即時軌道動畫", "專屬行星編號"]), active: true, sortOrder: 1 },
-  { id: "PKG-OBSERVER", name: "觀測者", priceTwd: 1280, description: "恆星與完整行星體系登錄", featuresJson: JSON.stringify(["恆星體系專屬編號", "4K 星系動畫", "年度位置更新"]), active: true, sortOrder: 2 },
-  { id: "PKG-ARCHIVIST", name: "典藏者", priceTwd: 2680, description: "完整典藏檔案與客製動畫", featuresJson: JSON.stringify(["可列印典藏證書", "客製獻詞", "完整軌道與成分報告"]), active: true, sortOrder: 3 },
+  { id: "PKG-EXPLORER", name: "Explorer", priceTwd: 200 * USD_PRICING_RATE_TWD, description: "A private memorial registry for one candidate planet", featuresJson: JSON.stringify(["Digital naming certificate", "Live orbital animation", "Unique planetary designation"]), active: true, sortOrder: 1 },
+  { id: "PKG-OBSERVER", name: "Observer", priceTwd: 300 * USD_PRICING_RATE_TWD, description: "A star and its complete candidate planetary system", featuresJson: JSON.stringify(["Unique stellar-system registry", "4K system animation", "Annual position update"]), active: true, sortOrder: 2 },
+  { id: "PKG-ARCHIVIST", name: "Archivist", priceTwd: 500 * USD_PRICING_RATE_TWD, description: "A complete archival record with bespoke presentation", featuresJson: JSON.stringify(["Print-ready archival certificate", "Custom dedication and thank-you letter", "Research dossier and high-resolution celestial artwork"]), active: true, sortOrder: 3 },
 ];
 
 const demoOwnerOrder = {
@@ -145,9 +156,33 @@ const demoOwnerOrder = {
   confirmedAt: "2026-07-19T08:05:00.000Z",
 };
 
+const lilyOwnerOrder = {
+  id: "ORD-LILY-2026",
+  createdAt: "2026-07-21T08:00:00.000Z",
+  candidateId: "SYS-LC-2026",
+  systemId: "SYS-LC-2026",
+  planetId: "PL-LC-2026-C",
+  desiredName: "Lilium Aeternum",
+  purchaserName: "Xie Yao Zhong",
+  ownerName: "Lily Chen",
+  recipientEmail: null,
+  dedication: "Happy Birthday, Lily. May this light remind you that you are cherished beyond distance, time, and every horizon still waiting to be discovered.",
+  email: "xie-yao-zhong@noctua.invalid",
+  packageName: "Archivist",
+  amountTwd: 500 * USD_PRICING_RATE_TWD,
+  status: "confirmed",
+  registryCode: "NOR-LILY2026",
+  animationTheme: "rose",
+  confirmedAt: "2026-07-21T08:05:00.000Z",
+  paymentProvider: "complimentary-gift",
+  paymentMessage: "Complimentary Archivist gift prepared by Xie Yao Zhong for Lily Chen.",
+};
+
 const initialResearchUpdates = [
   { id: "UPD-NX-001-01", systemId: "SYS-NX-001", title: "Atmospheric model refined", summary: "A revised thermal model narrows the likely water-vapour range for NOCTUA-X1 d while preserving its status as the system’s strongest temperate candidate.", observingNote: "Best inspected in the holder sky guide near meridian transit; the coordinates remain model-derived and are not a confirmed telescope target.", symbolicMeaning: "A symbol of patient hope: something distant becoming clearer through sustained attention.", publishedAt: "2026-07-19T10:00:00.000Z" },
   { id: "UPD-NX-014-01", systemId: "SYS-NX-014", title: "Orbital solution stabilised", summary: "Additional synthetic sampling reduced uncertainty in the three-planet orbital configuration around NOCTUA-K14.", observingNote: "Use the live guide to calculate the next local meridian window from the model right ascension and declination.", symbolicMeaning: "A symbol of constancy and quiet devotion around a long-lived star.", publishedAt: "2026-07-18T10:00:00.000Z" },
+  { id: "UPD-LC-2026-01", systemId: "SYS-LC-2026", title: "Lilium Aeternum model archive established", summary: "The initial four-planet architecture has been normalised against an F8V stellar prior and a deterministic Fibonacci-sphere sky coordinate model.", observingNote: "The coordinates are model-derived and should be treated as a visualisation target, not a confirmed telescope object.", symbolicMeaning: "An enduring light dedicated to Lily Chen: curiosity, grace and hope held in the same orbit.", publishedAt: "2026-07-21T08:10:00.000Z" },
+  { id: "UPD-LC-2026-02", systemId: "SYS-LC-2026", title: "Temperate ocean-world scenario refined", summary: "A first-pass equilibrium-temperature model identifies NOCTUA-LILIUM-0721 c as the strongest temperate scenario in the system, subject to unmeasured atmospheric and albedo assumptions.", observingNote: "Future revisions should prioritise synthetic transit depth, atmospheric retention and climate sensitivity studies.", symbolicMeaning: "The ocean world represents a future rich with possibility: calm on the surface, depth beneath, and light always returning.", publishedAt: "2026-07-21T08:20:00.000Z" },
 ];
 
 const showcaseNames = [
@@ -203,9 +238,14 @@ export async function ensureUniverseSeeded() {
       return { ...planetData, systemId: item.system.id, displayName: null, compositionJson: JSON.stringify(composition) };
     })).onConflictDoNothing();
   }
-  const [{ packageTotal }] = await db.select({ packageTotal: count() }).from(namingPackages);
-  if (packageTotal === 0) await db.insert(namingPackages).values(defaultPackages);
+  for (const item of defaultPackages) {
+    await db.insert(namingPackages).values(item).onConflictDoUpdate({
+      target: namingPackages.id,
+      set: { name: item.name, priceTwd: item.priceTwd, description: item.description, featuresJson: item.featuresJson, active: item.active, sortOrder: item.sortOrder, updatedAt: new Date().toISOString() },
+    });
+  }
   await db.insert(namingOrders).values(demoOwnerOrder).onConflictDoNothing();
+  await db.insert(namingOrders).values(lilyOwnerOrder).onConflictDoNothing();
   for (const update of initialResearchUpdates) await db.insert(researchUpdates).values(update).onConflictDoNothing();
   const settings = [
     { key: "schedule_frequency", value: "daily" },
@@ -264,21 +304,22 @@ function publicSystem(system: HydratedSystem) {
   const pulsar = system.id === "SYS-NX-PSR-067";
   const blackHole = system.id === "SYS-NX-BH-073";
   const doublePlanet = system.id === "SYS-NX-DP-081";
-  const classification = blackHole ? "Stellar-mass black hole + K-dwarf binary" : binary ? "G2V + K1V close binary star pair" : whiteDwarf ? "DA white dwarf stellar remnant" : redGiant ? "K2 III red giant" : triple ? "Three-star figure-eight choreography" : blueGiant ? "B0 Ia blue supergiant with ionised nebula" : pulsar ? "Millisecond pulsar neutron-star system" : doublePlanet ? "Mutual-orbit double-planet system" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
-  const summary = blackHole ? `A ${system.planets.length}-planet circumbinary model around a stellar-mass black hole and donor star.` : binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : whiteDwarf ? `A ${system.planets.length}-planet survivor system around a hot, compact white-dwarf remnant.` : redGiant ? `A ${system.planets.length}-planet evolved system shaped by the expansion of a red-giant star.` : triple ? `A ${system.planets.length}-planet circummultiple model around three stars displayed in a schematic figure-eight choreography.` : blueGiant ? `A ${system.planets.length}-planet model around a luminous blue supergiant inside a wind-shaped ionised nebula.` : pulsar ? `A ${system.planets.length}-planet compact system modelled around a rapidly rotating neutron star.` : doublePlanet ? `A ${system.planets.length}-planet model featuring two terrestrial worlds in a mutual barycentric orbit.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
+  const lilySystem = system.id === "SYS-LC-2026";
+  const classification = lilySystem ? "F8V pearl-white main-sequence star" : blackHole ? "Stellar-mass black hole + K-dwarf binary" : binary ? "G2V + K1V close binary star pair" : whiteDwarf ? "DA white dwarf stellar remnant" : redGiant ? "K2 III red giant" : triple ? "Three-star figure-eight choreography" : blueGiant ? "B0 Ia blue supergiant with ionised nebula" : pulsar ? "Millisecond pulsar neutron-star system" : doublePlanet ? "Mutual-orbit double-planet system" : system.temperatureK >= 6000 ? "F-type main-sequence star" : system.temperatureK >= 5200 ? "G-type main-sequence star" : "K-type orange dwarf";
+  const summary = lilySystem ? "A four-planet candidate model centred on a temperate pearlescent ocean world and prepared as the Lilium Aeternum private celestial dedication." : blackHole ? `A ${system.planets.length}-planet circumbinary model around a stellar-mass black hole and donor star.` : binary ? `A ${system.planets.length}-planet circumbinary candidate system modelled around a close G-type and K-type stellar pair.` : whiteDwarf ? `A ${system.planets.length}-planet survivor system around a hot, compact white-dwarf remnant.` : redGiant ? `A ${system.planets.length}-planet evolved system shaped by the expansion of a red-giant star.` : triple ? `A ${system.planets.length}-planet circummultiple model around three stars displayed in a schematic figure-eight choreography.` : blueGiant ? `A ${system.planets.length}-planet model around a luminous blue supergiant inside a wind-shaped ionised nebula.` : pulsar ? `A ${system.planets.length}-planet compact system modelled around a rapidly rotating neutron star.` : doublePlanet ? `A ${system.planets.length}-planet model featuring two terrestrial worlds in a mutual barycentric orbit.` : `A ${system.planets.length}-planet candidate system inferred from converging periodic signals and awaiting independent observational confirmation.`;
   return { ...system, classification, summary, planets: system.planets.map(publicPlanet) };
 }
 
 const englishPackages: Record<string, { name: string; description: string; features: string[] }> = {
   "PKG-EXPLORER": { name: "Explorer", description: "A private memorial registry for one candidate planet", features: ["Digital naming certificate", "Live orbital animation", "Unique planetary designation"] },
   "PKG-OBSERVER": { name: "Observer", description: "A star and its complete candidate planetary system", features: ["Unique stellar-system registry", "4K system animation", "Annual position update"] },
-  "PKG-ARCHIVIST": { name: "Archivist", description: "A complete archival record with bespoke presentation", features: ["Print-ready archival certificate", "Custom dedication", "Full orbit and composition report"] },
+  "PKG-ARCHIVIST": { name: "Archivist", description: "A complete archival record with bespoke presentation", features: ["Print-ready archival certificate", "Custom dedication and thank-you letter", "Research dossier and high-resolution celestial artwork"] },
 };
 
-function publicPackage<T extends { id: string; name: string; description: string; featuresJson: string }>(item: T) {
+function publicPackage<T extends { id: string; name: string; priceTwd: number; description: string; featuresJson: string }>(item: T) {
   const translated = englishPackages[item.id];
   const rawFeatures = parseJson<string[]>(item.featuresJson, []);
-  return { ...item, name: translated?.name ?? (/^[\x00-\x7F]*$/.test(item.name) ? item.name : "Celestial Registry"), description: translated?.description ?? (/^[\x00-\x7F]*$/.test(item.description) ? item.description : "A personalised private celestial registry edition"), features: translated?.features ?? rawFeatures.map((feature) => /^[\x00-\x7F]*$/.test(feature) ? feature : "Personalised archival deliverable") };
+  return { ...item, priceUsd: usdFromTwd(item.priceTwd), name: translated?.name ?? (/^[\x00-\x7F]*$/.test(item.name) ? item.name : "Celestial Registry"), description: translated?.description ?? (/^[\x00-\x7F]*$/.test(item.description) ? item.description : "A personalised private celestial registry edition"), features: translated?.features ?? rawFeatures.map((feature) => /^[\x00-\x7F]*$/.test(feature) ? feature : "Personalised archival deliverable") };
 }
 
 export async function getPublicUniverse() {
@@ -350,7 +391,7 @@ export async function getAdminDashboard() {
     db.select().from(systemSettings),
     db.select().from(researchUpdates).orderBy(desc(researchUpdates.publishedAt)).limit(40),
   ]);
-  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, features: parseJson<string[]>(item.featuresJson, []) })), orders, runs, updates, settings: Object.fromEntries(settings.map((item) => [item.key, item.value])), payment: getPaymentPublicInfo() };
+  return { systems: await hydrateSystems(systems), packages: packages.map((item) => ({ ...item, priceUsd: usdFromTwd(item.priceTwd), features: parseJson<string[]>(item.featuresJson, []) })), orders: orders.map((item) => ({ ...item, amountUsd: usdFromTwd(item.amountTwd) })), runs, updates, settings: Object.fromEntries(settings.map((item) => [item.key, item.value])), payment: getPaymentPublicInfo() };
 }
 
 export async function publishResearchUpdate(payload: { systemId: string; title: string; summary: string; observingNote: string; symbolicMeaning: string }) {
@@ -382,10 +423,11 @@ export async function saveSchedule(frequency: string, enabled: boolean, autoPubl
   for (const item of values) await db.insert(systemSettings).values(item).onConflictDoUpdate({ target: systemSettings.key, set: { value: item.value, updatedAt: new Date().toISOString() } });
 }
 
-export async function savePackage(payload: { id?: string; name: string; priceTwd: number; description: string; features: string[]; active: boolean }) {
+export async function savePackage(payload: { id?: string; name: string; priceUsd: number; description: string; features: string[]; active: boolean }) {
   const db = getDb();
   const id = payload.id || `PKG-${Date.now().toString(36).toUpperCase()}`;
-  await db.insert(namingPackages).values({ id, name: payload.name, priceTwd: payload.priceTwd, description: payload.description, featuresJson: JSON.stringify(payload.features), active: payload.active, sortOrder: Date.now() % 100000 }).onConflictDoUpdate({ target: namingPackages.id, set: { name: payload.name, priceTwd: payload.priceTwd, description: payload.description, featuresJson: JSON.stringify(payload.features), active: payload.active, updatedAt: new Date().toISOString() } });
+  const priceTwd = Math.round(Math.max(0, payload.priceUsd) * USD_PRICING_RATE_TWD);
+  await db.insert(namingPackages).values({ id, name: payload.name, priceTwd, description: payload.description, featuresJson: JSON.stringify(payload.features), active: payload.active, sortOrder: Date.now() % 100000 }).onConflictDoUpdate({ target: namingPackages.id, set: { name: payload.name, priceTwd, description: payload.description, featuresJson: JSON.stringify(payload.features), active: payload.active, updatedAt: new Date().toISOString() } });
 }
 
 export async function approveOrder(id: string) {

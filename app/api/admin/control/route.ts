@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (action === "run_inference") result = await runInference("admin");
     else if (action === "publish") await publishSystem(String(payload.id), Boolean(payload.published));
     else if (action === "save_schedule") await saveSchedule(String(payload.frequency), Boolean(payload.enabled), Boolean(payload.autoPublish));
-    else if (action === "save_package") await savePackage({ id: payload.id ? String(payload.id) : undefined, name: String(payload.name), priceTwd: Number(payload.priceTwd), description: String(payload.description), features: Array.isArray(payload.features) ? payload.features.map(String) : [], active: Boolean(payload.active) });
+    else if (action === "save_package") await savePackage({ id: payload.id ? String(payload.id) : undefined, name: String(payload.name), priceUsd: Number(payload.priceUsd), description: String(payload.description), features: Array.isArray(payload.features) ? payload.features.map(String) : [], active: Boolean(payload.active) });
     else if (action === "publish_update") result = await publishResearchUpdate({ systemId: String(payload.systemId), title: String(payload.title), summary: String(payload.summary), observingNote: String(payload.observingNote), symbolicMeaning: String(payload.symbolicMeaning) });
     else if (action === "approve_order") result = { registryCode: await approveOrder(String(payload.id)) };
     else return Response.json({ error: "未知的後台操作" }, { status: 400 });

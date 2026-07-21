@@ -2,6 +2,7 @@ import { and, eq, notInArray, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { namingOrders, namingPackages, starSystems } from "@/db/schema";
 import { ensureUniverseSeeded } from "@/lib/universe";
+import { usdFromTwd } from "@/lib/pricing";
 
 export async function POST(request: Request) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     const [existingOrder] = await db.select({ id: namingOrders.id, status: namingOrders.status, paymentToken: namingOrders.paymentToken, amountTwd: namingOrders.amountTwd }).from(namingOrders).where(and(sql`lower(${namingOrders.email}) = ${email}`, notInArray(namingOrders.status, ["payment_failed", "test_paid", "cancelled"]))).limit(1);
     if (existingOrder) {
       if (["pending", "payment_pending"].includes(existingOrder.status) && existingOrder.paymentToken) {
-        return Response.json({ order: { id: existingOrder.id, amountTwd: existingOrder.amountTwd, status: existingOrder.status }, checkoutUrl: `/api/payments/ecpay/checkout?order=${encodeURIComponent(existingOrder.id)}&token=${encodeURIComponent(existingOrder.paymentToken)}`, resumed: true, message: "Your existing secure checkout is ready to resume." });
+        return Response.json({ order: { id: existingOrder.id, amountUsd: usdFromTwd(existingOrder.amountTwd), amountTwd: existingOrder.amountTwd, status: existingOrder.status }, checkoutUrl: `/api/payments/ecpay/checkout?order=${encodeURIComponent(existingOrder.id)}&token=${encodeURIComponent(existingOrder.paymentToken)}`, resumed: true, message: "Your existing secure checkout is ready to resume." });
       }
       return Response.json({ error: "This purchaser has already used their one lifetime NOCTUA registry. Each person may make only one purchase.", code: "LIFETIME_LIMIT_REACHED" }, { status: 409 });
     }
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
       id, candidateId: systemId, systemId, planetId: payload.planetId ? String(payload.planetId) : null, desiredName: desiredName.slice(0, 40), purchaserName: purchaserName.slice(0, 60), ownerName: ownerName.slice(0, 60), recipientEmail: recipientEmail.slice(0, 160), dedication: String(payload.dedication ?? "").slice(0, 240), email: email.slice(0, 160), packageName: publicPackageName, amountTwd: plan.priceTwd, status: "payment_pending", paymentProvider: "ecpay", paymentTradeNo, paymentToken, paymentMessage: "Order created and awaiting secure ECPay checkout", paymentUpdatedAt: new Date().toISOString(),
     }).returning();
     const checkoutUrl = `/api/payments/ecpay/checkout?order=${encodeURIComponent(order.id)}&token=${encodeURIComponent(paymentToken)}`;
-    return Response.json({ order: { id: order.id, amountTwd: order.amountTwd, status: order.status }, checkoutUrl, message: "Order created. Preparing secure ECPay checkout." }, { status: 201 });
+    return Response.json({ order: { id: order.id, amountUsd: usdFromTwd(order.amountTwd), amountTwd: order.amountTwd, status: order.status }, checkoutUrl, message: "Order created. Preparing secure ECPay checkout." }, { status: 201 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Unable to create the order." }, { status: 500 });
   }
