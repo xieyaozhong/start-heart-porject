@@ -135,7 +135,7 @@ test("seeds and exposes a one-click demo holder account", async () => {
 });
 
 test("creates Lily Chen's USD Archivist dedication and downloadable English portfolio", async () => {
-  const [page, gift, giftCss, universe, pricing, admin, checkout, resultPage, portfolioScript] = await Promise.all([
+  const [page, gift, giftCss, universe, pricing, admin, checkout, resultPage, portfolioScript, bookScript] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/gift/lily-chen/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/gift/lily-chen/lily.module.css", import.meta.url), "utf8"),
@@ -145,6 +145,7 @@ test("creates Lily Chen's USD Archivist dedication and downloadable English port
     readFile(new URL("../app/api/payments/ecpay/checkout/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/payment/result/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../scripts/generate_lily_portfolio.py", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/generate_lily_keepsake_book.py", import.meta.url), "utf8"),
   ]);
   assert.match(page, /priceUsd: 200/);
   assert.match(page, /priceUsd: 300/);
@@ -155,8 +156,8 @@ test("creates Lily Chen's USD Archivist dedication and downloadable English port
   assert.match(checkout, /fixed 30:1 catalog basis/);
   assert.match(resultPage, /amountUsd/);
   assert.match(universe, /SYS-LC-2026/);
-  assert.match(universe, /NOCTUA-LILIUM-0721/);
-  assert.match(universe, /registryCode: "NOR-LILY2026"/);
+  assert.match(universe, /NOCTUA-LILY-0724/);
+  assert.match(universe, /registryCode: "NOCTUA-LILY-0724"/);
   assert.match(universe, /ownerName: "Lily Chen"/);
   assert.match(universe, /purchaserName: "Xie Yao Zhong"/);
   assert.match(universe, /packageName: "Archivist"/);
@@ -164,17 +165,30 @@ test("creates Lily Chen's USD Archivist dedication and downloadable English port
   assert.match(gift, /For Lily Chen/);
   assert.match(gift, /PRIVATE ARCHIVIST EDITION · US\$500/);
   assert.match(gift, /Download the complete portfolio/);
-  assert.match(gift, /Gold-foil dedication certificate/);
+  assert.match(gift, /Celestial dedication certificate/);
+  assert.match(gift, /A5 celestial keepsake book/);
+  assert.doesNotMatch(gift, /NOCTUA-LILIUM-0721|NOR-LILY2026/);
   assert.match(gift, /SCIENTIFIC INTEGRITY/);
   assert.match(giftCss, /\.hero/);
   assert.match(portfolioScript, /PRIVATE COMMEMORATIVE/);
-  assert.match(portfolioScript, /ASSOCIATION CERTIFIED/);
-  assert.match(portfolioScript, /Celestial Archive Association/);
+  assert.match(portfolioScript, /NOCTUA PRIVATE ARCHIVE AUTHENTICATION/);
+  assert.match(portfolioScript, /Noctua Archive Office/);
   assert.match(portfolioScript, /Noctua Celestial Lab/);
-  assert.match(portfolioScript, /institutional script marks, not personal signatures/);
+  assert.match(portfolioScript, /Institutional marks are typographic archive marks/);
+  assert.match(bookScript, /One giver\. One recipient\. One lifetime\./);
+  assert.match(bookScript, /golden-angle low-discrepancy/);
+  assert.match(bookScript, /ERROR_CORRECT_H/);
+  assert.match(bookScript, /pages\) != 20/);
+  assert.match(bookScript, /f"\{DESIGNATION\} b"/);
+  assert.match(bookScript, /f"\{DESIGNATION\} e"/);
   await Promise.all([
     "../public/gifts/lily-chen/lilium-aeternum-artist-impression.jpg",
+    "../public/gifts/lily-chen/book/world-b-rose-mineral.png",
+    "../public/gifts/lily-chen/book/world-c-pearl-ocean.png",
+    "../public/gifts/lily-chen/book/world-d-lavender-giant.png",
+    "../public/gifts/lily-chen/book/world-e-crystalline-ice.png",
     "../public/gifts/lily-chen/Lily_Chen_Archivist_Portfolio.pdf",
+    "../public/gifts/lily-chen/Lily_Chen_Lilium_Aeternum_Keepsake_Book.pdf",
     "../public/gifts/lily-chen/Lily_Chen_Celestial_Dedication_Certificate.pdf",
     "../public/gifts/lily-chen/Lily_Chen_Thank_You_Letter.pdf",
     "../public/gifts/lily-chen/Lily_Chen_Lilium_Aeternum_Research_Dossier.pdf",

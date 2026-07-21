@@ -9,8 +9,9 @@ export const metadata: Metadata = {
 };
 
 const downloads = [
-  { label: "Archivist portfolio", detail: "The complete ten-page edition · PDF", file: "Lily_Chen_Archivist_Portfolio.pdf" },
-  { label: "Gold-foil dedication certificate", detail: "Embossed seal and dual institutional script marks · PDF", file: "Lily_Chen_Celestial_Dedication_Certificate.pdf" },
+  { label: "Archivist portfolio", detail: "The complete thirty-page edition · PDF", file: "Lily_Chen_Archivist_Portfolio.pdf" },
+  { label: "A5 celestial keepsake book", detail: "Twenty pages of system science, five artworks and the lifetime promise · PDF", file: "Lily_Chen_Lilium_Aeternum_Keepsake_Book.pdf" },
+  { label: "Celestial dedication certificate", detail: "A restrained archival certificate with dual institutional script marks · PDF", file: "Lily_Chen_Celestial_Dedication_Certificate.pdf" },
   { label: "Thank-you letter", detail: "A formal letter from the NOCTUA archive · PDF", file: "Lily_Chen_Thank_You_Letter.pdf" },
   { label: "Model research dossier", detail: "Methods, architecture and limitations · PDF", file: "Lily_Chen_Lilium_Aeternum_Research_Dossier.pdf" },
   { label: "Birthday blessing", detail: "A personal message from Xie Yao Zhong · PDF", file: "Lily_Chen_Birthday_Blessing_from_Xie_Yao_Zhong.pdf" },
@@ -36,16 +37,16 @@ export default function LilyChenGiftPage() {
           <h1>For Lily Chen</h1>
           <h2>Lilium Aeternum</h2>
           <blockquote>“May every orbit remind you that the most meaningful journeys always find their way back to what matters.”</blockquote>
-          <span>A birthday dedication from Xie Yao Zhong · 21 July 2026</span>
+          <span>A birthday dedication from Xie Yao Zhong</span>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryAction} href="/?registry=NOR-LILY2026">Open the live private system</Link>
+            <Link className={styles.primaryAction} href="/?registry=NOCTUA-LILY-0724">Open the live private system</Link>
             <a className={styles.secondaryAction} href="/gifts/lily-chen/Lily_Chen_Archivist_Portfolio.pdf" download>Download the complete portfolio</a>
           </div>
         </div>
         <div className={styles.heroMeta}>
-          <div><small>PRIVATE REGISTRY</small><b>NOR-LILY2026</b></div>
-          <div><small>MODEL SYSTEM</small><b>SYS-LC-2026</b></div>
-          <div><small>DESIGNATION</small><b>NOCTUA-LILIUM-0721</b></div>
+          <div><small>PUBLIC ARCHIVE CODE</small><b>NOCTUA-LILY-0724</b></div>
+          <div><small>EDITION</small><b>ARCHIVIST / US$500</b></div>
+          <div><small>MODEL STATUS</small><b>PRIVATE · SYNTHETIC</b></div>
         </div>
       </section>
 
@@ -56,7 +57,7 @@ export default function LilyChenGiftPage() {
         </div>
         <div className={styles.introCopy}>
           <p>Lilium Aeternum is a bespoke four-planet visualisation built around a warm F8V stellar model. Its pearlescent ocean world, lavender ringed giant and distant crystalline planet form a private symbolic system dedicated exclusively to Lily Chen.</p>
-          <p>This Archivist Edition includes a personalised certificate, formal letter, transparent model research dossier, high-resolution celestial artwork and a birthday message written by Xie Yao Zhong.</p>
+          <p>This Archivist Edition includes a personalised certificate, formal letter, transparent model research dossier, a twenty-page A5 keepsake book, five celestial artworks and a birthday message written by Xie Yao Zhong.</p>
         </div>
       </section>
 
@@ -72,9 +73,9 @@ export default function LilyChenGiftPage() {
             <div><dt>Model coordinate</dt><dd>RA 23h 52m 45.8s<br />Dec +55° 40′ 18.1″</dd></div>
             <div><dt>Model distance</dt><dd>72.6 parsecs<br />236.8 light-years</dd></div>
             <div><dt>Stellar prior</dt><dd>F8V main-sequence<br />6,260 K</dd></div>
-            <div><dt>Featured world</dt><dd>NOCTUA-LILIUM-0721 c<br />Pearlescent ocean super-Earth</dd></div>
+            <div><dt>Featured world</dt><dd>NOCTUA-LILY-0724 c<br />Pearlescent ocean super-Earth</dd></div>
           </dl>
-          <Link className={styles.textLink} href="/?registry=NOR-LILY2026">Explore real-time model positions →</Link>
+          <Link className={styles.textLink} href="/?registry=NOCTUA-LILY-0724">Explore real-time model positions →</Link>
         </div>
       </section>
 
@@ -107,7 +108,7 @@ export default function LilyChenGiftPage() {
 
       <footer className={styles.footer}>
         <div className={styles.brand}><span>N</span><div><b>NOCTUA</b><small>Celestial Research Lab</small></div></div>
-        <p>Prepared exclusively for Lily Chen · Registry NOR-LILY2026</p>
+        <p>Prepared exclusively for Lily Chen · NOCTUA-LILY-0724</p>
         <Link href="/">Return to NOCTUA</Link>
       </footer>
     </main>

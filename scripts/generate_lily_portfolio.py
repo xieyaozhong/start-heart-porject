@@ -7,7 +7,7 @@ from PIL import Image as PILImage
 from pypdf import PdfReader, PdfWriter
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, A5, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
@@ -34,6 +34,7 @@ IMAGE_PATH = ROOT / "public" / "gifts" / "lily-chen" / "lilium-aeternum-artist-i
 OUTPUT_DIR = ROOT / "output" / "pdf" / "lily-chen"
 PUBLIC_DIR = ROOT / "public" / "gifts" / "lily-chen"
 PDF_IMAGE_PATH = OUTPUT_DIR / "lilium-aeternum-pdf-artwork.jpg"
+EDITORIAL_IMAGE_PATH = OUTPUT_DIR / "lilium-aeternum-editorial-artwork.jpg"
 
 NAVY = colors.HexColor("#07131f")
 DEEP_NAVY = colors.HexColor("#02070d")
@@ -45,9 +46,9 @@ MUTED = colors.HexColor("#657985")
 PALE = colors.HexColor("#dce6e8")
 LINE = colors.HexColor("#243743")
 
-REGISTRY = "NOR-LILY2026"
+REGISTRY = "NOCTUA-LILY-0724"
 SYSTEM_ID = "SYS-LC-2026"
-DESIGNATION = "NOCTUA-LILIUM-0721"
+DESIGNATION = "NOCTUA-LILY-0724"
 PRIVATE_NAME = "Lilium Aeternum"
 GIFT_URL = "https://noctua-celestial-lab.yao1230.chatgpt.site/gift/lily-chen"
 
@@ -80,7 +81,10 @@ def ensure_dirs() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
     with PILImage.open(IMAGE_PATH) as source:
-        source.convert("RGB").save(PDF_IMAGE_PATH, "JPEG", quality=84, optimize=True, progressive=True)
+        artwork = source.convert("RGB")
+        artwork.save(PDF_IMAGE_PATH, "JPEG", quality=88, optimize=True)
+        navy_layer = PILImage.new("RGB", artwork.size, (3, 10, 18))
+        PILImage.blend(artwork, navy_layer, 0.28).save(EDITORIAL_IMAGE_PATH, "JPEG", quality=88, optimize=True)
 
 
 def draw_cover_image(c: canvas.Canvas, page_size, overlay=0.56) -> None:
@@ -243,8 +247,8 @@ def create_certificate(path: Path) -> None:
     details = [
         ("PRIVATE REGISTRY", REGISTRY),
         ("MODEL SYSTEM", SYSTEM_ID),
-        ("SCIENTIFIC DESIGNATION", DESIGNATION),
-        ("ARCHIVE DATE", "21 JULY 2026"),
+        ("PUBLIC ARCHIVE CODE", DESIGNATION),
+        ("EDITION", "ARCHIVIST / PRIVATE"),
     ]
     panel_x = 27 * mm
     panel_y = height - 110 * mm
@@ -341,12 +345,12 @@ def create_thank_you(path: Path) -> None:
     styles = letter_styles()
     doc = SimpleDocTemplate(str(path), pagesize=A4, leftMargin=25 * mm, rightMargin=25 * mm, topMargin=36 * mm, bottomMargin=25 * mm, title="Thank You Letter for Lily Chen", author="NOCTUA Celestial Research Lab")
     story = [
-        Paragraph("ARCHIVIST EDITION / 21 JULY 2026", styles["kicker"]),
+        Paragraph("ARCHIVIST EDITION / PRIVATE CELESTIAL ARCHIVE", styles["kicker"]),
         Paragraph("A Letter of Appreciation<br/>for Lily Chen", styles["title"]),
         Paragraph("Dear Lily,", styles["body"]),
         Paragraph("Thank you for receiving <i>Lilium Aeternum</i>, a private celestial dedication created in your honour. This archive brings together an original astronomical artwork, a model-derived planetary system, a live orbital visualisation and a continuing record of future refinements.", styles["body"]),
         Paragraph("The name does not replace an official scientific designation, nor does it claim ownership of a celestial object. Its purpose is more personal: to preserve a promise, a birthday, and the meaning of being remembered across distance and time. The scientific language in your portfolio is deliberately transparent about what is modelled, what is inferred and what remains unknown.", styles["body"]),
-        Paragraph("Your Archivist Edition includes the private registry <b>NOR-LILY2026</b>, the model system <b>NOCTUA-LILIUM-0721</b>, a printable dedication certificate, the accompanying research dossier, an artist's impression and access to the interactive orbital archive.", styles["body"]),
+        Paragraph(f"Your Archivist Edition includes the private registry <b>{REGISTRY}</b>, the public archive designation <b>{DESIGNATION}</b>, a printable dedication certificate, an A5 keepsake book, the accompanying research dossier, five original artist's impressions and access to the interactive orbital archive.", styles["body"]),
         Paragraph("We hope this gift becomes a quiet place you can return to - a reminder that wonder can be both carefully studied and deeply felt.", styles["body"]),
         Paragraph("With appreciation,", styles["body"]),
         Paragraph("NOCTUA Celestial Research Lab", styles["signature"]),
@@ -367,7 +371,7 @@ def create_birthday_blessing(path: Path) -> None:
     c.rect(15 * mm, 15 * mm, width - 30 * mm, height - 30 * mm, fill=0, stroke=1)
     c.setFillColor(GOLD)
     c.setFont("Helvetica-Bold", 7.5)
-    c.drawCentredString(width / 2, height - 34 * mm, "A BIRTHDAY DEDICATION / 21 JULY 2026")
+    c.drawCentredString(width / 2, height - 34 * mm, "A PRIVATE BIRTHDAY DEDICATION")
     c.setFillColor(IVORY)
     c.setFont("Times-Roman", 29)
     c.drawCentredString(width / 2, height - 57 * mm, "For Lily Chen")
@@ -446,11 +450,11 @@ def create_research_dossier(path: Path) -> None:
     story.extend([
         Paragraph("NON-OBSERVATIONAL MODEL / ARCHIVIST EDITION", kicker),
         Paragraph("Lilium Aeternum:<br/>A Model-Derived Four-Planet Candidate Architecture", title),
-        Paragraph("Prepared for <b>Lily Chen</b><br/>Commissioned as a birthday dedication by <b>Xie Yao Zhong</b><br/>NOCTUA Celestial Research Lab - 21 July 2026", body),
+        Paragraph("Prepared for <b>Lily Chen</b><br/>Commissioned as a birthday dedication by <b>Xie Yao Zhong</b><br/>NOCTUA Celestial Research Lab", body),
         Spacer(1, 4 * mm),
         Image(str(PDF_IMAGE_PATH), width=172 * mm, height=96.75 * mm),
         Paragraph("Figure 1. Artist's impression of Lilium Aeternum. This generated visual is not telescope imagery or observational evidence.", caption),
-        Paragraph("Registry: <b>NOR-LILY2026</b> &nbsp;&nbsp; System: <b>SYS-LC-2026</b> &nbsp;&nbsp; Designation: <b>NOCTUA-LILIUM-0721</b>", small),
+        Paragraph(f"Registry: <b>{REGISTRY}</b> &nbsp;&nbsp; Internal model: <b>{SYSTEM_ID}</b> &nbsp;&nbsp; Public archive designation: <b>{DESIGNATION}</b>", small),
         PageBreak(),
         Paragraph("Abstract", h1),
         Paragraph("This dossier defines a deterministic, model-derived four-planet architecture around an F8V stellar prior. The system is a private scientific visualisation created for the Lilium Aeternum commemorative archive; it is not an observed target, a confirmed exoplanet system or an official astronomical designation. A Fibonacci-sphere sampling method supplies a reproducible sky coordinate, while Keplerian scaling relates the adopted orbital periods to semi-major axes. Equilibrium temperatures, bulk compositions and astrobiology scores are illustrative scenario outputs constrained by broad planetary-physics priors rather than measured spectra or transit data.", body),
@@ -463,7 +467,7 @@ def create_research_dossier(path: Path) -> None:
             ["Giver", "Xie Yao Zhong"],
             ["Archive edition", "Archivist / US$500 Gift Edition"],
             ["Registry", REGISTRY],
-            ["Scientific model code", f"{SYSTEM_ID} / {DESIGNATION}"],
+            ["Public archive code", DESIGNATION],
         ], colWidths=[47 * mm, 115 * mm], style=TableStyle([
             ("FONT", (0, 0), (-1, -1), "Helvetica", 8.5),
             ("FONT", (0, 0), (0, -1), "Helvetica-Bold", 8),
@@ -519,7 +523,7 @@ def create_research_dossier(path: Path) -> None:
         Paragraph("Planet b represents intensity and formation; planet c carries the central ocean-world scenario; planet d provides a visually dominant ringed giant and potential moon system; planet e preserves the cold outer archive. This narrative is an artistic layer placed on top of the physical model, not an observational classification.", body),
         PageBreak(),
         Paragraph("3. Temperate-world and life assessment", h1),
-        Paragraph("NOCTUA-LILIUM-0721 c receives the highest model astrobiology score (64/100). Its assigned equilibrium temperature, ocean fraction and atmospheric scenario permit a temperate interpretation. This score is a ranking tool, not a probability of life.", body),
+        Paragraph(f"{DESIGNATION} c receives the highest model astrobiology score (64/100). Its assigned equilibrium temperature, ocean fraction and atmospheric scenario permit a temperate interpretation. This score is a ranking tool, not a probability of life.", body),
         Paragraph("Factors supporting the scenario", h2),
         Paragraph("The adopted orbit is consistent with a temperate irradiation regime around the stellar prior. A 2.6 Earth-mass planet could plausibly retain a substantial atmosphere, while ocean coverage and tidal forcing from a faint ring or moon population may provide chemical and thermal gradients.", body),
         Paragraph("Factors that remain unknown", h2),
@@ -558,12 +562,194 @@ def create_research_dossier(path: Path) -> None:
         Paragraph("2. Kopparapu, R. K., et al. (2013). Habitable Zones Around Main-Sequence Stars: New Estimates. The Astrophysical Journal, 765:131. https://doi.org/10.1088/0004-637X/765/2/131", small),
         Paragraph("3. NASA Exoplanet Archive. Confirmed Planet and candidate-data context. https://exoplanetarchive.ipac.caltech.edu/", small),
         Paragraph("4. International Astronomical Union. Frequently Asked Questions on astronomical naming. https://www.iau.org/IAU/Science/What-we-do/FAQs.aspx", small),
-        Paragraph("5. NOCTUA Celestial Research Lab. Lilium Aeternum deterministic model specification, revision 2026-07-21.", small),
+        Paragraph("5. NOCTUA Celestial Research Lab. Lilium Aeternum deterministic model specification, private archive revision.", small),
         Spacer(1, 9 * mm),
         Paragraph("Prepared with care for Lily Chen", h2),
         Paragraph("This dossier accompanies a birthday gift from Xie Yao Zhong. Its scientific transparency is part of the gift: imagination is allowed to be beautiful without being presented as evidence.", body),
     ])
     doc.build(story)
+
+
+def create_refined_certificate(path: Path) -> None:
+    """Create a restrained, single-page archival certificate."""
+    page_size = landscape(A4)
+    width, height = page_size
+    c = canvas.Canvas(str(path), pagesize=page_size)
+    c.setTitle("Lilium Aeternum - Private Celestial Dedication for Lily Chen")
+    c.setAuthor("NOCTUA Celestial Research Lab")
+
+    c.setFillColor(IVORY)
+    c.rect(0, 0, width, height, fill=1, stroke=0)
+    art_width = 75 * mm
+    c.drawImage(str(EDITORIAL_IMAGE_PATH), 0, 0, width=art_width, height=height, preserveAspectRatio=False, mask="auto")
+
+    c.setStrokeColor(GOLD)
+    c.setLineWidth(0.7)
+    c.line(art_width, 12 * mm, art_width, height - 12 * mm)
+    c.setFillColor(IVORY)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawString(13 * mm, height - 19 * mm, "NOCTUA")
+    c.setFont("Helvetica", 5.8)
+    c.drawString(13 * mm, height - 25 * mm, "PRIVATE CELESTIAL ARCHIVE")
+    c.setFillColor(colors.HexColor("#d9c7a5"))
+    c.setFont("Times-Italic", 19)
+    c.drawString(13 * mm, 25 * mm, "Lilium Aeternum")
+    c.setFont("Helvetica", 5.6)
+    c.drawString(13 * mm, 18 * mm, "AN ARTIST'S IMPRESSION / NOT OBSERVATIONAL IMAGERY")
+
+    left = 92 * mm
+    right = width - 17 * mm
+    content_width = right - left
+    c.setFillColor(GOLD)
+    c.setFont("Helvetica-Bold", 6.4)
+    c.drawString(left, height - 21 * mm, "NOCTUA PRIVATE ARCHIVE AUTHENTICATION")
+    c.setFillColor(MUTED)
+    c.setFont("Helvetica", 5.8)
+    c.drawRightString(right, height - 21 * mm, "ARCHIVIST EDITION / PRIVATE COMMEMORATIVE MODEL")
+    c.setStrokeColor(colors.HexColor("#c8b590"))
+    c.setLineWidth(0.45)
+    c.line(left, height - 26 * mm, right, height - 26 * mm)
+
+    c.setFillColor(NAVY)
+    c.setFont("Times-Roman", 22)
+    c.drawString(left, height - 45 * mm, "Certificate of Celestial Dedication")
+    c.setFillColor(colors.HexColor("#6c7a7e"))
+    c.setFont("Helvetica", 7.3)
+    c.drawString(left, height - 55 * mm, "THIS PRIVATE ARCHIVE RECORD IS DEDICATED EXCLUSIVELY TO")
+    c.setFillColor(NAVY)
+    c.setFont("Times-Italic", 31)
+    c.drawString(left, height - 74 * mm, "Lily Chen")
+    c.setFillColor(ROSE)
+    c.setFont("Times-Roman", 16)
+    c.drawString(left, height - 87 * mm, PRIVATE_NAME)
+
+    body_style = ParagraphStyle(
+        "CertificateBody",
+        fontName="Helvetica",
+        fontSize=8.4,
+        leading=13.2,
+        textColor=colors.HexColor("#33464e"),
+    )
+    paragraph = Paragraph(
+        "Created by <b>Xie Yao Zhong</b> as a singular birthday dedication: "
+        "a model star and four imagined worlds preserved as a promise of care, "
+        "wonder and remembrance.",
+        body_style,
+    )
+    paragraph.wrapOn(c, content_width - 7 * mm, 32 * mm)
+    paragraph.drawOn(c, left, height - 116 * mm)
+
+    code_y = height - 137 * mm
+    c.setFillColor(NAVY)
+    c.roundRect(left, code_y - 17 * mm, content_width, 17 * mm, 1.5 * mm, fill=1, stroke=0)
+    c.setFillColor(colors.HexColor("#9da9ab"))
+    c.setFont("Helvetica-Bold", 5.7)
+    c.drawString(left + 7 * mm, code_y - 6 * mm, "PUBLIC ARCHIVE CODE")
+    c.setFillColor(IVORY)
+    c.setFont("Helvetica", 12.5)
+    c.drawString(left + 7 * mm, code_y - 12.8 * mm, DESIGNATION)
+    c.setFillColor(colors.HexColor("#9da9ab"))
+    c.setFont("Helvetica", 5.6)
+    c.drawRightString(right - 7 * mm, code_y - 9.3 * mm, "PRIVATE / NON-OBSERVATIONAL / NON-TRANSFERABLE")
+
+    signature_y = 37 * mm
+    signature_left = left + 31 * mm
+    signature_right = right - 31 * mm
+    c.setFillColor(colors.HexColor("#9b7441"))
+    c.setFont(ASSOCIATION_SCRIPT, 13.5)
+    c.drawCentredString(signature_left, signature_y + 10 * mm, "Noctua Archive Office")
+    c.setFont(COMPANY_SCRIPT, 17)
+    c.drawCentredString(signature_right, signature_y + 9.5 * mm, "Noctua Celestial Lab")
+    c.setStrokeColor(colors.HexColor("#9c8d76"))
+    c.setLineWidth(0.4)
+    c.line(left, signature_y + 4 * mm, left + 64 * mm, signature_y + 4 * mm)
+    c.line(right - 64 * mm, signature_y + 4 * mm, right, signature_y + 4 * mm)
+    c.setFillColor(MUTED)
+    c.setFont("Helvetica-Bold", 5.2)
+    c.drawCentredString(signature_left, signature_y, "PRIVATE ARCHIVE AUTHENTICATION MARK")
+    c.drawCentredString(signature_right, signature_y, "COMPANY INSTITUTIONAL SIGNATURE MARK")
+
+    seal_x = (signature_left + signature_right) / 2
+    seal_y = signature_y + 6 * mm
+    c.setStrokeColor(GOLD)
+    c.setLineWidth(0.65)
+    c.circle(seal_x, seal_y, 8 * mm, fill=0, stroke=1)
+    c.circle(seal_x, seal_y, 6.2 * mm, fill=0, stroke=1)
+    c.setFillColor(NAVY)
+    c.setFont("Times-Italic", 14)
+    c.drawCentredString(seal_x, seal_y - 1.7 * mm, "N")
+
+    c.setFillColor(colors.HexColor("#77858a"))
+    c.setFont("Helvetica", 5.25)
+    c.drawString(left, 15.5 * mm, "Institutional marks are typographic archive marks, not personal, government or scientific-agency signatures.")
+    c.drawString(left, 11.5 * mm, "This certificate conveys no celestial ownership and is not an IAU designation or evidence of astronomical discovery.")
+    c.save()
+
+
+def create_refined_birthday_blessing(path: Path) -> None:
+    """Create a quiet, premium, single-page birthday message."""
+    width, height = A4
+    c = canvas.Canvas(str(path), pagesize=A4)
+    c.setTitle("A Birthday Blessing for Lily Chen")
+    c.setAuthor("Xie Yao Zhong")
+    c.setFillColor(IVORY)
+    c.rect(0, 0, width, height, fill=1, stroke=0)
+
+    art_height = 82 * mm
+    c.drawImage(str(EDITORIAL_IMAGE_PATH), 0, height - art_height, width=width, height=art_height, preserveAspectRatio=False, mask="auto")
+    c.setFillColor(IVORY)
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString(18 * mm, height - 18 * mm, "NOCTUA / A PRIVATE BIRTHDAY DEDICATION")
+    c.setFont("Times-Italic", 29)
+    c.drawString(18 * mm, height - 51 * mm, "For Lily Chen")
+    c.setStrokeColor(GOLD)
+    c.setLineWidth(0.65)
+    c.line(18 * mm, height - art_height - 7 * mm, width - 18 * mm, height - art_height - 7 * mm)
+
+    title_y = height - art_height - 28 * mm
+    c.setFillColor(NAVY)
+    c.setFont("Times-Roman", 23)
+    c.drawCentredString(width / 2, title_y, "A Sky Kept for You")
+    c.setFillColor(ROSE)
+    c.setFont("Helvetica-Bold", 6.2)
+    c.drawCentredString(width / 2, title_y - 9 * mm, "LILIUM AETERNUM / " + DESIGNATION)
+
+    message_style = ParagraphStyle(
+        "BirthdayMessage",
+        fontName="Times-Roman",
+        fontSize=11.3,
+        leading=19,
+        textColor=colors.HexColor("#30424a"),
+        alignment=TA_CENTER,
+    )
+    message = Paragraph(
+        "Happy Birthday, Lily.<br/><br/>"
+        "I wanted to give you something quieter than a grand gesture and longer-lasting than a single day: "
+        "a small sky imagined with care, carrying your name through a family of worlds.<br/><br/>"
+        "May <i>Lilium Aeternum</i> remind you that you are cherished beyond distance and time. "
+        "May every year bring you a wider horizon, a steady courage, and discoveries that feel wholly your own.<br/><br/>"
+        "Wherever life takes you, I hope you will remember that someone once looked toward the stars and thought of you.",
+        message_style,
+    )
+    message.wrapOn(c, width - 52 * mm, 105 * mm)
+    message.drawOn(c, 26 * mm, 66 * mm)
+
+    c.setFillColor(colors.HexColor("#9b7441"))
+    c.setFont("Times-Italic", 11)
+    c.drawCentredString(width / 2, 50 * mm, "With warmest wishes,")
+    c.setFillColor(NAVY)
+    c.setFont(COMPANY_SCRIPT, 20)
+    c.drawCentredString(width / 2, 39 * mm, "Xie Yao Zhong")
+    c.setFillColor(MUTED)
+    c.setFont("Helvetica", 5.8)
+    c.drawCentredString(width / 2, 22 * mm, "A PERSONAL MESSAGE / CALLIGRAPHIC TYPOGRAPHY / PRIVATE KEEPSAKE")
+    c.setStrokeColor(colors.HexColor("#c9b996"))
+    c.setLineWidth(0.4)
+    c.line(30 * mm, 17 * mm, width - 30 * mm, 17 * mm)
+    c.setFillColor(colors.HexColor("#7f8c90"))
+    c.setFont("Helvetica", 5.3)
+    c.drawCentredString(width / 2, 11.5 * mm, f"{PRIVATE_NAME} / {DESIGNATION} / CREATED EXCLUSIVELY FOR LILY CHEN")
+    c.save()
 
 
 def merge_portfolio(paths: list[Path], output: Path) -> None:
@@ -582,23 +768,27 @@ def merge_portfolio(paths: list[Path], output: Path) -> None:
 
 
 def main() -> None:
+    from generate_lily_keepsake_book import main as generate_keepsake_book
+
     ensure_dirs()
     certificate = OUTPUT_DIR / "Lily_Chen_Celestial_Dedication_Certificate.pdf"
     thank_you = OUTPUT_DIR / "Lily_Chen_Thank_You_Letter.pdf"
     research = OUTPUT_DIR / "Lily_Chen_Lilium_Aeternum_Research_Dossier.pdf"
     birthday = OUTPUT_DIR / "Lily_Chen_Birthday_Blessing_from_Xie_Yao_Zhong.pdf"
+    book = OUTPUT_DIR / "Lily_Chen_Lilium_Aeternum_Keepsake_Book.pdf"
     portfolio = OUTPUT_DIR / "Lily_Chen_Archivist_Portfolio.pdf"
 
-    create_certificate(certificate)
+    create_refined_certificate(certificate)
     create_thank_you(thank_you)
     create_research_dossier(research)
-    create_birthday_blessing(birthday)
-    merge_portfolio([certificate, thank_you, research, birthday], portfolio)
+    create_refined_birthday_blessing(birthday)
+    generate_keepsake_book()
+    merge_portfolio([certificate, thank_you, research, birthday, book], portfolio)
 
-    for path in [certificate, thank_you, research, birthday, portfolio]:
+    for path in [certificate, thank_you, research, birthday, book, portfolio]:
         (PUBLIC_DIR / path.name).write_bytes(path.read_bytes())
 
-    print("\n".join(str(path) for path in [certificate, thank_you, research, birthday, portfolio]))
+    print("\n".join(str(path) for path in [certificate, thank_you, research, birthday, book, portfolio]))
 
 
 if __name__ == "__main__":

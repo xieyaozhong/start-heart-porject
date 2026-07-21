@@ -120,12 +120,12 @@ const initialSystems = [
     ],
   },
   {
-    system: { id: "SYS-LC-2026", designation: "NOCTUA-LILIUM-0721", displayName: null, classification: "F8V pearl-white main-sequence star", ...lilyModelPosition, starMass: 1.11, starRadius: 1.18, temperatureK: 6260, luminosity: 1.72, ageByr: 3.2, metallicity: 0.07, status: "published", confidence: 83, summary: "A four-planet candidate architecture prepared as the Lilium Aeternum private celestial dedication.", epochAt: "2026-07-21T00:00:00.000Z", publishedAt: "2026-07-21T00:00:00.000Z" },
+    system: { id: "SYS-LC-2026", designation: "NOCTUA-LILY-0724", displayName: null, classification: "F8V pearl-white main-sequence star", ...lilyModelPosition, starMass: 1.11, starRadius: 1.18, temperatureK: 6260, luminosity: 1.72, ageByr: 3.2, metallicity: 0.07, status: "published", confidence: 83, summary: "A four-planet candidate architecture prepared as the Lilium Aeternum private celestial dedication.", epochAt: "2026-07-21T00:00:00.000Z", publishedAt: "2026-07-21T00:00:00.000Z" },
     planets: [
-      { id: "PL-LC-2026-B", code: "NOCTUA-LILIUM-0721 b", type: "Rose-lit mineral terrestrial", massEarth: 1.5, radiusEarth: 1.12, periodDays: 22.8, semiMajorAu: 0.163, eccentricity: 0.04, equilibriumTemp: 720, epochAngleDeg: 31, orbitColor: "#d87a78", composition: [{ label: "Silicates", value: 57, color: "#c98b72" }, { label: "Iron-nickel core", value: 36, color: "#a7aaad" }, { label: "Other", value: 7, color: "#7b6b78" }], atmosphere: "Thin sodium and mineral-vapour exosphere candidate", state: "Tidally influenced · rose-lit volcanic plains", bioScore: 1, bioPrediction: "Surface temperatures are too high for known life." },
-      { id: "PL-LC-2026-C", code: "NOCTUA-LILIUM-0721 c", type: "Pearlescent ocean super-Earth", massEarth: 2.6, radiusEarth: 1.38, periodDays: 537.4, semiMajorAu: 1.34, eccentricity: 0.05, equilibriumTemp: 280, epochAngleDeg: 142, orbitColor: "#63b9cf", composition: [{ label: "Water / ice", value: 43, color: "#6ec2d8" }, { label: "Silicates", value: 39, color: "#b88e72" }, { label: "Iron-nickel core", value: 18, color: "#a7aaad" }], atmosphere: "Nitrogen, water vapour and trace carbon dioxide candidate", state: "Temperate ocean candidate · faint ring system", bioScore: 64, bioPrediction: "Persistent oceans, moderate irradiation and chemical gradients could support microbial or marine ecosystems; no biosignature has been observed." },
-      { id: "PL-LC-2026-D", code: "NOCTUA-LILIUM-0721 d", type: "Lavender ringed gas giant", massEarth: 156, radiusEarth: 9.7, periodDays: 4335, semiMajorAu: 5.39, eccentricity: 0.12, equilibriumTemp: 139, epochAngleDeg: 238, orbitColor: "#9d8bc9", composition: [{ label: "Hydrogen / helium", value: 81, color: "#d6cce0" }, { label: "Water / ice", value: 13, color: "#86afc9" }, { label: "Heavy elements", value: 6, color: "#8e788a" }], atmosphere: "Hydrogen, helium and methane with high-altitude lavender haze", state: "Prominent rings · multiple moon candidates", bioScore: 8, bioPrediction: "The giant itself is inhospitable, while large icy moons could retain subsurface oceans." },
-      { id: "PL-LC-2026-E", code: "NOCTUA-LILIUM-0721 e", type: "Distant crystalline ice world", massEarth: 5.8, radiusEarth: 1.82, periodDays: 16620, semiMajorAu: 13.2, eccentricity: 0.18, equilibriumTemp: 89, epochAngleDeg: 319, orbitColor: "#8ba9c6", composition: [{ label: "Water / ice", value: 58, color: "#91bdd3" }, { label: "Silicates", value: 29, color: "#9d8575" }, { label: "Iron-nickel core", value: 13, color: "#a7aaad" }], atmosphere: "Seasonal nitrogen and methane frost candidate", state: "Cryogenic surface · long orbital seasons", bioScore: 3, bioPrediction: "Known surface life is unlikely; internal radiogenic heating remains unconstrained." },
+      { id: "PL-LC-2026-B", code: "NOCTUA-LILY-0724 b", type: "Rose-lit mineral terrestrial", massEarth: 1.5, radiusEarth: 1.12, periodDays: 22.8, semiMajorAu: 0.163, eccentricity: 0.04, equilibriumTemp: 720, epochAngleDeg: 31, orbitColor: "#d87a78", composition: [{ label: "Silicates", value: 57, color: "#c98b72" }, { label: "Iron-nickel core", value: 36, color: "#a7aaad" }, { label: "Other", value: 7, color: "#7b6b78" }], atmosphere: "Thin sodium and mineral-vapour exosphere candidate", state: "Tidally influenced · rose-lit volcanic plains", bioScore: 1, bioPrediction: "Surface temperatures are too high for known life." },
+      { id: "PL-LC-2026-C", code: "NOCTUA-LILY-0724 c", type: "Pearlescent ocean super-Earth", massEarth: 2.6, radiusEarth: 1.38, periodDays: 537.4, semiMajorAu: 1.34, eccentricity: 0.05, equilibriumTemp: 280, epochAngleDeg: 142, orbitColor: "#63b9cf", composition: [{ label: "Water / ice", value: 43, color: "#6ec2d8" }, { label: "Silicates", value: 39, color: "#b88e72" }, { label: "Iron-nickel core", value: 18, color: "#a7aaad" }], atmosphere: "Nitrogen, water vapour and trace carbon dioxide candidate", state: "Temperate ocean candidate · faint ring system", bioScore: 64, bioPrediction: "Persistent oceans, moderate irradiation and chemical gradients could support microbial or marine ecosystems; no biosignature has been observed." },
+      { id: "PL-LC-2026-D", code: "NOCTUA-LILY-0724 d", type: "Lavender ringed gas giant", massEarth: 156, radiusEarth: 9.7, periodDays: 4335, semiMajorAu: 5.39, eccentricity: 0.12, equilibriumTemp: 139, epochAngleDeg: 238, orbitColor: "#9d8bc9", composition: [{ label: "Hydrogen / helium", value: 81, color: "#d6cce0" }, { label: "Water / ice", value: 13, color: "#86afc9" }, { label: "Heavy elements", value: 6, color: "#8e788a" }], atmosphere: "Hydrogen, helium and methane with high-altitude lavender haze", state: "Prominent rings · multiple moon candidates", bioScore: 8, bioPrediction: "The giant itself is inhospitable, while large icy moons could retain subsurface oceans." },
+      { id: "PL-LC-2026-E", code: "NOCTUA-LILY-0724 e", type: "Distant crystalline ice world", massEarth: 5.8, radiusEarth: 1.82, periodDays: 16620, semiMajorAu: 13.2, eccentricity: 0.18, equilibriumTemp: 89, epochAngleDeg: 319, orbitColor: "#8ba9c6", composition: [{ label: "Water / ice", value: 58, color: "#91bdd3" }, { label: "Silicates", value: 29, color: "#9d8575" }, { label: "Iron-nickel core", value: 13, color: "#a7aaad" }], atmosphere: "Seasonal nitrogen and methane frost candidate", state: "Cryogenic surface · long orbital seasons", bioScore: 3, bioPrediction: "Known surface life is unlikely; internal radiogenic heating remains unconstrained." },
     ],
   },
 ];
@@ -171,7 +171,7 @@ const lilyOwnerOrder = {
   packageName: "Archivist",
   amountTwd: 500 * USD_PRICING_RATE_TWD,
   status: "confirmed",
-  registryCode: "NOR-LILY2026",
+  registryCode: "NOCTUA-LILY-0724",
   animationTheme: "rose",
   confirmedAt: "2026-07-21T08:05:00.000Z",
   paymentProvider: "complimentary-gift",
@@ -182,7 +182,7 @@ const initialResearchUpdates = [
   { id: "UPD-NX-001-01", systemId: "SYS-NX-001", title: "Atmospheric model refined", summary: "A revised thermal model narrows the likely water-vapour range for NOCTUA-X1 d while preserving its status as the system’s strongest temperate candidate.", observingNote: "Best inspected in the holder sky guide near meridian transit; the coordinates remain model-derived and are not a confirmed telescope target.", symbolicMeaning: "A symbol of patient hope: something distant becoming clearer through sustained attention.", publishedAt: "2026-07-19T10:00:00.000Z" },
   { id: "UPD-NX-014-01", systemId: "SYS-NX-014", title: "Orbital solution stabilised", summary: "Additional synthetic sampling reduced uncertainty in the three-planet orbital configuration around NOCTUA-K14.", observingNote: "Use the live guide to calculate the next local meridian window from the model right ascension and declination.", symbolicMeaning: "A symbol of constancy and quiet devotion around a long-lived star.", publishedAt: "2026-07-18T10:00:00.000Z" },
   { id: "UPD-LC-2026-01", systemId: "SYS-LC-2026", title: "Lilium Aeternum model archive established", summary: "The initial four-planet architecture has been normalised against an F8V stellar prior and a deterministic Fibonacci-sphere sky coordinate model.", observingNote: "The coordinates are model-derived and should be treated as a visualisation target, not a confirmed telescope object.", symbolicMeaning: "An enduring light dedicated to Lily Chen: curiosity, grace and hope held in the same orbit.", publishedAt: "2026-07-21T08:10:00.000Z" },
-  { id: "UPD-LC-2026-02", systemId: "SYS-LC-2026", title: "Temperate ocean-world scenario refined", summary: "A first-pass equilibrium-temperature model identifies NOCTUA-LILIUM-0721 c as the strongest temperate scenario in the system, subject to unmeasured atmospheric and albedo assumptions.", observingNote: "Future revisions should prioritise synthetic transit depth, atmospheric retention and climate sensitivity studies.", symbolicMeaning: "The ocean world represents a future rich with possibility: calm on the surface, depth beneath, and light always returning.", publishedAt: "2026-07-21T08:20:00.000Z" },
+  { id: "UPD-LC-2026-02", systemId: "SYS-LC-2026", title: "Temperate ocean-world scenario refined", summary: "A first-pass equilibrium-temperature model identifies NOCTUA-LILY-0724 c as the strongest temperate scenario in the system, subject to unmeasured atmospheric and albedo assumptions.", observingNote: "Future revisions should prioritise synthetic transit depth, atmospheric retention and climate sensitivity studies.", symbolicMeaning: "The ocean world represents a future rich with possibility: calm on the surface, depth beneath, and light always returning.", publishedAt: "2026-07-21T08:20:00.000Z" },
 ];
 
 const showcaseNames = [
@@ -237,6 +237,12 @@ export async function ensureUniverseSeeded() {
       const { composition, ...planetData } = planet;
       return { ...planetData, systemId: item.system.id, displayName: null, compositionJson: JSON.stringify(composition) };
     })).onConflictDoNothing();
+    if (item.system.id === "SYS-LC-2026") {
+      await db.update(starSystems).set({ designation: item.system.designation }).where(eq(starSystems.id, item.system.id));
+      for (const planet of item.planets) {
+        await db.update(planets).set({ code: planet.code }).where(eq(planets.id, planet.id));
+      }
+    }
   }
   for (const item of defaultPackages) {
     await db.insert(namingPackages).values(item).onConflictDoUpdate({
@@ -246,7 +252,13 @@ export async function ensureUniverseSeeded() {
   }
   await db.insert(namingOrders).values(demoOwnerOrder).onConflictDoNothing();
   await db.insert(namingOrders).values(lilyOwnerOrder).onConflictDoNothing();
-  for (const update of initialResearchUpdates) await db.insert(researchUpdates).values(update).onConflictDoNothing();
+  await db.update(namingOrders).set({ registryCode: lilyOwnerOrder.registryCode }).where(eq(namingOrders.id, lilyOwnerOrder.id));
+  for (const update of initialResearchUpdates) {
+    await db.insert(researchUpdates).values(update).onConflictDoNothing();
+    if (update.systemId === "SYS-LC-2026") {
+      await db.update(researchUpdates).set({ title: update.title, summary: update.summary, observingNote: update.observingNote, symbolicMeaning: update.symbolicMeaning }).where(eq(researchUpdates.id, update.id));
+    }
+  }
   const settings = [
     { key: "schedule_frequency", value: "daily" },
     { key: "auto_publish", value: "false" },
@@ -442,7 +454,9 @@ export async function approveOrder(id: string) {
 export async function findRegistry(code: string) {
   await ensureUniverseSeeded();
   const db = getDb();
-  const [order] = await db.select().from(namingOrders).where(and(eq(namingOrders.registryCode, code.toUpperCase()), eq(namingOrders.status, "confirmed")));
+  const requestedCode = code.toUpperCase();
+  const canonicalCode = requestedCode === "NOR-LILY2026" ? "NOCTUA-LILY-0724" : requestedCode;
+  const [order] = await db.select().from(namingOrders).where(and(eq(namingOrders.registryCode, canonicalCode), eq(namingOrders.status, "confirmed")));
   if (!order?.systemId) return null;
   const [system] = await db.select().from(starSystems).where(eq(starSystems.id, order.systemId));
   if (!system) return null;
