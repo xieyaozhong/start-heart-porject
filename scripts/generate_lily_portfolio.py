@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import cos, pi, sin
 from pathlib import Path
 from textwrap import dedent
 from PIL import Image as PILImage
@@ -9,7 +10,9 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import (
     BaseDocTemplate,
@@ -49,6 +52,30 @@ PRIVATE_NAME = "Lilium Aeternum"
 GIFT_URL = "https://noctua-celestial-lab.yao1230.chatgpt.site/gift/lily-chen"
 
 
+def register_script_font(name: str, candidates: list[Path], fallback: str) -> str:
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        try:
+            pdfmetrics.registerFont(TTFont(name, str(candidate)))
+            return name
+        except Exception:
+            continue
+    return fallback
+
+
+ASSOCIATION_SCRIPT = register_script_font(
+    "NoctuaAssociationScript",
+    [Path("C:/Windows/Fonts/MTCORSVA.TTF"), Path("C:/Windows/Fonts/segoesc.ttf")],
+    "Times-Italic",
+)
+COMPANY_SCRIPT = register_script_font(
+    "NoctuaCompanyScript",
+    [Path("C:/Windows/Fonts/ITCEDSCR.TTF"), Path("C:/Windows/Fonts/BRUSHSCI.TTF")],
+    "Times-Italic",
+)
+
+
 def ensure_dirs() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
@@ -73,66 +100,208 @@ def fit_centered_text(c: canvas.Canvas, text: str, font: str, max_size: float, m
     return size
 
 
+def draw_foil_rule(c: canvas.Canvas, x1: float, y1: float, x2: float, y2: float, width=1.0) -> None:
+    c.setStrokeColor(colors.HexColor("#6d4518"))
+    c.setLineWidth(width + 1.2)
+    c.line(x1, y1, x2, y2)
+    c.setStrokeColor(colors.HexColor("#c28a35"))
+    c.setLineWidth(width)
+    c.line(x1, y1, x2, y2)
+    c.setStrokeColor(colors.HexColor("#ffe7a0"))
+    c.setLineWidth(max(0.25, width * 0.28))
+    c.line(x1, y1 + 0.55, x2, y2 + 0.55)
+
+
+def draw_foil_seal(c: canvas.Canvas, x: float, y: float, radius: float) -> None:
+    c.saveState()
+    for index in range(32):
+        angle = 2 * pi * index / 32
+        inner = radius * 0.92
+        outer = radius * (1.16 if index % 2 == 0 else 1.08)
+        c.setStrokeColor(colors.HexColor("#9b6825") if index % 2 else colors.HexColor("#e4b85e"))
+        c.setLineWidth(0.8)
+        c.line(x + cos(angle) * inner, y + sin(angle) * inner, x + cos(angle) * outer, y + sin(angle) * outer)
+
+    c.setFillColor(colors.HexColor("#8a5a1f"))
+    c.setStrokeColor(colors.HexColor("#ffe9a6"))
+    c.setLineWidth(1.1)
+    c.circle(x, y, radius, fill=1, stroke=1)
+    c.setFillColor(colors.HexColor("#d3a149"))
+    c.circle(x, y, radius * 0.88, fill=1, stroke=0)
+    c.setFillColor(DEEP_NAVY)
+    c.setStrokeColor(colors.HexColor("#fff0b5"))
+    c.setLineWidth(0.8)
+    c.circle(x, y, radius * 0.70, fill=1, stroke=1)
+    c.setStrokeColor(colors.HexColor("#b47b29"))
+    c.setLineWidth(0.7)
+    c.circle(x, y, radius * 0.56, fill=0, stroke=1)
+
+    c.setFillColor(colors.HexColor("#ffe7a0"))
+    c.setFont("Times-Italic", 24)
+    c.drawCentredString(x, y - 2.2 * mm, "N")
+    for index, orbit_radius in enumerate((radius * 0.32, radius * 0.46)):
+        c.setStrokeColor(colors.HexColor("#bb8435"))
+        c.setLineWidth(0.35)
+        c.ellipse(x - orbit_radius, y - orbit_radius * 0.32, x + orbit_radius, y + orbit_radius * 0.32, fill=0, stroke=1)
+        angle = 0.7 + index * pi
+        px = x + cos(angle) * orbit_radius
+        py = y + sin(angle) * orbit_radius * 0.32
+        c.setFillColor(colors.HexColor("#fff2bc"))
+        c.circle(px, py, 1.15, fill=1, stroke=0)
+
+    c.setFillColor(colors.HexColor("#fae3a2"))
+    c.setFont("Helvetica-Bold", 4.9)
+    c.drawCentredString(x, y + radius * 0.76, "ASSOCIATION CERTIFIED")
+    c.drawCentredString(x, y - radius * 0.84, "PRIVATE ARCHIVE")
+    c.setStrokeColor(colors.HexColor("#fff0b5"))
+    c.setLineWidth(0.45)
+    c.arc(x - radius * 0.93, y - radius * 0.93, x + radius * 0.93, y + radius * 0.93, 25, 92)
+    c.restoreState()
+
+
+def draw_corner_ornament(c: canvas.Canvas, x: float, y: float, sx: int, sy: int) -> None:
+    c.saveState()
+    c.setStrokeColor(colors.HexColor("#d7a84e"))
+    c.setFillColor(colors.HexColor("#ffe7a0"))
+    c.setLineWidth(0.65)
+    c.line(x, y, x + sx * 18 * mm, y)
+    c.line(x, y, x, y + sy * 18 * mm)
+    c.line(x + sx * 2.5 * mm, y + sy * 2.5 * mm, x + sx * 11 * mm, y + sy * 2.5 * mm)
+    c.line(x + sx * 2.5 * mm, y + sy * 2.5 * mm, x + sx * 2.5 * mm, y + sy * 11 * mm)
+    c.circle(x + sx * 2.5 * mm, y + sy * 2.5 * mm, 1.35, fill=1, stroke=0)
+    c.restoreState()
+
+
 def create_certificate(path: Path) -> None:
     page_size = landscape(A4)
     width, height = page_size
     c = canvas.Canvas(str(path), pagesize=page_size)
     c.setTitle("Lilium Aeternum - Certificate for Lily Chen")
     c.setAuthor("NOCTUA Celestial Research Lab")
-    draw_cover_image(c, page_size, overlay=0.63)
+    draw_cover_image(c, page_size, overlay=0.76)
 
-    c.setStrokeColor(GOLD)
-    c.setLineWidth(1.2)
-    c.rect(12 * mm, 12 * mm, width - 24 * mm, height - 24 * mm, fill=0, stroke=1)
-    c.setStrokeColor(colors.Color(0.45, 0.72, 0.82, alpha=0.45))
-    c.setLineWidth(0.45)
-    c.rect(16 * mm, 16 * mm, width - 32 * mm, height - 32 * mm, fill=0, stroke=1)
+    c.saveState()
+    c.setFillAlpha(0.84)
+    c.setFillColor(colors.HexColor("#07131c"))
+    c.rect(10 * mm, 10 * mm, width - 20 * mm, height - 20 * mm, fill=1, stroke=0)
+    c.restoreState()
 
-    c.setFillColor(GOLD)
-    c.setFont("Helvetica-Bold", 8)
-    c.drawCentredString(width / 2, height - 29 * mm, "NOCTUA CELESTIAL RESEARCH LAB / PRIVATE ARCHIVE")
+    c.setStrokeColor(colors.HexColor("#6d4518"))
+    c.setLineWidth(3.2)
+    c.rect(8.5 * mm, 8.5 * mm, width - 17 * mm, height - 17 * mm, fill=0, stroke=1)
+    c.setStrokeColor(colors.HexColor("#d9aa55"))
+    c.setLineWidth(1.25)
+    c.rect(10.2 * mm, 10.2 * mm, width - 20.4 * mm, height - 20.4 * mm, fill=0, stroke=1)
+    c.setStrokeColor(colors.HexColor("#ffe9a6"))
+    c.setLineWidth(0.35)
+    c.rect(11.6 * mm, 11.6 * mm, width - 23.2 * mm, height - 23.2 * mm, fill=0, stroke=1)
+    c.setStrokeColor(colors.HexColor("#9b6b2c"))
+    c.setLineWidth(0.55)
+    c.rect(15.5 * mm, 15.5 * mm, width - 31 * mm, height - 31 * mm, fill=0, stroke=1)
+
+    draw_corner_ornament(c, 15.5 * mm, 15.5 * mm, 1, 1)
+    draw_corner_ornament(c, width - 15.5 * mm, 15.5 * mm, -1, 1)
+    draw_corner_ornament(c, 15.5 * mm, height - 15.5 * mm, 1, -1)
+    draw_corner_ornament(c, width - 15.5 * mm, height - 15.5 * mm, -1, -1)
+
+    c.saveState()
+    c.setStrokeAlpha(0.045)
+    c.setStrokeColor(colors.HexColor("#ffe7a0"))
+    for index in range(24):
+        angle = 2 * pi * index / 24
+        c.line(width / 2 + cos(angle) * 19 * mm, height - 76 * mm + sin(angle) * 19 * mm, width / 2 + cos(angle) * 42 * mm, height - 76 * mm + sin(angle) * 42 * mm)
+    c.circle(width / 2, height - 76 * mm, 36 * mm, fill=0, stroke=1)
+    c.circle(width / 2, height - 76 * mm, 27 * mm, fill=0, stroke=1)
+    c.restoreState()
+
+    c.setFillColor(colors.HexColor("#e6bd6d"))
+    c.setFont("Helvetica-Bold", 6.7)
+    c.drawCentredString(width / 2, height - 23.5 * mm, "NOCTUA CELESTIAL RESEARCH LAB / ARCHIVIST EDITION")
+    c.setFillColor(colors.HexColor("#a88959"))
+    c.setFont("Helvetica", 5.6)
+    c.drawCentredString(width / 2, height - 28.2 * mm, "PRIVATE ASSOCIATION CERTIFIED  /  VERIFIED ARCHIVE RECORD  /  CERTIFICATE NC-AA-LILY-2026-0721")
+    draw_foil_rule(c, 82 * mm, height - 32.3 * mm, width - 82 * mm, height - 32.3 * mm, 0.55)
+
     c.setFillColor(IVORY)
-    c.setFont("Times-Roman", 16)
+    c.setFont("Times-Roman", 14)
     c.drawCentredString(width / 2, height - 43 * mm, "CERTIFICATE OF PRIVATE CELESTIAL DEDICATION")
-    title_size = fit_centered_text(c, PRIVATE_NAME, "Times-Italic", 35, width - 70 * mm)
+    c.setFillColor(colors.HexColor("#d6a54d"))
+    title_size = fit_centered_text(c, PRIVATE_NAME, "Times-Italic", 34, width - 72 * mm)
     c.setFont("Times-Italic", title_size)
-    c.drawCentredString(width / 2, height - 66 * mm, PRIVATE_NAME)
+    c.drawCentredString(width / 2, height - 61 * mm, PRIVATE_NAME)
 
-    body = [
-        "This certifies that the private commemorative designation above has been recorded",
-        "in the NOCTUA archival registry for Lily Chen, as a birthday gift from Xie Yao Zhong.",
-    ]
-    c.setFont("Helvetica", 9.5)
+    c.setFillColor(colors.HexColor("#8da0a8"))
+    c.setFont("Helvetica-Bold", 5.8)
+    c.drawCentredString(width / 2, height - 70 * mm, "DEDICATED EXCLUSIVELY TO")
+    c.setFillColor(IVORY)
+    c.setFont("Times-Roman", 18)
+    c.drawCentredString(width / 2, height - 80 * mm, "LILY CHEN")
     c.setFillColor(PALE)
-    for index, line in enumerate(body):
-        c.drawCentredString(width / 2, height - (81 + index * 6) * mm, line)
+    c.setFont("Helvetica", 8.2)
+    c.drawCentredString(width / 2, height - 89 * mm, "Presented as a birthday dedication by Xie Yao Zhong and preserved in the NOCTUA private celestial archive.")
 
     details = [
-        ("ARCHIVE EDITION", "Archivist / US$500 Gift Edition"),
         ("PRIVATE REGISTRY", REGISTRY),
-        ("MODEL SYSTEM", f"{SYSTEM_ID} / {DESIGNATION}"),
-        ("ARCHIVE DATE", "21 July 2026"),
+        ("MODEL SYSTEM", SYSTEM_ID),
+        ("SCIENTIFIC DESIGNATION", DESIGNATION),
+        ("ARCHIVE DATE", "21 JULY 2026"),
     ]
-    table_width = 190 * mm
-    x = (width - table_width) / 2
-    y = 46 * mm
-    col = table_width / 2
+    panel_x = 27 * mm
+    panel_y = height - 110 * mm
+    panel_width = width - 54 * mm
+    column_width = panel_width / 4
+    c.saveState()
+    c.setFillAlpha(0.56)
+    c.setFillColor(colors.HexColor("#101e27"))
+    c.rect(panel_x, panel_y - 20 * mm, panel_width, 20 * mm, fill=1, stroke=0)
+    c.restoreState()
+    draw_foil_rule(c, panel_x, panel_y, panel_x + panel_width, panel_y, 0.45)
+    draw_foil_rule(c, panel_x, panel_y - 20 * mm, panel_x + panel_width, panel_y - 20 * mm, 0.45)
     for index, (label, value) in enumerate(details):
-        row, column = divmod(index, 2)
-        bx = x + column * col
-        by = y - row * 19 * mm
-        c.setStrokeColor(colors.Color(0.45, 0.72, 0.82, alpha=0.25))
-        c.line(bx, by + 13 * mm, bx + col - 5 * mm, by + 13 * mm)
-        c.setFillColor(MUTED)
-        c.setFont("Helvetica-Bold", 6.5)
-        c.drawString(bx, by + 8.2 * mm, label)
-        c.setFillColor(IVORY)
-        c.setFont("Helvetica", 9)
-        c.drawString(bx, by + 2.2 * mm, value)
+        bx = panel_x + index * column_width
+        if index:
+            c.setStrokeColor(colors.HexColor("#55482f"))
+            c.setLineWidth(0.35)
+            c.line(bx, panel_y - 17 * mm, bx, panel_y - 3 * mm)
+        c.setFillColor(colors.HexColor("#88785f"))
+        c.setFont("Helvetica-Bold", 5.3)
+        c.drawCentredString(bx + column_width / 2, panel_y - 7.2 * mm, label)
+        c.setFillColor(colors.HexColor("#efe7d8"))
+        c.setFont("Helvetica", 7.2)
+        c.drawCentredString(bx + column_width / 2, panel_y - 13.7 * mm, value)
 
-    c.setFillColor(colors.HexColor("#9babb2"))
-    c.setFont("Helvetica", 6.6)
-    c.drawCentredString(width / 2, 19 * mm, "Private commemorative archive only. This certificate conveys no legal ownership and is not an official IAU designation.")
+    signature_y = 48 * mm
+    left_x = 73 * mm
+    right_x = width - 73 * mm
+    c.setFillColor(colors.HexColor("#f0ca76"))
+    c.setFont(ASSOCIATION_SCRIPT, 16)
+    c.drawCentredString(left_x, signature_y + 9 * mm, "Celestial Archive Association")
+    draw_foil_rule(c, 31 * mm, signature_y + 3.2 * mm, 115 * mm, signature_y + 3.2 * mm, 0.5)
+    c.setFillColor(colors.HexColor("#d3c8b5"))
+    c.setFont("Helvetica-Bold", 5.6)
+    c.drawCentredString(left_x, signature_y - 1.8 * mm, "NOCTUA CELESTIAL ARCHIVE ASSOCIATION")
+    c.setFillColor(colors.HexColor("#7f8c91"))
+    c.setFont("Helvetica", 5.2)
+    c.drawCentredString(left_x, signature_y - 6.1 * mm, "PRIVATE CERTIFICATION OFFICE / INSTITUTIONAL SCRIPT MARK")
+
+    c.setFillColor(colors.HexColor("#f4d185"))
+    c.setFont(COMPANY_SCRIPT, 21)
+    c.drawCentredString(right_x, signature_y + 8.3 * mm, "Noctua Celestial Lab")
+    draw_foil_rule(c, width - 115 * mm, signature_y + 3.2 * mm, width - 31 * mm, signature_y + 3.2 * mm, 0.5)
+    c.setFillColor(colors.HexColor("#d3c8b5"))
+    c.setFont("Helvetica-Bold", 5.6)
+    c.drawCentredString(right_x, signature_y - 1.8 * mm, "NOCTUA CELESTIAL RESEARCH LAB")
+    c.setFillColor(colors.HexColor("#7f8c91"))
+    c.setFont("Helvetica", 5.2)
+    c.drawCentredString(right_x, signature_y - 6.1 * mm, "REGISTRY DIRECTOR'S OFFICE / COMPANY SCRIPT MARK")
+
+    draw_foil_seal(c, width / 2, signature_y + 3 * mm, 14.5 * mm)
+
+    c.setFillColor(colors.HexColor("#8f999b"))
+    c.setFont("Helvetica", 5.6)
+    c.drawCentredString(width / 2, 20 * mm, "Certified within the private NOCTUA archive. The association and company signatures above are institutional script marks, not personal signatures.")
+    c.setFont("Helvetica", 5.3)
+    c.drawCentredString(width / 2, 16.1 * mm, "This certificate conveys no legal ownership and is not an official IAU designation, government accreditation, or scientific discovery certificate.")
     c.save()
 
 

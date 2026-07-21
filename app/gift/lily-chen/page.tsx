@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const downloads = [
   { label: "Archivist portfolio", detail: "The complete ten-page edition · PDF", file: "Lily_Chen_Archivist_Portfolio.pdf" },
-  { label: "Dedication certificate", detail: "Print-ready commemorative certificate · PDF", file: "Lily_Chen_Celestial_Dedication_Certificate.pdf" },
+  { label: "Gold-foil dedication certificate", detail: "Embossed seal and dual institutional script marks · PDF", file: "Lily_Chen_Celestial_Dedication_Certificate.pdf" },
   { label: "Thank-you letter", detail: "A formal letter from the NOCTUA archive · PDF", file: "Lily_Chen_Thank_You_Letter.pdf" },
   { label: "Model research dossier", detail: "Methods, architecture and limitations · PDF", file: "Lily_Chen_Lilium_Aeternum_Research_Dossier.pdf" },
   { label: "Birthday blessing", detail: "A personal message from Xie Yao Zhong · PDF", file: "Lily_Chen_Birthday_Blessing_from_Xie_Yao_Zhong.pdf" },

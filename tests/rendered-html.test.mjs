@@ -164,9 +164,14 @@ test("creates Lily Chen's USD Archivist dedication and downloadable English port
   assert.match(gift, /For Lily Chen/);
   assert.match(gift, /PRIVATE ARCHIVIST EDITION · US\$500/);
   assert.match(gift, /Download the complete portfolio/);
+  assert.match(gift, /Gold-foil dedication certificate/);
   assert.match(gift, /SCIENTIFIC INTEGRITY/);
   assert.match(giftCss, /\.hero/);
   assert.match(portfolioScript, /PRIVATE COMMEMORATIVE/);
+  assert.match(portfolioScript, /ASSOCIATION CERTIFIED/);
+  assert.match(portfolioScript, /Celestial Archive Association/);
+  assert.match(portfolioScript, /Noctua Celestial Lab/);
+  assert.match(portfolioScript, /institutional script marks, not personal signatures/);
   await Promise.all([
     "../public/gifts/lily-chen/lilium-aeternum-artist-impression.jpg",
     "../public/gifts/lily-chen/Lily_Chen_Archivist_Portfolio.pdf",
